@@ -1,0 +1,112 @@
+# AI/Development files (do not commit)
+TASKS.md
+CLAUDE.md
+.claude/
+
+# Xcode
+build/
+DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace
+!default.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# CocoaPods
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+fastlane/README.md
+
+# Code Injection
+iOSInjectionProject/
+
+# C/C++ build artifacts (whisper.cpp, llama.cpp)
+*.o
+*.a
+*.so
+*.dylib
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# ML Models (large binary files — download at runtime)
+*.bin
+*.gguf
+*.ggml
+!HushType/Resources/PromptTemplates/*.json
+
+# Secrets - NEVER COMMIT
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile
+authkey*.json
+secrets/
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+.mcp.json
+
+# Archives
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Testing
+*.xcresult
+.playwright-mcp/
+
+# Screenshots (generated)
+screenshots/**/*.png
+!screenshots/README.md
+
+# Temporary files
+*.tmp
+*.temp
