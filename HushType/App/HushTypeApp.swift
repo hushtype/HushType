@@ -69,19 +69,18 @@ struct HushTypeApp: App {
 
         // Load settings and start
         let context = modelContainer.mainContext
-        if let settings = UserSettings.shared(in: context) {
+        do {
+            let settings = try UserSettings.shared(in: context)
             controller.updateConfiguration(
                 vadSensitivity: Float(settings.vadSensitivity),
                 injectionMethod: settings.defaultInjectionMethod
             )
 
-            do {
-                try controller.start(hotkey: settings.globalHotkey)
-                Logger.general.info("Dictation pipeline started")
-            } catch {
-                Logger.general.error("Failed to start dictation pipeline: \(error.localizedDescription)")
-                appState.currentError = "Failed to start hotkey listener: \(error.localizedDescription)"
-            }
+            try controller.start(hotkey: settings.globalHotkey)
+            Logger.general.info("Dictation pipeline started")
+        } catch {
+            Logger.general.error("Failed to start dictation pipeline: \(error.localizedDescription)")
+            appState.currentError = "Failed to start: \(error.localizedDescription)"
         }
 
         dictationController = controller
