@@ -10,6 +10,8 @@ import SwiftUI
 
 @main
 struct HushTypeApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @State private var appState = AppState()
     let modelContainer: ModelContainer
 
     init() {
@@ -44,8 +46,9 @@ struct HushTypeApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: "mic.fill") {
-            Text("HushType Menu Bar App")
+        MenuBarExtra("HushType", systemImage: appState.menuBarIcon) {
+            MenuBarView()
+                .environment(appState)
         }
         .menuBarExtraStyle(.window)
         .modelContainer(modelContainer)
