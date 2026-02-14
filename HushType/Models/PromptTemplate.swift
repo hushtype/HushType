@@ -101,3 +101,73 @@ final class PromptTemplate {
         return result
     }
 }
+
+// MARK: - Built-in Templates
+
+extension PromptTemplate {
+    static let builtInTemplates: [PromptTemplate] = [
+        PromptTemplate(
+            name: "Clean Transcript",
+            mode: .clean,
+            systemPrompt: """
+                You are a text editor. Clean up the following dictated text. \
+                Fix punctuation, capitalization, and remove filler words \
+                (um, uh, like, you know). Preserve the speaker's original \
+                meaning and tone. Do not add or change content.
+                """,
+            userPromptTemplate: "{{transcription}}",
+            isBuiltIn: true,
+            isDefault: true
+        ),
+        PromptTemplate(
+            name: "Structured Notes",
+            mode: .structure,
+            systemPrompt: """
+                You are a note-taking assistant. Organize the following \
+                dictated text into well-structured notes with headings, \
+                bullet points, and paragraphs as appropriate. Preserve \
+                all information.
+                """,
+            userPromptTemplate: "{{transcription}}",
+            isBuiltIn: true,
+            isDefault: true
+        ),
+        PromptTemplate(
+            name: "Code Dictation",
+            mode: .code,
+            systemPrompt: """
+                You are a code transcription assistant. Convert the \
+                following spoken programming instructions into valid \
+                source code. Interpret spoken syntax naturally \
+                (e.g., "open paren" → "(", "new line" → line break). \
+                Output only the code, no explanations.
+                """,
+            userPromptTemplate: """
+                Language: {{language}}
+
+                {{transcription}}
+                """,
+            variables: ["language"],
+            isBuiltIn: true,
+            isDefault: true
+        ),
+        PromptTemplate(
+            name: "Email Draft",
+            mode: .prompt,
+            systemPrompt: """
+                You are a professional email writer. Convert the following \
+                dictated thoughts into a well-formatted email. Use a \
+                {{tone}} tone. Include a subject line.
+                """,
+            userPromptTemplate: """
+                Tone: {{tone}}
+                Recipient: {{recipient}}
+
+                {{transcription}}
+                """,
+            variables: ["tone", "recipient"],
+            isBuiltIn: true,
+            isDefault: true
+        ),
+    ]
+}

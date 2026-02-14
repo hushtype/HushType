@@ -96,3 +96,50 @@ final class ModelInfo {
         FileManager.default.fileExists(atPath: filePath.path)
     }
 }
+
+// MARK: - Pre-seeded Model Registry
+
+extension ModelInfo {
+    static let defaultModels: [ModelInfo] = [
+        ModelInfo(
+            name: "Whisper Tiny (English)",
+            type: .whisper,
+            fileName: "ggml-tiny.en.bin",
+            fileSize: 77_691_713,
+            downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Whisper Base (English)",
+            type: .whisper,
+            fileName: "ggml-base.en.bin",
+            fileSize: 147_951_465,
+            downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"),
+            isDefault: true
+        ),
+        ModelInfo(
+            name: "Whisper Small (English)",
+            type: .whisper,
+            fileName: "ggml-small.en.bin",
+            fileSize: 487_601_967,
+            downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Whisper Medium (English)",
+            type: .whisper,
+            fileName: "ggml-medium.en.bin",
+            fileSize: 1_533_774_781,
+            downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.en.bin"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Whisper Large v3 Turbo",
+            type: .whisper,
+            fileName: "ggml-large-v3-turbo.bin",
+            fileSize: 1_622_089_216,
+            downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"),
+            isDefault: false
+        ),
+    ]
+}
