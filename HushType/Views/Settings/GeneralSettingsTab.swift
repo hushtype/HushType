@@ -7,14 +7,32 @@ struct GeneralSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
     @State private var settings: UserSettings?
     @State private var launchAtLogin = false
+    @State private var hotkeyInput = ""
+    @State private var hotkeyError: String?
 
     var body: some View {
         Form {
             Section("Input") {
                 LabeledContent("Global Hotkey") {
-                    Text(settings?.globalHotkey ?? "Not set")
-                        .foregroundStyle(.secondary)
-                        .help("Hotkey customization will be available in a future release")
+                    HStack {
+                        TextField("e.g. cmd+shift+space", text: $hotkeyInput)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 200)
+                            .onSubmit {
+                                applyHotkey()
+                            }
+                        if let parsed = HotkeyBinding.parse(hotkeyInput) {
+                            Text(parsed.displayString)
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                        }
+                    }
+                    .help("Format: cmd+shift+space, ctrl+alt+r, etc.")
+                }
+                if let error = hotkeyError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
 
                 Toggle("Push-to-Talk Mode", isOn: Binding(
@@ -130,10 +148,29 @@ struct GeneralSettingsTab: View {
         do {
             settings = try UserSettings.shared(in: modelContext)
             launchAtLogin = settings?.launchAtLogin ?? false
+            hotkeyInput = settings?.globalHotkey ?? "cmd+shift+space"
             Logger.ui.debug("Loaded user settings in General tab")
         } catch {
             Logger.ui.error("Failed to load UserSettings: \(error.localizedDescription)")
         }
+    }
+
+    private func applyHotkey() {
+        guard HotkeyBinding.parse(hotkeyInput) != nil else {
+            hotkeyError = "Invalid hotkey format. Use: modifier+key (e.g. cmd+shift+space)"
+            return
+        }
+
+        let conflicts = HotkeyManager.detectConflicts(for: HotkeyBinding.parse(hotkeyInput)!)
+        if !conflicts.isEmpty {
+            hotkeyError = "May conflict with: \(conflicts.joined(separator: ", "))"
+        } else {
+            hotkeyError = nil
+        }
+
+        settings?.globalHotkey = hotkeyInput
+        saveSettings()
+        Logger.ui.info("Hotkey changed to: \(hotkeyInput)")
     }
 
     private func saveSettings() {

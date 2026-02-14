@@ -10,6 +10,7 @@ struct ModelsSettingsTab: View {
     }
 
     @State private var settings: UserSettings?
+    @State private var downloader = ModelDownloader()
 
     var body: some View {
         Form {
@@ -46,7 +47,7 @@ struct ModelsSettingsTab: View {
                 } else {
                     List {
                         ForEach(whisperModels) { model in
-                            ModelRow(model: model)
+                            ModelRow(model: model, downloader: downloader)
                         }
                     }
                     .frame(height: 250)
@@ -80,6 +81,7 @@ struct ModelsSettingsTab: View {
 
 struct ModelRow: View {
     let model: ModelInfo
+    let downloader: ModelDownloader
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
@@ -125,7 +127,15 @@ struct ModelRow: View {
 
             Spacer()
 
-            if model.isDownloaded {
+            if downloader.isDownloading(model) {
+                Button {
+                    downloader.cancel(model)
+                } label: {
+                    Label("Cancel", systemImage: "xmark.circle")
+                        .labelStyle(.iconOnly)
+                }
+                .help("Cancel download")
+            } else if model.isDownloaded {
                 Button {
                     deleteModel(model)
                 } label: {
@@ -135,7 +145,7 @@ struct ModelRow: View {
                 .help("Delete this model from disk")
             } else {
                 Button {
-                    downloadModel(model)
+                    downloader.download(model)
                 } label: {
                     Label("Download", systemImage: "arrow.down.circle")
                         .labelStyle(.iconOnly)
@@ -146,16 +156,16 @@ struct ModelRow: View {
         .padding(.vertical, 4)
     }
 
-    private func downloadModel(_ model: ModelInfo) {
-        Logger.models.info("Download requested for model: \(model.name)")
-        // Placeholder — will be wired to ModelManager service later
-        // ModelManager.shared.download(model)
-    }
-
     private func deleteModel(_ model: ModelInfo) {
         Logger.models.info("Delete requested for model: \(model.name)")
-        // Placeholder — will be wired to ModelManager service later
-        // ModelManager.shared.delete(model)
+        do {
+            try FileManager.default.removeItem(at: model.filePath)
+            model.isDownloaded = false
+            try modelContext.save()
+            Logger.models.info("Deleted model: \(model.name)")
+        } catch {
+            Logger.models.error("Failed to delete model \(model.name): \(error.localizedDescription)")
+        }
     }
 }
 
