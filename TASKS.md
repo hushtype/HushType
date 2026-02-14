@@ -42,21 +42,21 @@
 ## Phase 1: MVP — Core Dictation (v0.1.0)
 
 ### 1.1 Menu Bar App Shell
-- [ ] Implement `HushTypeApp.swift` — `@main` with `MenuBarExtra` using SF Symbols for mic state (idle/recording/processing), `.menuBarExtraStyle(.window)`
-- [ ] Create `AppDelegate.swift` — `NSApplicationDelegate` for lifecycle management, `LSUIElement` dock icon hiding, `NSApplication.shared` configuration
-- [ ] Create `MenuBarView.swift` — menu bar popover showing current status, last transcription preview, quick settings toggles, mode indicator
-- [ ] Create `MenuBarManager.swift` — manages menu bar icon state transitions (idle → recording → processing → idle), animates icon during processing
+- [x] Implement `HushTypeApp.swift` — `@main` with `MenuBarExtra` using SF Symbols for mic state (idle/recording/processing), `.menuBarExtraStyle(.window)`
+- [x] Create `AppDelegate.swift` — `NSApplicationDelegate` for lifecycle management, `LSUIElement` dock icon hiding, `NSApplication.shared` configuration
+- [x] Create `MenuBarView.swift` — menu bar popover showing current status, last transcription preview, quick settings toggles, mode indicator
+- [x] Create `MenuBarManager.swift` — manages menu bar icon state transitions (idle → recording → processing → idle), animates icon during processing
 
 ### 1.2 Global Hotkey System
-- [ ] Create `HotkeyManager.swift` — global hotkey registration using CGEvent tap, default `Cmd+Shift+Space`, support push-to-talk (hold) and toggle (press) modes
-- [ ] Add hotkey customization — user-configurable shortcut stored in UserSettings, conflict detection warning when shortcut clashes with another app
-- [ ] Support multiple hotkey slots — register up to 4 hotkeys for different processing modes (Phase 2 will bind modes to hotkeys)
+- [x] Create `HotkeyManager.swift` — global hotkey registration using CGEvent tap, default `Cmd+Shift+Space`, support push-to-talk (hold) and toggle (press) modes
+- [x] Add hotkey customization — user-configurable shortcut stored in UserSettings, conflict detection warning when shortcut clashes with another app
+- [x] Support multiple hotkey slots — register up to 4 hotkeys for different processing modes (Phase 2 will bind modes to hotkeys)
 
 ### 1.3 Audio Capture Pipeline
-- [ ] Create `AudioCaptureService.swift` — `AVAudioEngine` tap on default input device, format conversion to 16kHz mono Float32 PCM, `AudioCapturing` protocol conformance
-- [ ] Create `VoiceActivityDetector.swift` — energy-based VAD to trim leading/trailing silence, configurable sensitivity threshold
-- [ ] Create `AudioBuffer.swift` — circular ring buffer (30-second rolling window) for streaming support, thread-safe access
-- [ ] Add microphone device selection — enumerate available input devices, allow user to choose specific microphone, persist selection in UserSettings
+- [x] Create `AudioCaptureService.swift` — `AVAudioEngine` tap on default input device, format conversion to 16kHz mono Float32 PCM, `AudioCapturing` protocol conformance
+- [x] Create `VoiceActivityDetector.swift` — energy-based VAD to trim leading/trailing silence, configurable sensitivity threshold
+- [x] Create `AudioBuffer.swift` — circular ring buffer (30-second rolling window) for streaming support, thread-safe access
+- [x] Add microphone device selection — enumerate available input devices, allow user to choose specific microphone, persist selection in UserSettings
 
 ### 1.4 C Bridging: whisper.cpp
 - [ ] Create `WhisperKit/Package.swift` — local Swift package wrapping whisper.cpp with CMake build, C bridging header
@@ -71,10 +71,10 @@
 - [ ] Support multiple model sizes — tiny, base, small, medium, large-v3-turbo model loading based on UserSettings.selectedWhisperModel
 
 ### 1.6 Text Injection Engine
-- [ ] Create `TextInjectionService.swift` — `TextInjecting` protocol conformance, injects text at cursor position in any macOS app
-- [ ] Implement CGEvent injection — simulate keystrokes via CGEvent for short text (<50 chars), handle Unicode including CJK, emoji, diacritics
-- [ ] Implement clipboard paste fallback — copy to pasteboard, simulate Cmd+V, preserve/restore original clipboard contents
-- [ ] Add auto-detect strategy — choose CGEvent vs clipboard based on text length, configurable per-app override via InjectionMethod enum
+- [x] Create `TextInjectionService.swift` — `TextInjecting` protocol conformance, injects text at cursor position in any macOS app
+- [x] Implement CGEvent injection — simulate keystrokes via CGEvent for short text (<50 chars), handle Unicode including CJK, emoji, diacritics
+- [x] Implement clipboard paste fallback — copy to pasteboard, simulate Cmd+V, preserve/restore original clipboard contents
+- [x] Add auto-detect strategy — choose CGEvent vs clipboard based on text length, configurable per-app override via InjectionMethod enum
 
 ### 1.7 Basic Settings
 - [ ] Create `SettingsView.swift` — tabbed settings window using SwiftUI `TabView`, minimum 3 tabs for MVP (General, Audio, Models)
