@@ -59,16 +59,16 @@
 - [x] Add microphone device selection — enumerate available input devices, allow user to choose specific microphone, persist selection in UserSettings
 
 ### 1.4 C Bridging: whisper.cpp
-- [ ] Create `WhisperKit/Package.swift` — local Swift package wrapping whisper.cpp with CMake build, C bridging header
-- [ ] Add whisper.cpp source — vendored or submodule, configured for macOS with Metal GPU acceleration enabled
-- [ ] Create `WhisperKit/include/whisper-bridge.h` — C bridging header exposing whisper_init, whisper_free, whisper_full, whisper_full_params
-- [ ] Create `WhisperContext.swift` — Swift wrapper pairing init/deinit with whisper_init/whisper_free, `@unchecked Sendable`, all C calls on background queue
+- [x] Create `WhisperKit/Package.swift` — local Swift package wrapping whisper.cpp with CMake build, C bridging header
+- [x] Add whisper.cpp source — vendored or submodule, configured for macOS with Metal GPU acceleration enabled
+- [x] Create `WhisperKit/include/whisper-bridge.h` — C bridging header exposing whisper_init, whisper_free, whisper_full, whisper_full_params
+- [x] Create `WhisperContext.swift` — Swift wrapper pairing init/deinit with whisper_init/whisper_free, `@unchecked Sendable`, all C calls on background queue
 
 ### 1.5 Speech Recognition Service
-- [ ] Create `WhisperService.swift` — `TranscriptionEngine` protocol conformance, loads model from ModelInfo path, transcribes Float32 audio buffer, returns text result
-- [ ] Add model loading — load whisper model on first use (lazy), keep in memory between transcriptions (preloaded), unload on memory pressure
-- [ ] Add Metal GPU acceleration — enable Metal backend in whisper_full_params for Apple Silicon and AMD GPUs
-- [ ] Support multiple model sizes — tiny, base, small, medium, large-v3-turbo model loading based on UserSettings.selectedWhisperModel
+- [x] Create `WhisperService.swift` — `TranscriptionEngine` protocol conformance, loads model from ModelInfo path, transcribes Float32 audio buffer, returns text result
+- [x] Add model loading — load whisper model on first use (lazy), keep in memory between transcriptions (preloaded), unload on memory pressure
+- [x] Add Metal GPU acceleration — enable Metal backend in whisper_full_params for Apple Silicon and AMD GPUs
+- [x] Support multiple model sizes — tiny, base, small, medium, large-v3-turbo model loading based on UserSettings.selectedWhisperModel
 
 ### 1.6 Text Injection Engine
 - [x] Create `TextInjectionService.swift` — `TextInjecting` protocol conformance, injects text at cursor position in any macOS app
@@ -77,15 +77,15 @@
 - [x] Add auto-detect strategy — choose CGEvent vs clipboard based on text length, configurable per-app override via InjectionMethod enum
 
 ### 1.7 Basic Settings
-- [ ] Create `SettingsView.swift` — tabbed settings window using SwiftUI `TabView`, minimum 3 tabs for MVP (General, Audio, Models)
-- [ ] Create `GeneralSettingsTab.swift` — hotkey configuration, push-to-talk vs toggle mode, launch at login (`SMAppService`), dock icon visibility
-- [ ] Create `AudioSettingsTab.swift` — input device selection picker, VAD sensitivity slider, audio level meter preview
-- [ ] Create `ModelsSettingsTab.swift` — whisper model list with download status, download/delete buttons, disk usage per model, active model selection
+- [x] Create `SettingsView.swift` — tabbed settings window using SwiftUI `TabView`, minimum 3 tabs for MVP (General, Audio, Models)
+- [x] Create `GeneralSettingsTab.swift` — hotkey configuration, push-to-talk vs toggle mode, launch at login (`SMAppService`), dock icon visibility
+- [x] Create `AudioSettingsTab.swift` — input device selection picker, VAD sensitivity slider, audio level meter preview
+- [x] Create `ModelsSettingsTab.swift` — whisper model list with download status, download/delete buttons, disk usage per model, active model selection
 
 ### 1.8 Pipeline Integration
-- [ ] Wire end-to-end pipeline — hotkey triggers AudioCaptureService → audio flows to WhisperService → transcribed text passes to TextInjectionService → text appears at cursor
-- [ ] Create `DictationController.swift` — orchestrates the pipeline lifecycle (start recording → stop recording → transcribe → inject), manages state transitions, updates AppState
-- [ ] Add DictationEntry recording — save each transcription to SwiftData with metadata (rawText, mode=.raw, language, app context, duration, wordCount, timestamp)
+- [x] Wire end-to-end pipeline — hotkey triggers AudioCaptureService → audio flows to WhisperService → transcribed text passes to TextInjectionService → text appears at cursor
+- [x] Create `DictationController.swift` — orchestrates the pipeline lifecycle (start recording → stop recording → transcribe → inject), manages state transitions, updates AppState
+- [x] Add DictationEntry recording — save each transcription to SwiftData with metadata (rawText, mode=.raw, language, app context, duration, wordCount, timestamp)
 
 ### 1.9 MVP Tests
 - [ ] Create `HotkeyManagerTests.swift` — unit tests for hotkey registration, serialization/deserialization of hotkey config
