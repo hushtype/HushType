@@ -88,11 +88,11 @@
 - [x] Add DictationEntry recording — save each transcription to SwiftData with metadata (rawText, mode=.raw, language, app context, duration, wordCount, timestamp)
 
 ### 1.9 MVP Tests
-- [ ] Create `HotkeyManagerTests.swift` — unit tests for hotkey registration, serialization/deserialization of hotkey config
-- [ ] Create `AudioCaptureServiceTests.swift` — unit tests for format conversion (verify 16kHz mono Float32 output), buffer management
-- [ ] Create `WhisperServiceTests.swift` — integration test with known audio sample, verify transcription output matches expected text
-- [ ] Create `TextInjectionServiceTests.swift` — unit tests for CGEvent keystroke generation, clipboard preserve/restore logic
-- [ ] Create `DictationEntryTests.swift` — unit tests for SwiftData model creation, computed properties (outputText, wordsPerMinute)
+- [x] Create `HotkeyManagerTests.swift` — unit tests for hotkey registration, serialization/deserialization of hotkey config
+- [x] Create `AudioCaptureServiceTests.swift` — unit tests for format conversion (verify 16kHz mono Float32 output), buffer management
+- [x] Create `WhisperServiceTests.swift` — integration test with known audio sample, verify transcription output matches expected text
+- [x] Create `TextInjectionServiceTests.swift` — unit tests for CGEvent keystroke generation, clipboard preserve/restore logic
+- [x] Create `DictationEntryTests.swift` — unit tests for SwiftData model creation, computed properties (outputText, wordsPerMinute)
 
 ---
 
