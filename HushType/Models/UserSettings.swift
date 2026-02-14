@@ -30,6 +30,10 @@ final class UserSettings {
     /// Audio input device identifier. Nil means use system default.
     var audioInputDeviceID: String?
 
+    /// Voice Activity Detection sensitivity (0.0 to 1.0).
+    /// Lower values detect quieter speech but may trigger on background noise.
+    var vadSensitivity: Double
+
     // MARK: - Processing Defaults
 
     /// Default processing mode applied when no AppProfile override exists.
@@ -98,6 +102,7 @@ final class UserSettings {
         globalHotkey: String = "cmd+shift+space",
         pushToTalkEnabled: Bool = false,
         audioInputDeviceID: String? = nil,
+        vadSensitivity: Double = 0.5,
         defaultMode: ProcessingMode = .clean,
         defaultLanguage: String = "en",
         autoDetectLanguage: Bool = false,
@@ -120,6 +125,7 @@ final class UserSettings {
         self.globalHotkey = globalHotkey
         self.pushToTalkEnabled = pushToTalkEnabled
         self.audioInputDeviceID = audioInputDeviceID
+        self.vadSensitivity = vadSensitivity
         self.defaultMode = defaultMode
         self.defaultLanguage = defaultLanguage
         self.autoDetectLanguage = autoDetectLanguage
