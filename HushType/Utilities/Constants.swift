@@ -10,8 +10,9 @@ enum Constants {
 
     /// Default hotkey: Cmd+Shift+Space
     enum Hotkey {
-        static let defaultModifiers: UInt = 0 // placeholder - CGEventFlags combo
+        static let defaultModifiers: UInt = 0x100108 // .maskCommand | .maskShift
         static let defaultKeyCode: UInt16 = 49 // spacebar
+        static let defaultString = "cmd+shift+space"
     }
 
     /// Model storage paths
