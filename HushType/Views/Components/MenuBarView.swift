@@ -10,6 +10,7 @@ import os.log
 
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -90,7 +91,10 @@ struct MenuBarView: View {
 
             // MARK: - Action Buttons
             VStack(spacing: 8) {
-                SettingsLink {
+                Button {
+                    openSettings()
+                    NSApp.activate(ignoringOtherApps: true)
+                } label: {
                     HStack {
                         Image(systemName: "gearshape")
                         Text("Settings...")
