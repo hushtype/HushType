@@ -90,9 +90,7 @@ struct MenuBarView: View {
 
             // MARK: - Action Buttons
             VStack(spacing: 8) {
-                Button {
-                    openSettings()
-                } label: {
+                SettingsLink {
                     HStack {
                         Image(systemName: "gearshape")
                         Text("Settings...")
@@ -129,12 +127,6 @@ struct MenuBarView: View {
             return text
         }
         return String(text.prefix(maxLength)) + "..."
-    }
-
-    private func openSettings() {
-        Logger.ui.info("Opening Settings window")
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     private func quitApp() {
