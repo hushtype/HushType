@@ -7,11 +7,13 @@
 
 import SwiftData
 import SwiftUI
+import os
 
 @main
 struct HushTypeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
+    @State private var dictationController: DictationController?
     let modelContainer: ModelContainer
 
     init() {
@@ -57,5 +59,31 @@ struct HushTypeApp: App {
             SettingsView()
         }
         .modelContainer(modelContainer)
+    }
+
+    // MARK: - Pipeline Setup
+
+    private func setupPipeline() {
+        let controller = DictationController(appState: appState)
+        controller.modelContainer = modelContainer
+
+        // Load settings and start
+        let context = modelContainer.mainContext
+        if let settings = UserSettings.shared(in: context) {
+            controller.updateConfiguration(
+                vadSensitivity: Float(settings.vadSensitivity),
+                injectionMethod: settings.defaultInjectionMethod
+            )
+
+            do {
+                try controller.start(hotkey: settings.globalHotkey)
+                Logger.general.info("Dictation pipeline started")
+            } catch {
+                Logger.general.error("Failed to start dictation pipeline: \(error.localizedDescription)")
+                appState.currentError = "Failed to start hotkey listener: \(error.localizedDescription)"
+            }
+        }
+
+        dictationController = controller
     }
 }
