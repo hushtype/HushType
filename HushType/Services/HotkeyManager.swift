@@ -166,8 +166,8 @@ final class HotkeyManager: @unchecked Sendable {
 
     // MARK: - Callbacks (set on main thread before start)
 
-    var onHotkeyDown: (@Sendable (HotkeyBinding) -> Void)?
-    var onHotkeyUp: (@Sendable (HotkeyBinding) -> Void)?
+    @ObservationIgnored var onHotkeyDown: (@Sendable (HotkeyBinding) -> Void)?
+    @ObservationIgnored var onHotkeyUp: (@Sendable (HotkeyBinding) -> Void)?
 
     // MARK: - Thread-Safe Bindings
 

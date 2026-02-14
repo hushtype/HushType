@@ -4,8 +4,10 @@ import os
 
 struct ModelsSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(filter: #Predicate<ModelInfo> { $0.type == .whisper })
-    private var whisperModels: [ModelInfo]
+    @Query private var allModels: [ModelInfo]
+    private var whisperModels: [ModelInfo] {
+        allModels.filter { $0.type == .whisper }
+    }
 
     @State private var settings: UserSettings?
 
@@ -159,6 +161,6 @@ struct ModelRow: View {
 
 #Preview {
     ModelsSettingsTab()
-        .modelContainer(for: [UserSettings.self, ModelInfo.self], inMemory: true)
+        .modelContainer(for: [ModelInfo.self, UserSettings.self], inMemory: true)
         .frame(width: 500, height: 400)
 }
