@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftData
 import os
@@ -58,14 +59,15 @@ final class DictationController: @unchecked Sendable {
         audioService: AudioCaptureService = AudioCaptureService(),
         vad: VoiceActivityDetector = VoiceActivityDetector(),
         whisperService: WhisperService = WhisperService(),
-        injectionService: TextInjectionService = TextInjectionService(),
-        hotkeyManager: HotkeyManager = HotkeyManager()
+        injectionService: TextInjectionService? = nil,
+        hotkeyManager: HotkeyManager = HotkeyManager(),
+        permissionsManager: PermissionsManager = PermissionsManager()
     ) {
         self.appState = appState
         self.audioService = audioService
         self.vad = vad
         self.whisperService = whisperService
-        self.injectionService = injectionService
+        self.injectionService = injectionService ?? TextInjectionService(permissionsManager: permissionsManager)
         self.hotkeyManager = hotkeyManager
 
         setupHotkeyCallbacks()
