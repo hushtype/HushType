@@ -1,0 +1,5 @@
+module CWhisper {
+    header "include/whisper-bridge.h"
+    link "whisper"
+    export *
+}
