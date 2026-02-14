@@ -38,6 +38,9 @@ struct HushTypeApp: App {
         } catch {
             fatalError("Failed to initialize SwiftData container: \(error)")
         }
+
+        // Seed built-in data on first launch
+        DataSeeder.seedIfNeeded(in: modelContainer.mainContext)
     }
 
     var body: some Scene {
