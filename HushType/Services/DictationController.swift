@@ -301,13 +301,19 @@ final class DictationController: @unchecked Sendable {
         injectionMethod: InjectionMethod,
         keystrokeDelayMs: Int = 5,
         pushToTalkEnabled: Bool = false,
-        playSoundEffects: Bool = true
+        playSoundEffects: Bool = true,
+        audioInputDeviceID: String? = nil,
+        useGPUAcceleration: Bool = true,
+        whisperThreadCount: Int = 0
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
         self.injectionService.keystrokeDelayMs = keystrokeDelayMs
         self.pushToTalkEnabled = pushToTalkEnabled
         self.playSoundEffects = playSoundEffects
+        self.audioService.setInputDevice(id: audioInputDeviceID)
+        self.whisperService.useGPU = useGPUAcceleration
+        self.whisperService.threadCount = whisperThreadCount
     }
 
     // MARK: - Sound Effects

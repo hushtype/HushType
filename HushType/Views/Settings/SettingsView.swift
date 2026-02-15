@@ -25,7 +25,7 @@ struct SettingsView: View {
                 }
                 .tag(2)
         }
-        .frame(minWidth: 500, minHeight: 400)
+        .frame(minWidth: 500, minHeight: 700)
         .onAppear {
             Logger.ui.info("Settings window opened")
         }

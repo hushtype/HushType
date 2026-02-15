@@ -14,6 +14,12 @@ struct ModelsSettingsTab: View {
 
     var body: some View {
         Form {
+            Section {
+                ModelInfoSection()
+            } header: {
+                Text("Choosing a Model")
+            }
+
             Section("Active Model") {
                 Picker("Selected Whisper Model", selection: Binding(
                     get: { settings?.selectedWhisperModel ?? "ggml-base.en.bin" },
@@ -75,6 +81,73 @@ struct ModelsSettingsTab: View {
             Logger.ui.debug("Saved user settings from Models tab")
         } catch {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")
+        }
+    }
+}
+
+private struct ModelInfoSection: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Larger models are more accurate but slower and use more memory. English-only models (.en) are optimized for English speech.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+                GridRow {
+                    Text("Model").bold()
+                    Text("Size").bold()
+                    Text("RAM").bold()
+                    Text("Speed").bold()
+                    Text("Accuracy").bold()
+                }
+                .font(.caption)
+                Divider().gridCellColumns(5)
+                GridRow {
+                    Text("Tiny")
+                    Text("75 MB")
+                    Text("~273 MB")
+                    Text("Fastest")
+                    Text("Basic")
+                }
+                GridRow {
+                    Text("Base")
+                    Text("142 MB")
+                    Text("~388 MB")
+                    Text("Fast")
+                    Text("Good")
+                }
+                GridRow {
+                    Text("Small")
+                    Text("466 MB")
+                    Text("~852 MB")
+                    Text("Moderate")
+                    Text("Better")
+                }
+                GridRow {
+                    Text("Medium")
+                    Text("1.5 GB")
+                    Text("~2.1 GB")
+                    Text("Slow")
+                    Text("Very Good")
+                }
+                GridRow {
+                    Text("Large v3 Turbo")
+                    Text("1.5 GB")
+                    Text("~2.1 GB")
+                    Text("Slow")
+                    Text("Best")
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+
+            Text("Large v3 Turbo supports 100+ languages. All other models are English-only.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text("Recommended: Base for daily use. Upgrade to Small if you notice frequent errors.")
+                .font(.caption)
+                .foregroundStyle(.blue)
         }
     }
 }

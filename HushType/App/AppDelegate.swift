@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
     var modelContainer: ModelContainer?
     private var dictationController: DictationController?
+    private var modelDownloader: ModelDownloader?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Kill any other running instances of HushType
@@ -22,9 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         Logger.general.info("HushType launched - dock icon hidden, menu bar active")
 
-        startPipeline()
-
-        // Listen for model downloads to hot-load them
+        // Register observers before pipeline start so auto-download notifications aren't missed
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleModelDownloaded(_:)),
@@ -32,13 +31,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
-        // Listen for settings changes to update pipeline config
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleSettingsChanged),
             name: .userSettingsChanged,
             object: nil
         )
+
+        startPipeline()
     }
 
     @objc private func handleSettingsChanged() {
@@ -51,7 +51,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 injectionMethod: settings.defaultInjectionMethod,
                 keystrokeDelayMs: settings.keystrokeDelay,
                 pushToTalkEnabled: settings.pushToTalkEnabled,
-                playSoundEffects: settings.playSoundEffects
+                playSoundEffects: settings.playSoundEffects,
+                audioInputDeviceID: settings.audioInputDeviceID,
+                useGPUAcceleration: settings.useGPUAcceleration,
+                whisperThreadCount: settings.whisperThreadCount
             )
             try controller.reloadHotkey(settings.globalHotkey)
             Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled))")
@@ -62,6 +65,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleModelDownloaded(_ notification: Notification) {
         guard let fileName = notification.userInfo?["fileName"] as? String else { return }
+
+        // Persist isDownloaded = true to SwiftData (ModelDownloader sets it in memory only)
+        if let context = modelContainer?.mainContext {
+            try? context.save()
+        }
+
         guard let controller = dictationController else { return }
         Task {
             await controller.loadWhisperModel(fileName: fileName)
@@ -99,14 +108,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 injectionMethod: settings.defaultInjectionMethod,
                 keystrokeDelayMs: settings.keystrokeDelay,
                 pushToTalkEnabled: settings.pushToTalkEnabled,
-                playSoundEffects: settings.playSoundEffects
+                playSoundEffects: settings.playSoundEffects,
+                audioInputDeviceID: settings.audioInputDeviceID,
+                useGPUAcceleration: settings.useGPUAcceleration,
+                whisperThreadCount: settings.whisperThreadCount
             )
 
-            // Load whisper model in background
+            // Load whisper model — auto-download default if not on disk
             let modelFileName = settings.selectedWhisperModel
             Task {
                 await controller.loadWhisperModel(fileName: modelFileName)
             }
+            autoDownloadDefaultModelIfNeeded(in: context)
 
             try controller.start(hotkey: settings.globalHotkey)
             appState.currentError = nil
@@ -117,5 +130,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         dictationController = controller
+    }
+
+    // MARK: - Auto-Download Default Model
+
+    @MainActor
+    private func autoDownloadDefaultModelIfNeeded(in context: ModelContext) {
+        let descriptor = FetchDescriptor<ModelInfo>()
+        guard let models = try? context.fetch(descriptor) else { return }
+
+        let defaultModel = models.first { $0.isDefault && $0.type == .whisper }
+        guard let model = defaultModel, !model.isDownloaded, !model.fileExistsOnDisk else { return }
+
+        Logger.general.info("Default whisper model not downloaded — auto-downloading \(model.name)")
+        let downloader = ModelDownloader()
+        modelDownloader = downloader
+        downloader.download(model)
+
+        do {
+            try context.save()
+        } catch {
+            Logger.general.error("Failed to save model state: \(error.localizedDescription)")
+        }
     }
 }

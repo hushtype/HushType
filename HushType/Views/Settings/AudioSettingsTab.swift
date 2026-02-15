@@ -62,18 +62,41 @@ struct AudioSettingsTab: View {
 
             Section("Audio Level") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Live Audio Input")
-                        .font(.headline)
+                    HStack {
+                        Text("Live Audio Input")
+                            .font(.headline)
+                        Spacer()
+                        Text(audioService.isCapturing ? "Listening..." : "Stopped")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
 
                     GeometryReader { geometry in
+                        let vadThreshold = CGFloat(settings?.vadSensitivity ?? 0.5)
+                        let thresholdX = geometry.size.width * vadThreshold
+
                         ZStack(alignment: .leading) {
+                            // Background
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(.secondary.opacity(0.2))
 
+                            // Level bar
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(levelColor)
+                                .fill(levelColor(threshold: vadThreshold))
                                 .frame(width: max(0, geometry.size.width * CGFloat(audioService.currentLevel)))
                                 .animation(.linear(duration: 0.05), value: audioService.currentLevel)
+
+                            // VAD threshold line
+                            Rectangle()
+                                .fill(.orange)
+                                .frame(width: 2)
+                                .offset(x: thresholdX - 1)
+
+                            // Threshold label
+                            Text("VAD")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.orange)
+                                .offset(x: thresholdX + 4, y: -1)
                         }
                     }
                     .frame(height: 24)
@@ -86,8 +109,8 @@ struct AudioSettingsTab: View {
 
                         Spacer()
 
-                        Text(audioService.isCapturing ? "Listening..." : "Stopped")
-                            .font(.caption)
+                        Text("Audio above the orange line is detected as speech")
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -103,18 +126,20 @@ struct AudioSettingsTab: View {
                 ))
                 .help("Use Metal GPU for whisper.cpp inference (recommended)")
 
-                LabeledContent("Whisper Threads") {
-                    TextField("Threads", value: Binding(
-                        get: { settings?.whisperThreadCount ?? 0 },
-                        set: { newValue in
-                            settings?.whisperThreadCount = newValue
-                            saveSettings()
-                        }
-                    ), format: .number)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 100)
-                    .help("Number of CPU threads for inference (0 = auto-detect)")
+                Picker("Inference Threads", selection: Binding(
+                    get: { settings?.whisperThreadCount ?? 0 },
+                    set: { newValue in
+                        settings?.whisperThreadCount = newValue
+                        saveSettings()
+                    }
+                )) {
+                    Text("Auto (Recommended)").tag(0)
+                    Text("2").tag(2)
+                    Text("4").tag(4)
+                    Text("6").tag(6)
+                    Text("8").tag(8)
                 }
+                .help("CPU threads for whisper inference. Auto uses all available cores for fastest transcription.")
             }
         }
         .formStyle(.grouped)
@@ -129,11 +154,11 @@ struct AudioSettingsTab: View {
 
     // MARK: - Audio Level
 
-    private var levelColor: Color {
-        let level = audioService.currentLevel
-        if level > 0.8 { return .red }
-        if level > 0.5 { return .yellow }
-        return .green
+    private func levelColor(threshold: CGFloat) -> Color {
+        let level = CGFloat(audioService.currentLevel)
+        if level > 0.9 { return .red } // clipping
+        if level >= threshold { return .green } // above VAD = speech detected
+        return .secondary.opacity(0.4) // below VAD = silence/noise
     }
 
     private func toggleAudioPreview() {
@@ -181,6 +206,7 @@ struct AudioSettingsTab: View {
     private func saveSettings() {
         do {
             try modelContext.save()
+            NotificationCenter.default.post(name: .userSettingsChanged, object: nil)
             Logger.ui.debug("Saved user settings from Audio tab")
         } catch {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")

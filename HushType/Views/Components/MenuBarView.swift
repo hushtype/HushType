@@ -93,7 +93,7 @@ struct MenuBarView: View {
                 SettingsLink {
                     HStack {
                         Image(systemName: "gearshape")
-                        Text("Settings...")
+                        Text("Settings")
                         Spacer()
                     }
                     .contentShape(Rectangle())
