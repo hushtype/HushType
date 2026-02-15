@@ -219,8 +219,15 @@ final class DictationController: @unchecked Sendable {
 
             Logger.general.info("Transcription: \"\(result.text.prefix(80))...\"")
 
+            // Voice prefix detection — switch mode if user said "code mode:", "clean this up:", etc.
+            var rawText = result.text
+            if let detection = VoicePrefixDetector.detect(in: rawText) {
+                appState.activeMode = detection.mode
+                rawText = detection.strippedText
+                Logger.general.info("Voice prefix switched to \(detection.mode.rawValue), stripped text: \(rawText.count) chars")
+            }
+
             // LLM processing (if mode requires it)
-            let rawText = result.text
             var outputText = rawText
 
             if appState.activeMode.requiresLLM, let router = processingRouter {

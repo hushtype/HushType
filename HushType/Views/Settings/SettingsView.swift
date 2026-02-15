@@ -19,11 +19,17 @@ struct SettingsView: View {
                 }
                 .tag(1)
 
+            ProcessingSettingsTab()
+                .tabItem {
+                    Label("Processing", systemImage: "sparkles")
+                }
+                .tag(2)
+
             ModelsSettingsTab()
                 .tabItem {
                     Label("Models", systemImage: "arrow.down.circle")
                 }
-                .tag(2)
+                .tag(3)
         }
         .frame(minWidth: 500, minHeight: 700)
         .onAppear {
@@ -34,5 +40,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .modelContainer(for: [UserSettings.self, ModelInfo.self], inMemory: true)
+        .modelContainer(for: [UserSettings.self, ModelInfo.self, PromptTemplate.self], inMemory: true)
 }
