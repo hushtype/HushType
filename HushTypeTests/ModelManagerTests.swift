@@ -4,6 +4,7 @@ import XCTest
 
 @testable import HushType
 
+@MainActor
 final class ModelManagerTests: XCTestCase {
     private var modelContainer: ModelContainer!
     private var modelContext: ModelContext!

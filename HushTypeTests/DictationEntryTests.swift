@@ -253,8 +253,9 @@ final class DictationEntryTests: XCTestCase {
         try modelContext.save()
 
         // Fetch and verify
+        let entryId = entry.id
         let descriptor = FetchDescriptor<DictationEntry>(
-            predicate: #Predicate { $0.id == entry.id }
+            predicate: #Predicate { $0.id == entryId }
         )
         let entries = try modelContext.fetch(descriptor)
 
@@ -292,11 +293,10 @@ final class DictationEntryTests: XCTestCase {
         modelContext.insert(codeEntry)
         try modelContext.save()
 
-        // Query for clean mode entries
-        let descriptor = FetchDescriptor<DictationEntry>(
-            predicate: #Predicate { $0.mode == .clean }
-        )
-        let cleanEntries = try modelContext.fetch(descriptor)
+        // Query all and filter by mode (SwiftData #Predicate doesn't support enum case comparison)
+        let descriptor = FetchDescriptor<DictationEntry>()
+        let allEntries = try modelContext.fetch(descriptor)
+        let cleanEntries = allEntries.filter { $0.mode == .clean }
 
         XCTAssertEqual(cleanEntries.count, 1)
         XCTAssertEqual(cleanEntries.first?.mode, .clean)

@@ -3,6 +3,7 @@ import XCTest
 
 @testable import HushType
 
+@MainActor
 final class ProcessingModeRouterTests: XCTestCase {
     private var mockProvider: MockLLMProvider!
     private var llmService: LLMService!
@@ -41,7 +42,6 @@ final class ProcessingModeRouterTests: XCTestCase {
     // MARK: - Clean Mode Tests
 
     func test_cleanMode_callsLLMService() async throws {
-        // Load model first
         try await llmService.loadModel(at: "mock-model")
 
         let input = "um like hello world you know"
@@ -202,7 +202,6 @@ final class ProcessingModeRouterTests: XCTestCase {
         try await llmService.loadModel(at: "mock-model")
         mockProvider.mockResponse = "output"
 
-        // Test each mode to ensure none throw unexpected errors
         for mode in ProcessingMode.allCases {
             mockProvider.generateWasCalled = false
 
@@ -250,7 +249,7 @@ final class ProcessingModeRouterTests: XCTestCase {
 
 // MARK: - Mock LLM Provider
 
-actor MockLLMProvider: LLMProvider {
+final class MockLLMProvider: LLMProvider, @unchecked Sendable {
     var isModelLoaded: Bool = false
     var generateWasCalled: Bool = false
     var mockResponse: String = "mock llm output"
@@ -258,7 +257,7 @@ actor MockLLMProvider: LLMProvider {
     var lastUserPrompt: String?
 
     var estimatedMemoryUsage: UInt64 {
-        1024 * 1024 // 1 MB
+        1024 * 1024
     }
 
     func loadModel(at path: String) async throws {
