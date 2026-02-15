@@ -50,7 +50,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 vadSensitivity: Float(settings.vadSensitivity),
                 injectionMethod: settings.defaultInjectionMethod,
                 keystrokeDelayMs: settings.keystrokeDelay,
-                pushToTalkEnabled: settings.pushToTalkEnabled
+                pushToTalkEnabled: settings.pushToTalkEnabled,
+                playSoundEffects: settings.playSoundEffects
             )
             try controller.reloadHotkey(settings.globalHotkey)
             Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled))")
@@ -97,7 +98,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 vadSensitivity: Float(settings.vadSensitivity),
                 injectionMethod: settings.defaultInjectionMethod,
                 keystrokeDelayMs: settings.keystrokeDelay,
-                pushToTalkEnabled: settings.pushToTalkEnabled
+                pushToTalkEnabled: settings.pushToTalkEnabled,
+                playSoundEffects: settings.playSoundEffects
             )
 
             // Load whisper model in background

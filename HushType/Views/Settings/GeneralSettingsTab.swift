@@ -63,14 +63,6 @@ struct GeneralSettingsTab: View {
                         saveSettings()
                     }
 
-                Toggle("Show Menu Bar Icon", isOn: Binding(
-                    get: { settings?.showMenuBarIcon ?? true },
-                    set: { newValue in
-                        settings?.showMenuBarIcon = newValue
-                        saveSettings()
-                    }
-                ))
-
                 Toggle("Show Recording Indicator", isOn: Binding(
                     get: { settings?.showRecordingIndicator ?? true },
                     set: { newValue in

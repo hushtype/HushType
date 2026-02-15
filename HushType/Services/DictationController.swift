@@ -48,6 +48,7 @@ final class DictationController: @unchecked Sendable {
     private var vadSensitivity: Float = 0.5
     private var injectionMethod: InjectionMethod = .auto
     private var pushToTalkEnabled: Bool = false
+    private var playSoundEffects: Bool = true
 
     // MARK: - SwiftData (set after init)
 
@@ -155,6 +156,7 @@ final class DictationController: @unchecked Sendable {
         }
 
         updateState(.recording)
+        playSound(.start)
 
         do {
             try await audioService.startCapture()
@@ -173,6 +175,8 @@ final class DictationController: @unchecked Sendable {
             Logger.general.warning("Cannot stop recording — not recording")
             return
         }
+
+        playSound(.stop)
 
         // Stop capture and get samples
         let rawSamples = await audioService.stopCapture()
@@ -296,12 +300,30 @@ final class DictationController: @unchecked Sendable {
         vadSensitivity: Float,
         injectionMethod: InjectionMethod,
         keystrokeDelayMs: Int = 5,
-        pushToTalkEnabled: Bool = false
+        pushToTalkEnabled: Bool = false,
+        playSoundEffects: Bool = true
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
         self.injectionService.keystrokeDelayMs = keystrokeDelayMs
         self.pushToTalkEnabled = pushToTalkEnabled
+        self.playSoundEffects = playSoundEffects
+    }
+
+    // MARK: - Sound Effects
+
+    private enum SoundEvent {
+        case start, stop
+    }
+
+    private func playSound(_ event: SoundEvent) {
+        guard playSoundEffects else { return }
+        switch event {
+        case .start:
+            NSSound(named: "Tink")?.play()
+        case .stop:
+            NSSound(named: "Pop")?.play()
+        }
     }
 
     // MARK: - History
@@ -322,8 +344,12 @@ final class DictationController: @unchecked Sendable {
         let context = ModelContext(container)
         let wordCount = rawText.split(separator: " ").count
 
+        // Load privacy settings
+        let settings = try? UserSettings.shared(in: context)
+        let storeText = settings?.storeTranscriptionText ?? true
+
         let entry = DictationEntry(
-            rawText: rawText,
+            rawText: storeText ? rawText : "",
             mode: appState.activeMode,
             language: language,
             appBundleIdentifier: appBundleIdentifier,
@@ -336,9 +362,53 @@ final class DictationController: @unchecked Sendable {
 
         do {
             try context.save()
-            Logger.general.info("DictationEntry saved (\(wordCount) words, \(String(format: "%.1f", audioDuration))s)")
+            Logger.general.info("DictationEntry saved (\(wordCount) words, \(String(format: "%.1f", audioDuration))s, text stored: \(storeText))")
         } catch {
             Logger.general.error("Failed to save DictationEntry: \(error.localizedDescription)")
+        }
+
+        // Enforce retention policies
+        enforceHistoryLimits(in: context, settings: settings)
+    }
+
+    @MainActor
+    private func enforceHistoryLimits(in context: ModelContext, settings: UserSettings?) {
+        let maxEntries = settings?.maxHistoryEntries ?? 5000
+        let retentionDays = settings?.historyRetentionDays ?? 90
+
+        do {
+            // Purge entries exceeding max count (oldest first)
+            if maxEntries > 0 {
+                let allEntries = FetchDescriptor<DictationEntry>(
+                    sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+                )
+                let entries = try context.fetch(allEntries)
+                if entries.count > maxEntries {
+                    for entry in entries.dropFirst(maxEntries) {
+                        context.delete(entry)
+                    }
+                    Logger.general.info("Purged \(entries.count - maxEntries) old history entries (max: \(maxEntries))")
+                }
+            }
+
+            // Delete entries older than retention period
+            if retentionDays > 0 {
+                let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? Date()
+                let expiredDescriptor = FetchDescriptor<DictationEntry>(
+                    predicate: #Predicate { $0.timestamp < cutoff }
+                )
+                let expired = try context.fetch(expiredDescriptor)
+                for entry in expired {
+                    context.delete(entry)
+                }
+                if !expired.isEmpty {
+                    Logger.general.info("Purged \(expired.count) expired history entries (retention: \(retentionDays) days)")
+                }
+            }
+
+            try context.save()
+        } catch {
+            Logger.general.error("Failed to enforce history limits: \(error.localizedDescription)")
         }
     }
 }
