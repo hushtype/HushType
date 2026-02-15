@@ -111,43 +111,43 @@
 - [x] Implement `OllamaProvider.swift` — `LLMProvider` conformance using Ollama HTTP API on localhost:11434, auto-detect running instance, model listing
 
 ### 2.3 Processing Modes
-- [ ] Create `ProcessingModeRouter.swift` — routes transcription through the correct processing pipeline based on `ProcessingMode` enum (raw passes through, others go to LLM)
-- [ ] Implement Clean mode — LLM prompt that fixes punctuation, capitalization, removes filler words (um, uh, like)
-- [ ] Implement Structure mode — LLM prompt that organizes into paragraphs, bullet lists, headings
-- [ ] Implement Prompt mode — applies user-selected PromptTemplate with variable substitution
-- [ ] Implement Code mode — LLM prompt optimized for converting spoken instructions into source code
-- [ ] Implement Custom mode — user-defined pipeline with custom pre/post processors
+- [x] Create `ProcessingModeRouter.swift` — routes transcription through the correct processing pipeline based on `ProcessingMode` enum (raw passes through, others go to LLM)
+- [x] Implement Clean mode — LLM prompt that fixes punctuation, capitalization, removes filler words (um, uh, like)
+- [x] Implement Structure mode — LLM prompt that organizes into paragraphs, bullet lists, headings
+- [x] Implement Prompt mode — applies user-selected PromptTemplate with variable substitution
+- [x] Implement Code mode — LLM prompt optimized for converting spoken instructions into source code
+- [x] Implement Custom mode — user-defined pipeline with custom pre/post processors
 
 ### 2.4 Prompt Template Engine
-- [ ] Create `PromptTemplateEngine.swift` — variable substitution engine for `{{transcription}}`, `{{language}}`, `{{app_name}}`, `{{app_bundle_id}}`, `{{timestamp}}`, custom user variables
-- [ ] Add template CRUD — create, read, update, delete user templates in SwiftData, protect built-in templates from deletion
-- [ ] Add template validation — check for unresolved variables, warn on empty system/user prompts
+- [x] Create `PromptTemplateEngine.swift` — variable substitution engine for `{{transcription}}`, `{{language}}`, `{{app_name}}`, `{{app_bundle_id}}`, `{{timestamp}}`, custom user variables
+- [x] Add template CRUD — create, read, update, delete user templates in SwiftData, protect built-in templates from deletion
+- [x] Add template validation — check for unresolved variables, warn on empty system/user prompts
 
 ### 2.5 Model Manager
-- [ ] Create `ModelManager.swift` — download GGUF models via URLSession background transfers, SHA-256 verification, progress tracking via ModelInfo.downloadProgress
-- [ ] Add model storage management — enumerate installed models, show disk usage, delete models, verify file integrity
-- [ ] Add custom model import — import user-supplied GGUF files from Finder via NSOpenPanel, validate file format, register in ModelInfo
+- [x] Create `ModelManager.swift` — download GGUF models via URLSession background transfers, SHA-256 verification, progress tracking via ModelInfo.downloadProgress
+- [x] Add model storage management — enumerate installed models, show disk usage, delete models, verify file integrity
+- [x] Add custom model import — import user-supplied GGUF files from Finder via NSOpenPanel, validate file format, register in ModelInfo
 
 ### 2.6 Per-Hotkey Mode Assignment
-- [ ] Bind processing modes to hotkeys — each of 4 hotkey slots triggers a specific ProcessingMode, stored in UserSettings
-- [ ] Add mode indicator — show active mode name/icon in menu bar popover when hotkey is pressed
-- [ ] Add voice prefix triggers — detect mode-switching phrases in first 2 seconds ("code mode", "email mode", "clean this up", "raw mode"), strip prefix from output
+- [x] Bind processing modes to hotkeys — each of 4 hotkey slots triggers a specific ProcessingMode, stored in UserSettings
+- [x] Add mode indicator — show active mode name/icon in menu bar popover when hotkey is pressed
+- [x] Add voice prefix triggers — detect mode-switching phrases in first 2 seconds ("code mode", "email mode", "clean this up", "raw mode"), strip prefix from output
 
 ### 2.7 Settings: Processing Tab
-- [ ] Create `ProcessingSettingsTab.swift` — processing mode selection, default mode picker, per-hotkey mode binding UI
-- [ ] Create `TemplateEditorView.swift` — template list, create/edit/delete templates, system prompt editor, user prompt editor with variable insertion, preview
-- [ ] Create `ModelManagementView.swift` — unified view for whisper + LLM models, download progress bars, disk usage breakdown, model switcher
+- [x] Create `ProcessingSettingsTab.swift` — processing mode selection, default mode picker, per-hotkey mode binding UI
+- [x] Create `TemplateEditorView.swift` — template list, create/edit/delete templates, system prompt editor, user prompt editor with variable insertion, preview
+- [x] Create `ModelManagementView.swift` — unified view for whisper + LLM models, download progress bars, disk usage breakdown, model switcher
 
 ### 2.8 Pipeline Update
-- [ ] Wire LLM into pipeline — Audio → Whisper → ProcessingModeRouter → LLM (if needed) → TextInjection
-- [ ] Update DictationEntry recording — store both rawText and processedText, record which ProcessingMode was used
-- [ ] Add LLM backend selection — settings toggle between llama.cpp and Ollama provider
+- [x] Wire LLM into pipeline — Audio → Whisper → ProcessingModeRouter → LLM (if needed) → TextInjection
+- [x] Update DictationEntry recording — store both rawText and processedText, record which ProcessingMode was used
+- [x] Add LLM backend selection — settings toggle between llama.cpp and Ollama provider
 
 ### 2.9 Phase 2 Tests
-- [ ] Create `LlamaContextTests.swift` — integration test for model loading, simple inference, memory cleanup
-- [ ] Create `ProcessingModeRouterTests.swift` — unit tests for mode routing, raw passthrough, LLM dispatch
-- [ ] Create `PromptTemplateEngineTests.swift` — unit tests for variable substitution, built-in template rendering, edge cases (missing variables, empty input)
-- [ ] Create `ModelManagerTests.swift` — unit tests for model registry, download state tracking, file validation
+- [x] Create `LlamaContextTests.swift` — integration test for model loading, simple inference, memory cleanup
+- [x] Create `ProcessingModeRouterTests.swift` — unit tests for mode routing, raw passthrough, LLM dispatch
+- [x] Create `PromptTemplateEngineTests.swift` — unit tests for variable substitution, built-in template rendering, edge cases (missing variables, empty input)
+- [x] Create `ModelManagerTests.swift` — unit tests for model registry, download state tracking, file validation
 
 ---
 
