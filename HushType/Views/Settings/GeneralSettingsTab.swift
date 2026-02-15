@@ -15,7 +15,7 @@ struct GeneralSettingsTab: View {
             Section("Input") {
                 LabeledContent("Global Hotkey") {
                     HStack {
-                        TextField("e.g. cmd+shift+space", text: $hotkeyInput)
+                        TextField("Hotkey", text: $hotkeyInput)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 200)
                             .onSubmit {
@@ -27,7 +27,6 @@ struct GeneralSettingsTab: View {
                                 .font(.caption)
                         }
                     }
-                    .help("Format: cmd+shift+space, ctrl+alt+r, etc.")
                 }
                 if let error = hotkeyError {
                     Text(error)
@@ -148,7 +147,7 @@ struct GeneralSettingsTab: View {
         do {
             settings = try UserSettings.shared(in: modelContext)
             launchAtLogin = settings?.launchAtLogin ?? false
-            hotkeyInput = settings?.globalHotkey ?? "cmd+shift+space"
+            hotkeyInput = settings?.globalHotkey ?? "fn"
             Logger.ui.debug("Loaded user settings in General tab")
         } catch {
             Logger.ui.error("Failed to load UserSettings: \(error.localizedDescription)")
@@ -157,7 +156,7 @@ struct GeneralSettingsTab: View {
 
     private func applyHotkey() {
         guard HotkeyBinding.parse(hotkeyInput) != nil else {
-            hotkeyError = "Invalid hotkey format. Use: modifier+key (e.g. cmd+shift+space)"
+            hotkeyError = "Invalid hotkey format. Use: fn, cmd+shift+space, ctrl+alt+r, etc."
             return
         }
 

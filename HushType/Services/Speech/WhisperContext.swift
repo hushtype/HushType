@@ -1,4 +1,3 @@
-import CWhisper
 import Foundation
 import os
 
@@ -60,12 +59,6 @@ final class WhisperContext: @unchecked Sendable {
         qos: .userInitiated
     )
 
-    /// Logger for whisper operations.
-    private static let logger = Logger(
-        subsystem: "com.hushtype.app",
-        category: "whisper"
-    )
-
     /// Whether a model is currently loaded.
     var isLoaded: Bool {
         context != nil
@@ -87,13 +80,13 @@ final class WhisperContext: @unchecked Sendable {
         }
 
         self.context = ctx
-        Self.logger.info("Whisper model loaded: \(modelPath)")
+        Logger.whisper.info("Whisper model loaded: \(modelPath)")
     }
 
     deinit {
         if let ctx = context {
             whisper_free(ctx)
-            Self.logger.info("Whisper context freed")
+            Logger.whisper.info("Whisper context freed")
         }
     }
 
@@ -166,18 +159,17 @@ final class WhisperContext: @unchecked Sendable {
         params.print_realtime = false
         params.print_timestamps = false
 
-        // Set language
-        language.withCString { langPtr in
+        // Set language — keep withCString scope around whisper_full to avoid use-after-free
+        let result: Int32 = language.withCString { langPtr in
             params.language = langPtr
-        }
 
-        // Run inference
-        let result = samples.withUnsafeBufferPointer { bufferPtr in
-            whisper_full(ctx, params, bufferPtr.baseAddress!, Int32(samples.count))
+            return samples.withUnsafeBufferPointer { bufferPtr in
+                whisper_full(ctx, params, bufferPtr.baseAddress!, Int32(samples.count))
+            }
         }
 
         guard result == 0 else {
-            Self.logger.error("Whisper transcription failed with code: \(result)")
+            Logger.whisper.error("Whisper transcription failed with code: \(result)")
             throw WhisperContextError.transcriptionFailed
         }
 
@@ -194,7 +186,7 @@ final class WhisperContext: @unchecked Sendable {
         let inferenceDuration = CFAbsoluteTimeGetCurrent() - startTime
         let trimmedText = fullText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        Self.logger.info(
+        Logger.whisper.info(
             "Transcribed \(String(format: "%.1f", audioDuration))s audio in \(String(format: "%.2f", inferenceDuration))s (\(segmentCount) segments)"
         )
 
@@ -237,7 +229,7 @@ final class WhisperContext: @unchecked Sendable {
             if let ctx = context {
                 whisper_free(ctx)
                 context = nil
-                Self.logger.info("Whisper model unloaded")
+                Logger.whisper.info("Whisper model unloaded")
             }
         }
     }

@@ -33,26 +33,29 @@ final class ClipboardInjector: @unchecked Sendable {
 
             Logger.injection.debug("Text written to clipboard")
 
-            // Step 3: Simulate Cmd+V paste
-            try await simulatePaste()
+            // Step 3: Simulate Cmd+V paste (requires accessibility)
+            if AXIsProcessTrusted() {
+                try await simulatePaste()
 
-            // Step 4: Wait for paste to complete
-            try await Task.sleep(for: .milliseconds(100))
+                // Step 4: Wait for paste to complete
+                try await Task.sleep(for: .milliseconds(100))
 
-            // Step 5: Restore original clipboard if it hasn't changed
-            // (Check changeCount to see if user copied something else)
-            if pasteboard.changeCount == originalChangeCount + 1 {
-                // Clipboard hasn't changed since we modified it — safe to restore
-                pasteboard.clearContents()
-                if let items = originalItems {
-                    pasteboard.writeObjects(items)
-                    Logger.injection.debug("Original clipboard restored")
+                // Step 5: Restore original clipboard if it hasn't changed
+                if pasteboard.changeCount == originalChangeCount + 1 {
+                    pasteboard.clearContents()
+                    if let items = originalItems {
+                        pasteboard.writeObjects(items)
+                        Logger.injection.debug("Original clipboard restored")
+                    }
+                } else {
+                    Logger.injection.debug("Clipboard changed during paste — skipping restore")
                 }
-            } else {
-                Logger.injection.debug("Clipboard changed during paste — skipping restore")
-            }
 
-            Logger.injection.info("Clipboard injection completed")
+                Logger.injection.info("Clipboard injection completed (pasted)")
+            } else {
+                // No accessibility — text is on clipboard, user can Cmd+V manually
+                Logger.injection.info("Clipboard injection completed (text on clipboard — Cmd+V to paste)")
+            }
 
         } catch {
             // Attempt to restore clipboard even on failure

@@ -99,7 +99,7 @@ final class UserSettings {
         id: String = "default",
         selectedWhisperModel: String = "ggml-base.en.bin",
         selectedLLMModel: String? = nil,
-        globalHotkey: String = "cmd+shift+space",
+        globalHotkey: String = "fn",
         pushToTalkEnabled: Bool = false,
         audioInputDeviceID: String? = nil,
         vadSensitivity: Double = 0.5,

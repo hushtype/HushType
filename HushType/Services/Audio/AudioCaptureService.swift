@@ -38,6 +38,12 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
     /// Whether audio capture is currently active.
     private(set) var isCapturing: Bool = false
 
+    /// Most recent audio input level (0.0 to 1.0), updated during capture.
+    private(set) var currentLevel: Float = 0
+
+    /// Timestamp of last level update for throttling.
+    private var lastLevelUpdate: TimeInterval = 0
+
     /// Target audio format: 16kHz mono Float32 PCM.
     private let targetFormat = AVAudioFormat(
         commonFormat: .pcmFormatFloat32,
@@ -199,6 +205,9 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
         engine.inputNode.removeTap(onBus: 0)
 
         isCapturing = false
+        DispatchQueue.main.async { [weak self] in
+            self?.currentLevel = 0
+        }
 
         // Read all samples from buffer
         let samples = buffer.readAll()
@@ -223,6 +232,21 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
 
         // Write to buffer
         self.buffer.write(samples)
+
+        // Update audio level (~20fps throttle)
+        let now = CFAbsoluteTimeGetCurrent()
+        if now - lastLevelUpdate > 0.05, !samples.isEmpty {
+            lastLevelUpdate = now
+            var sum: Float = 0
+            for sample in samples {
+                sum += sample * sample
+            }
+            let rms = sqrt(sum / Float(samples.count))
+            let level = min(1.0, rms * 5.0)
+            DispatchQueue.main.async { [weak self] in
+                self?.currentLevel = level
+            }
+        }
     }
 
     /// Convert audio buffer to target format.

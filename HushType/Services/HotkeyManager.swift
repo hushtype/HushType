@@ -1,3 +1,4 @@
+import AppKit
 import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
@@ -29,12 +30,19 @@ struct HotkeyBinding: Equatable, Identifiable {
         self.isEnabled = isEnabled
     }
 
-    func matches(event: CGEvent) -> Bool {
+    /// Match against an NSEvent (used by global/local monitors).
+    func matchesNSEvent(_ event: NSEvent) -> Bool {
         guard isEnabled else { return false }
-        let eventKeyCode = CGKeyCode(event.getIntegerValueField(.keyboardEventKeycode))
-        let eventModifiers = event.flags.intersection(Self.modifierMask)
-        let bindingModifiers = modifiers.intersection(Self.modifierMask)
-        return eventKeyCode == keyCode && eventModifiers == bindingModifiers
+        guard event.keyCode == keyCode else { return false }
+
+        let eventMods = event.modifierFlags.intersection([.command, .shift, .option, .control])
+        var bindingMods: NSEvent.ModifierFlags = []
+        if modifiers.contains(.maskCommand) { bindingMods.insert(.command) }
+        if modifiers.contains(.maskShift) { bindingMods.insert(.shift) }
+        if modifiers.contains(.maskAlternate) { bindingMods.insert(.option) }
+        if modifiers.contains(.maskControl) { bindingMods.insert(.control) }
+
+        return eventMods == bindingMods
     }
 
     // MARK: - Display
@@ -52,6 +60,10 @@ struct HotkeyBinding: Equatable, Identifiable {
     // MARK: - Serialization
 
     func serialize() -> String {
+        // Standalone fn key — no modifiers prefix needed
+        if modifiers.isEmpty, keyCode == CGKeyCode(kVK_Function) {
+            return "fn"
+        }
         var parts: [String] = []
         if modifiers.contains(.maskControl) { parts.append("ctrl") }
         if modifiers.contains(.maskAlternate) { parts.append("option") }
@@ -63,6 +75,13 @@ struct HotkeyBinding: Equatable, Identifiable {
 
     static func parse(_ string: String) -> HotkeyBinding? {
         let parts = string.lowercased().split(separator: "+").map(String.init)
+        guard !parts.isEmpty else { return nil }
+
+        // Handle standalone "fn" key (no modifiers required)
+        if parts.count == 1, let keyCode = keyCodeForName(parts[0]) {
+            return HotkeyBinding(keyCode: keyCode, modifiers: [])
+        }
+
         guard parts.count >= 2 else { return nil }
 
         var modifiers: CGEventFlags = []
@@ -103,6 +122,7 @@ struct HotkeyBinding: Equatable, Identifiable {
             "f1": kVK_F1, "f2": kVK_F2, "f3": kVK_F3, "f4": kVK_F4,
             "f5": kVK_F5, "f6": kVK_F6, "f7": kVK_F7, "f8": kVK_F8,
             "f9": kVK_F9, "f10": kVK_F10, "f11": kVK_F11, "f12": kVK_F12,
+            "fn": kVK_Function, "globe": kVK_Function,
         ]
         return mapping[name].map { CGKeyCode($0) }
     }
@@ -110,7 +130,7 @@ struct HotkeyBinding: Equatable, Identifiable {
     static func keyCodeName(_ keyCode: CGKeyCode) -> String {
         let mapping: [Int: String] = [
             kVK_Space: "Space", kVK_Return: "Return", kVK_Tab: "Tab",
-            kVK_Escape: "Esc", kVK_Delete: "Delete",
+            kVK_Escape: "Esc", kVK_Delete: "Delete", kVK_Function: "Fn",
             kVK_ANSI_A: "A", kVK_ANSI_B: "B", kVK_ANSI_C: "C",
             kVK_ANSI_D: "D", kVK_ANSI_E: "E", kVK_ANSI_F: "F",
             kVK_ANSI_G: "G", kVK_ANSI_H: "H", kVK_ANSI_I: "I",
@@ -135,17 +155,11 @@ struct HotkeyBinding: Equatable, Identifiable {
 // MARK: - Hotkey Error
 
 enum HotkeyError: LocalizedError {
-    case accessibilityNotGranted
-    case eventTapCreationFailed
     case alreadyRunning
     case maxBindingsReached
 
     var errorDescription: String? {
         switch self {
-        case .accessibilityNotGranted:
-            "Accessibility permission is required for global hotkeys"
-        case .eventTapCreationFailed:
-            "Failed to create system event tap"
         case .alreadyRunning:
             "Hotkey manager is already running"
         case .maxBindingsReached:
@@ -180,50 +194,35 @@ final class HotkeyManager: @unchecked Sendable {
         return _bindings
     }
 
-    // MARK: - Event Tap
+    // MARK: - NSEvent Monitors
 
-    private var eventTap: CFMachPort?
-    private var runLoopSource: CFRunLoopSource?
-    private var tapThread: Thread?
+    private var globalMonitor: Any?
+    private var localMonitor: Any?
+
+    // MARK: - State Tracking
+
+    /// Tracks whether the fn key is currently held (for push-to-talk).
+    private var fnKeyDown = false
 
     // MARK: - Lifecycle
 
     func start() throws {
         guard !isRunning else { throw HotkeyError.alreadyRunning }
-        guard AXIsProcessTrusted() else { throw HotkeyError.accessibilityNotGranted }
 
-        let refcon = Unmanaged.passUnretained(self).toOpaque()
-        let eventMask = (1 << CGEventType.keyDown.rawValue)
-            | (1 << CGEventType.keyUp.rawValue)
-
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(eventMask),
-            callback: hotkeyEventCallback,
-            userInfo: refcon
-        ) else {
-            throw HotkeyError.eventTapCreationFailed
+        // Global monitor: captures events from other apps (no accessibility needed)
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.keyDown, .keyUp, .flagsChanged]
+        ) { [weak self] event in
+            self?.handleNSEvent(event)
         }
 
-        eventTap = tap
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        runLoopSource = source
-
-        let thread = Thread { [weak self] in
-            guard let source else { return }
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
-            CGEvent.tapEnable(tap: tap, enable: true)
-            Logger.hotkey.info("Event tap run loop started")
-            CFRunLoopRun()
-            Logger.hotkey.info("Event tap run loop stopped")
-            self?.isRunning = false
+        // Local monitor: captures events when HushType itself is focused
+        localMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.keyDown, .keyUp, .flagsChanged]
+        ) { [weak self] event in
+            self?.handleNSEvent(event)
+            return event
         }
-        thread.name = "com.hushtype.hotkey.runloop"
-        thread.qualityOfService = .userInteractive
-        thread.start()
-        tapThread = thread
 
         isRunning = true
         Logger.hotkey.info("Hotkey manager started with \(self.bindings.count) binding(s)")
@@ -232,19 +231,17 @@ final class HotkeyManager: @unchecked Sendable {
     func stop() {
         guard isRunning else { return }
 
-        if let tap = eventTap {
-            CGEvent.tapEnable(tap: tap, enable: false)
+        if let monitor = globalMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalMonitor = nil
         }
-        if let source = runLoopSource {
-            CFRunLoopSourceInvalidate(source)
+        if let monitor = localMonitor {
+            NSEvent.removeMonitor(monitor)
+            localMonitor = nil
         }
 
-        tapThread?.cancel()
-        eventTap = nil
-        runLoopSource = nil
-        tapThread = nil
+        fnKeyDown = false
         isRunning = false
-
         Logger.hotkey.info("Hotkey manager stopped")
     }
 
@@ -292,30 +289,36 @@ final class HotkeyManager: @unchecked Sendable {
 
     // MARK: - Event Handling
 
-    fileprivate func handleEvent(
-        proxy: CGEventTapProxy,
-        type: CGEventType,
-        event: CGEvent
-    ) -> Unmanaged<CGEvent>? {
-        // Re-enable tap if system disabled it
-        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-            if let tap = eventTap {
-                CGEvent.tapEnable(tap: tap, enable: true)
-                Logger.hotkey.warning("Event tap re-enabled after system disable")
+    private func handleNSEvent(_ event: NSEvent) {
+        // Handle fn/Globe key via flagsChanged events
+        if event.type == .flagsChanged {
+            let currentBindings = bindings
+            for binding in currentBindings where binding.keyCode == CGKeyCode(kVK_Function) && binding.isEnabled {
+                let fnPressed = event.modifierFlags.contains(.function)
+                if fnPressed && !fnKeyDown {
+                    fnKeyDown = true
+                    let callback = onHotkeyDown
+                    DispatchQueue.main.async { callback?(binding) }
+                    Logger.hotkey.debug("Fn key down")
+                    return
+                } else if !fnPressed && fnKeyDown {
+                    fnKeyDown = false
+                    let callback = onHotkeyUp
+                    DispatchQueue.main.async { callback?(binding) }
+                    Logger.hotkey.debug("Fn key up")
+                    return
+                }
             }
-            return Unmanaged.passUnretained(event)
+            return
         }
 
-        guard type == .keyDown || type == .keyUp else {
-            return Unmanaged.passUnretained(event)
-        }
+        // Handle regular key events
+        guard event.type == .keyDown || event.type == .keyUp else { return }
 
-        // Check against registered bindings (lock-protected read)
         let currentBindings = bindings
-
         for binding in currentBindings {
-            if binding.matches(event: event) {
-                if type == .keyDown {
+            if binding.matchesNSEvent(event) {
+                if event.type == .keyDown {
                     let callback = onHotkeyDown
                     DispatchQueue.main.async { callback?(binding) }
                     Logger.hotkey.debug("Hotkey down: \(binding.displayString)")
@@ -324,11 +327,9 @@ final class HotkeyManager: @unchecked Sendable {
                     DispatchQueue.main.async { callback?(binding) }
                     Logger.hotkey.debug("Hotkey up: \(binding.displayString)")
                 }
-                return nil // Consume the event
+                return
             }
         }
-
-        return Unmanaged.passUnretained(event)
     }
 
     // MARK: - Conflict Detection
@@ -347,17 +348,4 @@ final class HotkeyManager: @unchecked Sendable {
         }
         return conflicts
     }
-}
-
-// MARK: - CGEvent Tap Callback (C function)
-
-private func hotkeyEventCallback(
-    proxy: CGEventTapProxy,
-    type: CGEventType,
-    event: CGEvent,
-    refcon: UnsafeMutableRawPointer?
-) -> Unmanaged<CGEvent>? {
-    guard let refcon else { return Unmanaged.passUnretained(event) }
-    let manager = Unmanaged<HotkeyManager>.fromOpaque(refcon).takeUnretainedValue()
-    return manager.handleEvent(proxy: proxy, type: type, event: event)
 }

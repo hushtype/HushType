@@ -1,12 +1,16 @@
 import Foundation
 import os
 
+extension Notification.Name {
+    static let whisperModelDownloaded = Notification.Name("com.hushtype.whisperModelDownloaded")
+}
+
 /// Downloads whisper/LLM models from remote URLs with progress tracking.
 @Observable
 final class ModelDownloader: @unchecked Sendable {
     private(set) var activeDownloads: Set<String> = []
-    private var tasks: [String: URLSessionDownloadTask] = []
-    private var observations: [String: NSKeyValueObservation] = []
+    private var tasks: [String: URLSessionDownloadTask] = [:]
+    private var observations: [String: NSKeyValueObservation] = [:]
 
     func download(_ model: ModelInfo) {
         guard let url = model.downloadURL else {
@@ -87,6 +91,13 @@ final class ModelDownloader: @unchecked Sendable {
             model.isDownloaded = true
             model.downloadProgress = nil
             Logger.models.info("Download complete: \(model.name) -> \(model.filePath.path)")
+
+            // Notify the pipeline to load the newly downloaded model
+            NotificationCenter.default.post(
+                name: .whisperModelDownloaded,
+                object: nil,
+                userInfo: ["fileName": model.fileName]
+            )
         } catch {
             Logger.models.error("Failed to save model \(model.name): \(error.localizedDescription)")
             model.downloadProgress = nil

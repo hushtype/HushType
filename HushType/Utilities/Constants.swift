@@ -8,11 +8,11 @@ enum Constants {
     /// Logging
     static let logSubsystem = "com.hushtype.app"
 
-    /// Default hotkey: Cmd+Shift+Space
+    /// Default hotkey: Fn (Globe key)
     enum Hotkey {
-        static let defaultModifiers: UInt = 0x100108 // .maskCommand | .maskShift
-        static let defaultKeyCode: UInt16 = 49 // spacebar
-        static let defaultString = "cmd+shift+space"
+        static let defaultModifiers: UInt = 0x800000 // .maskFunction
+        static let defaultKeyCode: UInt16 = 63 // fn/globe key
+        static let defaultString = "fn"
     }
 
     /// Model storage paths

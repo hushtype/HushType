@@ -99,7 +99,7 @@ final class DictationController: @unchecked Sendable {
     // MARK: - Lifecycle
 
     /// Start the controller — registers hotkeys and prepares services.
-    func start(hotkey: String = "cmd+shift+space") throws {
+    func start(hotkey: String = "fn") throws {
         try hotkeyManager.loadFromSettings(hotkey: hotkey)
         try hotkeyManager.start()
         Logger.general.info("DictationController started")
@@ -177,11 +177,17 @@ final class DictationController: @unchecked Sendable {
         }
 
         // Trim silence with VAD
-        let trimmedSamples = vad.trimSilence(from: rawSamples, sensitivity: vadSensitivity)
+        var trimmedSamples = vad.trimSilence(from: rawSamples, sensitivity: vadSensitivity)
         guard !trimmedSamples.isEmpty else {
             Logger.general.info("No voice activity detected in recording")
             updateState(.idle)
             return
+        }
+
+        // Pad to minimum 1 second (16000 samples at 16kHz) — whisper requirement
+        let minSamples = 16000
+        if trimmedSamples.count < minSamples {
+            trimmedSamples.append(contentsOf: [Float](repeating: 0, count: minSamples - trimmedSamples.count))
         }
 
         // Transcribe
@@ -248,15 +254,38 @@ final class DictationController: @unchecked Sendable {
         }
     }
 
+    // MARK: - Model Loading
+
+    /// Load the whisper model by file name.
+    /// - Parameter fileName: Model file name (e.g., "ggml-base.en.bin").
+    func loadWhisperModel(fileName: String) async {
+        let modelRef = ModelInfoRef(fileName: fileName, type: "whisper")
+        let path = modelRef.filePath
+
+        guard FileManager.default.fileExists(atPath: path.path) else {
+            Logger.general.warning("Whisper model not found at \(path.path) — transcription will fail until model is downloaded")
+            return
+        }
+
+        do {
+            try await whisperService.loadModel(at: path)
+            Logger.general.info("Whisper model loaded: \(fileName)")
+        } catch {
+            Logger.general.error("Failed to load whisper model: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Configuration
 
     /// Update settings from UserSettings.
     func updateConfiguration(
         vadSensitivity: Float,
-        injectionMethod: InjectionMethod
+        injectionMethod: InjectionMethod,
+        keystrokeDelayMs: Int = 5
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
+        self.injectionService.keystrokeDelayMs = keystrokeDelayMs
     }
 
     // MARK: - History

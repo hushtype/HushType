@@ -9,8 +9,7 @@ import SwiftUI
 import os.log
 
 struct MenuBarView: View {
-    @Environment(AppState.self) private var appState
-    @Environment(\.openSettings) private var openSettings
+    var appState: AppState
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -91,10 +90,7 @@ struct MenuBarView: View {
 
             // MARK: - Action Buttons
             VStack(spacing: 8) {
-                Button {
-                    openSettings()
-                    NSApp.activate(ignoringOtherApps: true)
-                } label: {
+                SettingsLink {
                     HStack {
                         Image(systemName: "gearshape")
                         Text("Settings...")
@@ -140,6 +136,5 @@ struct MenuBarView: View {
 }
 
 #Preview {
-    MenuBarView()
-        .environment(AppState())
+    MenuBarView(appState: AppState())
 }

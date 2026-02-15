@@ -42,12 +42,16 @@ final class TextInjectionService: TextInjecting, @unchecked Sendable {
     private let clipboardInjector: ClipboardInjector
     private let permissionsManager: PermissionsManager
 
+    /// Delay in milliseconds between simulated keystrokes (CGEvent mode).
+    var keystrokeDelayMs: Int = 5
+
     // MARK: - Initialization
 
-    init(permissionsManager: PermissionsManager) {
+    init(permissionsManager: PermissionsManager, keystrokeDelayMs: Int = 5) {
         self.permissionsManager = permissionsManager
         self.cgEventInjector = CGEventInjector()
         self.clipboardInjector = ClipboardInjector()
+        self.keystrokeDelayMs = keystrokeDelayMs
     }
 
     // MARK: - Text Injection
@@ -55,20 +59,20 @@ final class TextInjectionService: TextInjecting, @unchecked Sendable {
     func inject(_ text: String, method: InjectionMethod) async throws {
         Logger.injection.info("Starting text injection using method: \(method.rawValue)")
 
+        permissionsManager.refreshAccessibilityStatus()
         let resolvedMethod = resolveMethod(for: text, preferred: method)
         Logger.injection.debug("Resolved injection method: \(String(describing: resolvedMethod))")
 
         switch resolvedMethod {
         case .cgEvent:
-            // Check accessibility permission
+            // Check accessibility permission (refresh live — cached value may be stale)
+            permissionsManager.refreshAccessibilityStatus()
             guard permissionsManager.accessibilityEnabled else {
                 Logger.injection.error("CGEvent injection requires Accessibility permission")
                 throw TextInjectionError.accessibilityNotGranted
             }
 
-            // Get keystroke delay from user settings (default 5ms if not available)
-            let keystrokeDelay = 5 // TODO: Get from UserSettings once available
-            try await cgEventInjector.inject(text, keystrokeDelay: keystrokeDelay)
+            try await cgEventInjector.inject(text, keystrokeDelay: keystrokeDelayMs)
 
         case .clipboard:
             try await clipboardInjector.inject(text)
@@ -88,12 +92,13 @@ final class TextInjectionService: TextInjecting, @unchecked Sendable {
         case .clipboard:
             return .clipboard
         case .auto:
-            // Use CGEvent for short ASCII-only text, clipboard otherwise
-            if text.count < 64 && text.allSatisfy({ $0.isASCII }) {
-                Logger.injection.debug("Auto-detection: using CGEvent (short ASCII text)")
+            // Prefer CGEvent for short ASCII text if accessibility is available,
+            // otherwise fall back to clipboard
+            if permissionsManager.accessibilityEnabled && text.count < 64 && text.allSatisfy({ $0.isASCII }) {
+                Logger.injection.debug("Auto-detection: using CGEvent (short ASCII, accessibility granted)")
                 return .cgEvent
             } else {
-                Logger.injection.debug("Auto-detection: using clipboard (long or Unicode text)")
+                Logger.injection.debug("Auto-detection: using clipboard")
                 return .clipboard
             }
         }

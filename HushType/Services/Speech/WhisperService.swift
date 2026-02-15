@@ -71,8 +71,8 @@ enum WhisperServiceError: Error, LocalizedError {
 final class WhisperService: @unchecked Sendable {
     // MARK: - Properties
 
-    /// The underlying whisper context (nil if no model loaded).
-    private var context: AnyObject? // WhisperContext from WhisperKit package
+    /// The underlying whisper context.
+    private var context: WhisperContext?
 
     /// Queue for thread-safe property access.
     private let queue = DispatchQueue(label: "com.hushtype.whisper.service", qos: .userInitiated)
@@ -109,25 +109,26 @@ final class WhisperService: @unchecked Sendable {
 
         Logger.whisper.info("Loading whisper model: \(path.lastPathComponent)")
 
-        // In the full implementation, this creates a WhisperContext from the WhisperKit package.
-        // For now, we store the path and mark as loaded once WhisperKit is built.
-        //
-        // TODO: Replace with actual WhisperContext initialization once whisper.cpp is built:
-        // let whisperContext = try WhisperContext(modelPath: path.path)
-        // self.context = whisperContext
+        do {
+            let whisperContext = try WhisperContext(modelPath: path.path)
+            self.context = whisperContext
 
-        await MainActor.run {
-            self.loadedModelName = path.deletingPathExtension().lastPathComponent
-            self.isModelLoaded = true
+            await MainActor.run {
+                self.loadedModelName = path.deletingPathExtension().lastPathComponent
+                self.isModelLoaded = true
+            }
+
+            Logger.whisper.info("Whisper model loaded: \(path.lastPathComponent)")
+        } catch {
+            throw WhisperServiceError.modelLoadFailed(error.localizedDescription)
         }
-
-        Logger.whisper.info("Whisper model loaded: \(path.lastPathComponent)")
     }
 
     /// Unload the current model and free memory.
     func unloadModel() {
         Logger.whisper.info("Unloading whisper model")
 
+        context?.unload()
         context = nil
         isModelLoaded = false
         loadedModelName = nil
@@ -149,7 +150,7 @@ final class WhisperService: @unchecked Sendable {
     /// - Parameter samples: Float32 audio samples at 16kHz mono.
     /// - Returns: Transcription result.
     func transcribe(samples: [Float]) async throws -> WhisperTranscriptionResult {
-        guard isModelLoaded else {
+        guard isModelLoaded, let whisperContext = context else {
             throw WhisperServiceError.modelNotLoaded
         }
 
@@ -157,40 +158,27 @@ final class WhisperService: @unchecked Sendable {
             throw WhisperServiceError.transcriptionFailed("Empty audio data")
         }
 
-        let startTime = CFAbsoluteTimeGetCurrent()
         let audioDuration = Double(samples.count) / 16000.0
-
         Logger.whisper.info("Starting transcription of \(String(format: "%.1f", audioDuration))s audio")
 
-        // TODO: Replace with actual WhisperContext transcription once WhisperKit is built:
-        // guard let whisperContext = context as? WhisperContext else {
-        //     throw WhisperServiceError.modelNotLoaded
-        // }
-        // let result = try await whisperContext.transcribe(
-        //     samples: samples,
-        //     language: language,
-        //     threadCount: threadCount,
-        //     useGPU: useGPU
-        // )
-        // return WhisperTranscriptionResult(
-        //     text: result.text,
-        //     language: result.language,
-        //     audioDuration: result.audioDuration,
-        //     inferenceDuration: result.inferenceDuration,
-        //     segmentCount: result.segmentCount
-        // )
+        do {
+            let result = try await whisperContext.transcribe(
+                samples: samples,
+                language: language,
+                threadCount: threadCount,
+                useGPU: useGPU
+            )
 
-        // Placeholder until WhisperKit is fully integrated
-        let inferenceDuration = CFAbsoluteTimeGetCurrent() - startTime
-        Logger.whisper.warning("WhisperKit not yet integrated — returning placeholder")
-
-        return WhisperTranscriptionResult(
-            text: "[Transcription placeholder — whisper.cpp not yet built]",
-            language: language,
-            audioDuration: audioDuration,
-            inferenceDuration: inferenceDuration,
-            segmentCount: 0
-        )
+            return WhisperTranscriptionResult(
+                text: result.text,
+                language: result.language,
+                audioDuration: result.audioDuration,
+                inferenceDuration: result.inferenceDuration,
+                segmentCount: result.segmentCount
+            )
+        } catch {
+            throw WhisperServiceError.transcriptionFailed(error.localizedDescription)
+        }
     }
 }
 

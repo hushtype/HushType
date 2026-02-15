@@ -12,8 +12,6 @@ import os
 @main
 struct HushTypeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @State private var appState = AppState()
-    @State private var dictationController: DictationController?
     let modelContainer: ModelContainer
 
     init() {
@@ -45,44 +43,24 @@ struct HushTypeApp: App {
 
         // Seed built-in data on first launch
         DataSeeder.seedIfNeeded(in: modelContainer.mainContext)
+
+        // Wire model container to delegate for pipeline startup
+        appDelegate.modelContainer = modelContainer
     }
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: appState.menuBarIcon) {
-            MenuBarView()
-                .environment(appState)
+        MenuBarExtra("HushType", systemImage: appDelegate.appState.menuBarIcon) {
+            MenuBarView(appState: appDelegate.appState)
         }
         .menuBarExtraStyle(.window)
         .modelContainer(modelContainer)
 
         Settings {
             SettingsView()
+                .onAppear {
+                    NSApp.activate(ignoringOtherApps: true)
+                }
         }
         .modelContainer(modelContainer)
-    }
-
-    // MARK: - Pipeline Setup
-
-    private func setupPipeline() {
-        let controller = DictationController(appState: appState)
-        controller.modelContainer = modelContainer
-
-        // Load settings and start
-        let context = modelContainer.mainContext
-        do {
-            let settings = try UserSettings.shared(in: context)
-            controller.updateConfiguration(
-                vadSensitivity: Float(settings.vadSensitivity),
-                injectionMethod: settings.defaultInjectionMethod
-            )
-
-            try controller.start(hotkey: settings.globalHotkey)
-            Logger.general.info("Dictation pipeline started")
-        } catch {
-            Logger.general.error("Failed to start dictation pipeline: \(error.localizedDescription)")
-            appState.currentError = "Failed to start: \(error.localizedDescription)"
-        }
-
-        dictationController = controller
     }
 }

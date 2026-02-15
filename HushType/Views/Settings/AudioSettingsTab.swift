@@ -5,23 +5,31 @@ import os
 struct AudioSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
     @State private var settings: UserSettings?
-    @State private var selectedDevice = "Default"
-    @State private var availableDevices = ["Default", "MacBook Microphone", "External USB Mic"]
+    @State private var selectedDeviceID: String = "default"
+    @State private var availableDevices: [(id: String, name: String)] = []
+    @State private var audioService = AudioCaptureService()
 
     var body: some View {
         Form {
             Section("Input Device") {
-                Picker("Microphone", selection: $selectedDevice) {
-                    ForEach(availableDevices, id: \.self) { device in
-                        Text(device)
-                            .tag(device)
+                Picker("Microphone", selection: $selectedDeviceID) {
+                    Text("System Default").tag("default")
+                    ForEach(availableDevices, id: \.id) { device in
+                        Text(device.name).tag(device.id)
                     }
                 }
-                .help("Audio input device for recording. Will be wired to AudioCaptureService in a future release.")
+                .onChange(of: selectedDeviceID) { _, newValue in
+                    let deviceID = newValue == "default" ? nil : newValue
+                    settings?.audioInputDeviceID = deviceID
+                    saveSettings()
+                    Logger.ui.info("Audio device changed to: \(newValue)")
+                }
+                .help("Audio input device for recording")
 
-                Text("Device selection is a placeholder — audio service integration pending")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Button("Refresh Devices") {
+                    loadDevices()
+                }
+                .font(.caption)
             }
 
             Section("Voice Activity Detection") {
@@ -57,25 +65,31 @@ struct AudioSettingsTab: View {
                     Text("Live Audio Input")
                         .font(.headline)
 
-                    // Placeholder audio level meter
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(.secondary.opacity(0.2))
-                            .frame(height: 24)
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(.secondary.opacity(0.2))
 
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(.green)
-                            .frame(width: 50, height: 24)
-
-                        Text("Preview")
-                            .font(.caption)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(levelColor)
+                                .frame(width: max(0, geometry.size.width * CGFloat(audioService.currentLevel)))
+                                .animation(.linear(duration: 0.05), value: audioService.currentLevel)
+                        }
                     }
+                    .frame(height: 24)
 
-                    Text("Audio level meter preview — will be connected to live input in future release")
+                    HStack {
+                        Button(audioService.isCapturing ? "Stop Preview" : "Start Preview") {
+                            toggleAudioPreview()
+                        }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+
+                        Spacer()
+
+                        Text(audioService.isCapturing ? "Listening..." : "Stopped")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -106,12 +120,58 @@ struct AudioSettingsTab: View {
         .formStyle(.grouped)
         .onAppear {
             loadSettings()
+            loadDevices()
         }
+        .onDisappear {
+            stopAudioPreview()
+        }
+    }
+
+    // MARK: - Audio Level
+
+    private var levelColor: Color {
+        let level = audioService.currentLevel
+        if level > 0.8 { return .red }
+        if level > 0.5 { return .yellow }
+        return .green
+    }
+
+    private func toggleAudioPreview() {
+        if audioService.isCapturing {
+            stopAudioPreview()
+        } else {
+            startAudioPreview()
+        }
+    }
+
+    private func startAudioPreview() {
+        Task {
+            do {
+                try await audioService.startCapture()
+                Logger.ui.info("Audio preview started")
+            } catch {
+                Logger.ui.error("Failed to start audio preview: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func stopAudioPreview() {
+        Task {
+            _ = await audioService.stopCapture()
+            Logger.ui.info("Audio preview stopped")
+        }
+    }
+
+    // MARK: - Data
+
+    private func loadDevices() {
+        availableDevices = audioService.enumerateInputDevices()
     }
 
     private func loadSettings() {
         do {
             settings = try UserSettings.shared(in: modelContext)
+            selectedDeviceID = settings?.audioInputDeviceID ?? "default"
             Logger.ui.debug("Loaded user settings in Audio tab")
         } catch {
             Logger.ui.error("Failed to load UserSettings: \(error.localizedDescription)")

@@ -46,6 +46,12 @@ fastlane/README.md
 # Code Injection
 iOSInjectionProject/
 
+# Vendored C/C++ sources (cloned by scripts/setup-whisper.sh)
+vendor/
+
+# Generated whisper.cpp headers (copied by setup-whisper.sh build phase)
+WhisperKit/Sources/CWhisper/include/
+
 # C/C++ build artifacts (whisper.cpp, llama.cpp)
 *.o
 *.a

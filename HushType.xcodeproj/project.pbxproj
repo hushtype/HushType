@@ -29,9 +29,22 @@
 		680B19152F3FA6A8007650D7 /* HushTypeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HushTypeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		680B1B032F40B0FE007650D7 /* Exceptions for "HushType" folder in "HushType" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 680B18FB2F3FA6A7007650D7 /* HushType */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		680B18FE2F3FA6A7007650D7 /* HushType */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				680B1B032F40B0FE007650D7 /* Exceptions for "HushType" folder in "HushType" target */,
+			);
 			path = HushType;
 			sourceTree = "<group>";
 		};
@@ -99,6 +112,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 680B191F2F3FA6A8007650D7 /* Build configuration list for PBXNativeTarget "HushType" */;
 			buildPhases = (
+				680B1C012F40C000007650D7 /* Build whisper.cpp */,
 				680B18F82F3FA6A7007650D7 /* Sources */,
 				680B18F92F3FA6A7007650D7 /* Frameworks */,
 				680B18FA2F3FA6A7007650D7 /* Resources */,
@@ -231,6 +245,26 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		680B1C012F40C000007650D7 /* Build whisper.cpp */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/scripts/setup-whisper.sh",
+			);
+			name = "Build whisper.cpp";
+			outputPaths = (
+				"${SRCROOT}/vendor/whisper.cpp/build/lib/libwhisper.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/setup-whisper.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		680B18F82F3FA6A7007650D7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -307,7 +341,7 @@
 				DEVELOPMENT_TEAM = L6UMTZRQRM;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -371,7 +405,7 @@
 				DEVELOPMENT_TEAM = L6UMTZRQRM;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -403,13 +437,30 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				EXCLUDED_SOURCE_FILE_NAMES = .gitkeep;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/WhisperKit/Sources/CWhisper/include";
 				INFOPLIST_FILE = HushType/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/vendor/whisper.cpp/build/lib";
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-lwhisper",
+					"-lggml",
+					"-lggml-base",
+					"-lggml-cpu",
+					"-lggml-blas",
+					"-lggml-metal",
+					"-lc++",
+					"-framework",
+					Metal,
+					"-framework",
+					Accelerate,
+					"-framework",
+					Foundation,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hushtype.HushType;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -417,6 +468,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "HushType/HushType-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -436,13 +488,30 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				EXCLUDED_SOURCE_FILE_NAMES = .gitkeep;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/WhisperKit/Sources/CWhisper/include";
 				INFOPLIST_FILE = HushType/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/vendor/whisper.cpp/build/lib";
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-lwhisper",
+					"-lggml",
+					"-lggml-base",
+					"-lggml-cpu",
+					"-lggml-blas",
+					"-lggml-metal",
+					"-lc++",
+					"-framework",
+					Metal,
+					"-framework",
+					Accelerate,
+					"-framework",
+					Foundation,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.hushtype.HushType;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -450,6 +519,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "HushType/HushType-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
