@@ -285,6 +285,12 @@ final class DictationController: @unchecked Sendable {
 
     // MARK: - Configuration
 
+    /// Reload the hotkey binding from a serialized string (e.g. "cmd+shift+d").
+    func reloadHotkey(_ hotkey: String) throws {
+        try hotkeyManager.loadFromSettings(hotkey: hotkey)
+        Logger.general.info("Hotkey reloaded: \(hotkey)")
+    }
+
     /// Update settings from UserSettings.
     func updateConfiguration(
         vadSensitivity: Float,

@@ -7,25 +7,15 @@ struct GeneralSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
     @State private var settings: UserSettings?
     @State private var launchAtLogin = false
-    @State private var hotkeyInput = ""
+    @State private var hotkeyString = ""
     @State private var hotkeyError: String?
 
     var body: some View {
         Form {
             Section("Input") {
                 LabeledContent("Global Hotkey") {
-                    HStack {
-                        TextField("Hotkey", text: $hotkeyInput)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 200)
-                            .onSubmit {
-                                applyHotkey()
-                            }
-                        if let parsed = HotkeyBinding.parse(hotkeyInput) {
-                            Text(parsed.displayString)
-                                .foregroundStyle(.secondary)
-                                .font(.caption)
-                        }
+                    HotkeyRecorderView(hotkeyString: $hotkeyString) { newValue in
+                        applyHotkey(newValue)
                     }
                 }
                 if let error = hotkeyError {
@@ -147,29 +137,29 @@ struct GeneralSettingsTab: View {
         do {
             settings = try UserSettings.shared(in: modelContext)
             launchAtLogin = settings?.launchAtLogin ?? false
-            hotkeyInput = settings?.globalHotkey ?? "fn"
+            hotkeyString = settings?.globalHotkey ?? "fn"
             Logger.ui.debug("Loaded user settings in General tab")
         } catch {
             Logger.ui.error("Failed to load UserSettings: \(error.localizedDescription)")
         }
     }
 
-    private func applyHotkey() {
-        guard HotkeyBinding.parse(hotkeyInput) != nil else {
-            hotkeyError = "Invalid hotkey format. Use: fn, cmd+shift+space, ctrl+alt+r, etc."
+    private func applyHotkey(_ newValue: String) {
+        guard let binding = HotkeyBinding.parse(newValue) else {
+            hotkeyError = "Invalid shortcut. Try again."
             return
         }
 
-        let conflicts = HotkeyManager.detectConflicts(for: HotkeyBinding.parse(hotkeyInput)!)
+        let conflicts = HotkeyManager.detectConflicts(for: binding)
         if !conflicts.isEmpty {
             hotkeyError = "May conflict with: \(conflicts.joined(separator: ", "))"
         } else {
             hotkeyError = nil
         }
 
-        settings?.globalHotkey = hotkeyInput
+        settings?.globalHotkey = newValue
         saveSettings()
-        Logger.ui.info("Hotkey changed to: \(hotkeyInput)")
+        Logger.ui.info("Hotkey changed to: \(newValue)")
     }
 
     private func saveSettings() {

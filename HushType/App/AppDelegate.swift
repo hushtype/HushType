@@ -52,7 +52,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 keystrokeDelayMs: settings.keystrokeDelay,
                 pushToTalkEnabled: settings.pushToTalkEnabled
             )
-            Logger.general.info("Pipeline config updated from settings (pushToTalk: \(settings.pushToTalkEnabled))")
+            try controller.reloadHotkey(settings.globalHotkey)
+            Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled))")
         } catch {
             Logger.general.error("Failed to reload settings: \(error.localizedDescription)")
         }
