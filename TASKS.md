@@ -105,10 +105,10 @@
 - [x] Create `LlamaContext.swift` — Swift wrapper pairing init/deinit with llama_init/llama_free, `@unchecked Sendable`, configurable context length (512–4096 tokens), memory management
 
 ### 2.2 LLM Service
-- [ ] Create `LLMService.swift` — `TextProcessing` protocol conformance, wraps LlamaContext, loads GGUF model, runs inference with system+user prompts
-- [ ] Create `LLMProvider.swift` — protocol abstracting LLM backends (loadModel, complete, isModelLoaded, estimatedMemoryUsage, unloadModel) for swappable backends
-- [ ] Implement `LlamaCppProvider.swift` — `LLMProvider` conformance using local llama.cpp, Metal offloading, graceful OOM handling
-- [ ] Implement `OllamaProvider.swift` — `LLMProvider` conformance using Ollama HTTP API on localhost:11434, auto-detect running instance, model listing
+- [x] Create `LLMService.swift` — `TextProcessing` protocol conformance, wraps LlamaContext, loads GGUF model, runs inference with system+user prompts
+- [x] Create `LLMProvider.swift` — protocol abstracting LLM backends (loadModel, complete, isModelLoaded, estimatedMemoryUsage, unloadModel) for swappable backends
+- [x] Implement `LlamaCppProvider.swift` — `LLMProvider` conformance using local llama.cpp, Metal offloading, graceful OOM handling
+- [x] Implement `OllamaProvider.swift` — `LLMProvider` conformance using Ollama HTTP API on localhost:11434, auto-detect running instance, model listing
 
 ### 2.3 Processing Modes
 - [ ] Create `ProcessingModeRouter.swift` — routes transcription through the correct processing pipeline based on `ProcessingMode` enum (raw passes through, others go to LLM)
