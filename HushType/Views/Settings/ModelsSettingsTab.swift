@@ -53,7 +53,11 @@ struct ModelsSettingsTab: View {
                 } else {
                     List {
                         ForEach(whisperModels) { model in
-                            ModelRow(model: model, downloader: downloader)
+                            ModelRow(
+                                model: model,
+                                downloader: downloader,
+                                selectedModelFileName: settings?.selectedWhisperModel ?? "ggml-base.en.bin"
+                            )
                         }
                     }
                     .frame(height: 250)
@@ -155,7 +159,13 @@ private struct ModelInfoSection: View {
 struct ModelRow: View {
     let model: ModelInfo
     let downloader: ModelDownloader
+    let selectedModelFileName: String
     @Environment(\.modelContext) private var modelContext
+    @State private var showDeleteConfirmation = false
+
+    private var isActiveModel: Bool {
+        model.fileName == selectedModelFileName
+    }
 
     var body: some View {
         HStack {
@@ -171,6 +181,16 @@ struct ModelRow: View {
                             .padding(.vertical, 2)
                             .background(.blue.opacity(0.2))
                             .foregroundStyle(.blue)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
+
+                    if isActiveModel && model.isDownloaded {
+                        Text("Active")
+                            .font(.caption)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.green.opacity(0.2))
+                            .foregroundStyle(.green)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                 }
@@ -210,12 +230,13 @@ struct ModelRow: View {
                 .help("Cancel download")
             } else if model.isDownloaded {
                 Button {
-                    deleteModel(model)
+                    showDeleteConfirmation = true
                 } label: {
                     Label("Delete", systemImage: "trash")
                         .labelStyle(.iconOnly)
                 }
-                .help("Delete this model from disk")
+                .help(isActiveModel ? "Cannot delete the active model" : "Delete this model from disk")
+                .disabled(isActiveModel)
             } else {
                 Button {
                     downloader.download(model)
@@ -227,6 +248,14 @@ struct ModelRow: View {
             }
         }
         .padding(.vertical, 4)
+        .alert("Delete Model", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                deleteModel(model)
+            }
+        } message: {
+            Text("Delete \(model.name) (\(model.formattedFileSize))? You can re-download it later.")
+        }
     }
 
     private func deleteModel(_ model: ModelInfo) {
