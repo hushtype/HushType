@@ -99,10 +99,10 @@
 ## Phase 2: LLM Post-Processing (v0.2.0)
 
 ### 2.1 C Bridging: llama.cpp
-- [ ] Create `LlamaKit/Package.swift` — local Swift package wrapping llama.cpp with CMake build, C bridging header
-- [ ] Add llama.cpp source — vendored or submodule, configured for macOS with Metal GPU acceleration, GGUF model support
-- [ ] Create `LlamaKit/include/llama-bridge.h` — C bridging header exposing llama_model_load, llama_free, llama_eval, context management
-- [ ] Create `LlamaContext.swift` — Swift wrapper pairing init/deinit with llama_init/llama_free, `@unchecked Sendable`, configurable context length (512–4096 tokens), memory management
+- [x] Create `LlamaKit/Package.swift` — local Swift package wrapping llama.cpp with CMake build, C bridging header
+- [x] Add llama.cpp source — vendored or submodule, configured for macOS with Metal GPU acceleration, GGUF model support
+- [x] Create `LlamaKit/include/llama-bridge.h` — C bridging header exposing llama_model_load, llama_free, llama_eval, context management
+- [x] Create `LlamaContext.swift` — Swift wrapper pairing init/deinit with llama_init/llama_free, `@unchecked Sendable`, configurable context length (512–4096 tokens), memory management
 
 ### 2.2 LLM Service
 - [ ] Create `LLMService.swift` — `TextProcessing` protocol conformance, wraps LlamaContext, loads GGUF model, runs inference with system+user prompts
