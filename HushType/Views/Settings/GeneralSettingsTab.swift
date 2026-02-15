@@ -175,6 +175,7 @@ struct GeneralSettingsTab: View {
     private func saveSettings() {
         do {
             try modelContext.save()
+            NotificationCenter.default.post(name: .userSettingsChanged, object: nil)
             Logger.ui.debug("Saved user settings from General tab")
         } catch {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")

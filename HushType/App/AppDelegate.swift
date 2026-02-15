@@ -31,6 +31,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: .whisperModelDownloaded,
             object: nil
         )
+
+        // Listen for settings changes to update pipeline config
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSettingsChanged),
+            name: .userSettingsChanged,
+            object: nil
+        )
+    }
+
+    @objc private func handleSettingsChanged() {
+        guard let modelContainer, let controller = dictationController else { return }
+        let context = modelContainer.mainContext
+        do {
+            let settings = try UserSettings.shared(in: context)
+            controller.updateConfiguration(
+                vadSensitivity: Float(settings.vadSensitivity),
+                injectionMethod: settings.defaultInjectionMethod,
+                keystrokeDelayMs: settings.keystrokeDelay,
+                pushToTalkEnabled: settings.pushToTalkEnabled
+            )
+            Logger.general.info("Pipeline config updated from settings (pushToTalk: \(settings.pushToTalkEnabled))")
+        } catch {
+            Logger.general.error("Failed to reload settings: \(error.localizedDescription)")
+        }
     }
 
     @objc private func handleModelDownloaded(_ notification: Notification) {
@@ -70,7 +95,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             controller.updateConfiguration(
                 vadSensitivity: Float(settings.vadSensitivity),
                 injectionMethod: settings.defaultInjectionMethod,
-                keystrokeDelayMs: settings.keystrokeDelay
+                keystrokeDelayMs: settings.keystrokeDelay,
+                pushToTalkEnabled: settings.pushToTalkEnabled
             )
 
             // Load whisper model in background

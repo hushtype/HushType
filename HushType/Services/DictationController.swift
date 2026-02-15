@@ -47,6 +47,7 @@ final class DictationController: @unchecked Sendable {
 
     private var vadSensitivity: Float = 0.5
     private var injectionMethod: InjectionMethod = .auto
+    private var pushToTalkEnabled: Bool = false
 
     // MARK: - SwiftData (set after init)
 
@@ -80,8 +81,14 @@ final class DictationController: @unchecked Sendable {
         hotkeyManager.onHotkeyDown = { [weak self] binding in
             guard let self else { return }
             Task { @MainActor in
-                if self.state == .idle {
-                    await self.startRecording(mode: binding.mode)
+                if self.pushToTalkEnabled {
+                    // Push-to-talk: hold to record, release to stop
+                    if self.state == .idle {
+                        await self.startRecording(mode: binding.mode)
+                    }
+                } else {
+                    // Toggle mode: press to start/stop
+                    await self.toggleRecording(mode: binding.mode)
                 }
             }
         }
@@ -89,9 +96,10 @@ final class DictationController: @unchecked Sendable {
         hotkeyManager.onHotkeyUp = { [weak self] binding in
             guard let self else { return }
             Task { @MainActor in
-                if self.state == .recording {
+                if self.pushToTalkEnabled && self.state == .recording {
                     await self.stopRecordingAndProcess()
                 }
+                // Toggle mode: do nothing on key up
             }
         }
     }
@@ -281,11 +289,13 @@ final class DictationController: @unchecked Sendable {
     func updateConfiguration(
         vadSensitivity: Float,
         injectionMethod: InjectionMethod,
-        keystrokeDelayMs: Int = 5
+        keystrokeDelayMs: Int = 5,
+        pushToTalkEnabled: Bool = false
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
         self.injectionService.keystrokeDelayMs = keystrokeDelayMs
+        self.pushToTalkEnabled = pushToTalkEnabled
     }
 
     // MARK: - History
