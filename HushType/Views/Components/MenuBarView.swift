@@ -98,7 +98,7 @@ struct MenuBarView: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(SettingsButtonStyle())
                 .foregroundStyle(.primary)
 
                 Button {
@@ -117,6 +117,14 @@ struct MenuBarView: View {
         }
         .padding(12)
         .frame(width: 280)
+        .onDisappear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                let hasSettingsWindow = NSApp.windows.contains { $0.isVisible && $0.level == .normal }
+                if hasSettingsWindow {
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
+        }
     }
 
     // MARK: - Helper Methods
@@ -132,6 +140,20 @@ struct MenuBarView: View {
     private func quitApp() {
         Logger.general.info("User requested quit from menu bar")
         NSApp.terminate(nil)
+    }
+}
+
+private struct SettingsButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .onChange(of: configuration.isPressed) { _, pressed in
+                if pressed {
+                    // Activate after SettingsLink opens/shows the settings window
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+                }
+            }
     }
 }
 
