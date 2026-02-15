@@ -49,8 +49,10 @@ struct HushTypeApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: appDelegate.appState.menuBarIcon) {
+        MenuBarExtra {
             MenuBarView(appState: appDelegate.appState)
+        } label: {
+            Image(nsImage: appDelegate.appState.menuBarImage)
         }
         .menuBarExtraStyle(.window)
         .modelContainer(modelContainer)
