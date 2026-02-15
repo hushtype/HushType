@@ -72,11 +72,10 @@ else
     ls -la "$LIB_DIR"/*.a 2>/dev/null || echo "      (no .a files found)"
 fi
 
-# Step 4: Copy headers (whisper.h + all ggml headers it depends on)
+# Step 4: Copy whisper.h header only (ggml headers provided by llama.cpp via LlamaKit)
 echo "[4/4] Installing headers..."
 mkdir -p "$CWHISPER_INCLUDE"
 cp "$WHISPER_DIR/include/whisper.h" "$CWHISPER_INCLUDE/"
-cp "$WHISPER_DIR/ggml/include/"*.h "$CWHISPER_INCLUDE/"
 
 echo ""
 echo "=== Setup Complete ==="

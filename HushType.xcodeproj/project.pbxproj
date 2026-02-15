@@ -113,6 +113,7 @@
 			buildConfigurationList = 680B191F2F3FA6A8007650D7 /* Build configuration list for PBXNativeTarget "HushType" */;
 			buildPhases = (
 				680B1C012F40C000007650D7 /* Build whisper.cpp */,
+				680B1C032F50A000007650D7 /* Build llama.cpp */,
 				680B18F82F3FA6A7007650D7 /* Sources */,
 				680B18F92F3FA6A7007650D7 /* Frameworks */,
 				680B18FA2F3FA6A7007650D7 /* Resources */,
@@ -261,6 +262,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
 			shellScript = "\"${SRCROOT}/scripts/setup-whisper.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		680B1C032F50A000007650D7 /* Build llama.cpp */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${SRCROOT}/scripts/setup-llama.sh",
+			);
+			name = "Build llama.cpp";
+			outputPaths = (
+				"${SRCROOT}/vendor/llama.cpp/build/lib/libllama.a",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/setup-llama.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -437,17 +455,24 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				EXCLUDED_SOURCE_FILE_NAMES = .gitkeep;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/WhisperKit/Sources/CWhisper/include";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/WhisperKit/Sources/CWhisper/include",
+					"$(SRCROOT)/LlamaKit/Sources/CLlama/include",
+				);
 				INFOPLIST_FILE = HushType/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/vendor/whisper.cpp/build/lib";
+				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/llama.cpp/build/lib",
+					"$(SRCROOT)/vendor/whisper.cpp/build/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"-lwhisper",
+					"-lllama",
 					"-lggml",
 					"-lggml-base",
 					"-lggml-cpu",
@@ -488,17 +513,24 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				EXCLUDED_SOURCE_FILE_NAMES = .gitkeep;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/WhisperKit/Sources/CWhisper/include";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/WhisperKit/Sources/CWhisper/include",
+					"$(SRCROOT)/LlamaKit/Sources/CLlama/include",
+				);
 				INFOPLIST_FILE = HushType/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/vendor/whisper.cpp/build/lib";
+				LIBRARY_SEARCH_PATHS = (
+					"$(SRCROOT)/vendor/llama.cpp/build/lib",
+					"$(SRCROOT)/vendor/whisper.cpp/build/lib",
+				);
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"-lwhisper",
+					"-lllama",
 					"-lggml",
 					"-lggml-base",
 					"-lggml-cpu",
