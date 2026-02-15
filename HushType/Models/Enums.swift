@@ -46,6 +46,17 @@ enum ProcessingMode: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    var iconName: String {
+        switch self {
+        case .raw: "waveform"
+        case .clean: "sparkles"
+        case .structure: "list.bullet"
+        case .prompt: "text.bubble"
+        case .code: "chevron.left.forwardslash.chevron.right"
+        case .custom: "gearshape"
+        }
+    }
+
     /// Whether this mode requires the LLM engine to be loaded.
     var requiresLLM: Bool {
         switch self {

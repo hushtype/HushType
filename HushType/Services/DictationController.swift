@@ -10,13 +10,14 @@ enum DictationState: Equatable {
     case idle
     case recording
     case transcribing
+    case processing
     case injecting
     case error(String)
 
     var isActive: Bool {
         switch self {
         case .idle, .error: false
-        case .recording, .transcribing, .injecting: true
+        case .recording, .transcribing, .processing, .injecting: true
         }
     }
 }
@@ -24,7 +25,7 @@ enum DictationState: Equatable {
 // MARK: - DictationController
 
 /// Orchestrates the full dictation pipeline:
-/// hotkey → audio capture → VAD trim → whisper transcription → text injection → history save.
+/// hotkey → audio capture → VAD trim → whisper transcription → LLM processing → text injection → history save.
 @Observable
 final class DictationController: @unchecked Sendable {
     // MARK: - State
@@ -38,6 +39,8 @@ final class DictationController: @unchecked Sendable {
     private let whisperService: WhisperService
     private let injectionService: TextInjectionService
     private let hotkeyManager: HotkeyManager
+    private var llmService: LLMService?
+    private var processingRouter: ProcessingModeRouter?
 
     // MARK: - App State
 
@@ -216,14 +219,34 @@ final class DictationController: @unchecked Sendable {
 
             Logger.general.info("Transcription: \"\(result.text.prefix(80))...\"")
 
+            // LLM processing (if mode requires it)
+            let rawText = result.text
+            var outputText = rawText
+
+            if appState.activeMode.requiresLLM, let router = processingRouter {
+                updateState(.processing)
+                do {
+                    outputText = try await router.process(
+                        text: rawText,
+                        mode: appState.activeMode
+                    )
+                    Logger.general.info("LLM processed: \(outputText.count) chars")
+                } catch {
+                    Logger.general.warning("LLM processing failed, using raw text: \(error.localizedDescription)")
+                    outputText = rawText
+                }
+            }
+
             // Inject text
             updateState(.injecting)
-            try await injectionService.inject(result.text, method: injectionMethod)
+            try await injectionService.inject(outputText, method: injectionMethod)
 
             // Save history entry
             let frontmostApp = NSWorkspace.shared.frontmostApplication
+            let processedText = (outputText != rawText) ? outputText : nil
             await saveDictationEntry(
-                rawText: result.text,
+                rawText: rawText,
+                processedText: processedText,
                 language: result.language,
                 audioDuration: result.audioDuration,
                 appBundleIdentifier: frontmostApp?.bundleIdentifier,
@@ -231,8 +254,8 @@ final class DictationController: @unchecked Sendable {
             )
 
             // Update preview
-            appState.lastTranscriptionPreview = result.text
-            Logger.general.info("Dictation complete: \(result.text.count) chars injected")
+            appState.lastTranscriptionPreview = outputText
+            Logger.general.info("Dictation complete: \(outputText.count) chars injected")
 
         } catch {
             Logger.general.error("Pipeline error: \(error.localizedDescription)")
@@ -256,7 +279,7 @@ final class DictationController: @unchecked Sendable {
         case .recording:
             appState.isRecording = true
             appState.isProcessing = false
-        case .transcribing, .injecting:
+        case .transcribing, .processing, .injecting:
             appState.isRecording = false
             appState.isProcessing = true
         case .error(let message):
@@ -284,6 +307,38 @@ final class DictationController: @unchecked Sendable {
             Logger.general.info("Whisper model loaded: \(fileName)")
         } catch {
             Logger.general.error("Failed to load whisper model: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - LLM Setup
+
+    /// Configure the LLM service and processing router.
+    func setLLMService(_ service: LLMService) {
+        self.llmService = service
+        self.processingRouter = ProcessingModeRouter(llmService: service)
+        Logger.general.info("LLM service configured for pipeline")
+    }
+
+    /// Load an LLM model by file name.
+    func loadLLMModel(fileName: String) async {
+        let modelRef = ModelInfoRef(fileName: fileName, type: "llm")
+        let path = modelRef.filePath
+
+        guard FileManager.default.fileExists(atPath: path.path) else {
+            Logger.general.warning("LLM model not found at \(path.path)")
+            return
+        }
+
+        guard let service = llmService else {
+            Logger.general.warning("No LLM service — cannot load model")
+            return
+        }
+
+        do {
+            try await service.loadModel(at: path.path)
+            Logger.general.info("LLM model loaded: \(fileName)")
+        } catch {
+            Logger.general.error("Failed to load LLM model: \(error.localizedDescription)")
         }
     }
 
@@ -337,6 +392,7 @@ final class DictationController: @unchecked Sendable {
     @MainActor
     private func saveDictationEntry(
         rawText: String,
+        processedText: String? = nil,
         language: String,
         audioDuration: TimeInterval,
         appBundleIdentifier: String?,
@@ -348,7 +404,8 @@ final class DictationController: @unchecked Sendable {
         }
 
         let context = ModelContext(container)
-        let wordCount = rawText.split(separator: " ").count
+        let outputText = processedText ?? rawText
+        let wordCount = outputText.split(separator: " ").count
 
         // Load privacy settings
         let settings = try? UserSettings.shared(in: context)
@@ -356,6 +413,7 @@ final class DictationController: @unchecked Sendable {
 
         let entry = DictationEntry(
             rawText: storeText ? rawText : "",
+            processedText: storeText ? processedText : nil,
             mode: appState.activeMode,
             language: language,
             appBundleIdentifier: appBundleIdentifier,

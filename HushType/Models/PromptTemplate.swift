@@ -171,3 +171,130 @@ extension PromptTemplate {
         ),
     ]
 }
+
+// MARK: - Template Management
+
+extension PromptTemplate {
+    /// Create a new user template.
+    static func createUserTemplate(
+        name: String,
+        mode: ProcessingMode,
+        systemPrompt: String,
+        userPromptTemplate: String,
+        variables: [String] = [],
+        in context: ModelContext
+    ) -> PromptTemplate {
+        let template = PromptTemplate(
+            name: name,
+            mode: mode,
+            systemPrompt: systemPrompt,
+            userPromptTemplate: userPromptTemplate,
+            variables: variables,
+            isBuiltIn: false,
+            isDefault: false
+        )
+        context.insert(template)
+        return template
+    }
+
+    /// Check if this template can be deleted (built-in templates cannot).
+    var isDeletable: Bool {
+        !isBuiltIn
+    }
+
+    /// Delete this template if it's not built-in.
+    /// - Returns: true if deleted, false if built-in (protected).
+    @discardableResult
+    func deleteIfAllowed(from context: ModelContext) -> Bool {
+        guard isDeletable else { return false }
+        context.delete(self)
+        return true
+    }
+
+    /// Duplicate this template with a new name.
+    func duplicate(name: String? = nil, in context: ModelContext) -> PromptTemplate {
+        let newName = name ?? "\(self.name) Copy"
+        return PromptTemplate.createUserTemplate(
+            name: newName,
+            mode: mode,
+            systemPrompt: systemPrompt,
+            userPromptTemplate: userPromptTemplate,
+            variables: variables,
+            in: context
+        )
+    }
+}
+
+// MARK: - Template Validation
+
+extension PromptTemplate {
+    /// Validation result for a template.
+    struct ValidationResult {
+        let isValid: Bool
+        let warnings: [String]
+        let unresolvedVariables: [String]
+    }
+
+    /// Validate this template for common issues.
+    func validate() -> ValidationResult {
+        var warnings: [String] = []
+
+        // Check for empty prompts
+        if systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            warnings.append("System prompt is empty")
+        }
+        if userPromptTemplate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            warnings.append("User prompt template is empty")
+        }
+
+        // Check for unresolved variables
+        let unresolvedVars = findUnresolvedVariables()
+        if !unresolvedVars.isEmpty {
+            warnings.append("Unresolved variables: \(unresolvedVars.joined(separator: ", "))")
+        }
+
+        // Check that transcription placeholder exists somewhere
+        let allText = systemPrompt + " " + userPromptTemplate
+        if !allText.contains("{{transcription}}") {
+            warnings.append("Template does not use {{transcription}} — the raw text won't be included")
+        }
+
+        let isValid = warnings.isEmpty ||
+            (warnings.count == 1 && warnings.first == "System prompt is empty")
+
+        return ValidationResult(
+            isValid: isValid,
+            warnings: warnings,
+            unresolvedVariables: unresolvedVars
+        )
+    }
+
+    /// Find variable placeholders not declared in the variables array.
+    private func findUnresolvedVariables() -> [String] {
+        let builtInVars: Set<String> = [
+            "transcription", "language", "app_name",
+            "app_bundle_id", "timestamp", "date", "time"
+        ]
+        let declaredVars = Set(variables)
+        let allKnown = builtInVars.union(declaredVars)
+
+        let pattern = "\\{\\{([^}]+)\\}\\}"
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+
+        let allText = systemPrompt + " " + userPromptTemplate
+        let range = NSRange(allText.startIndex..., in: allText)
+        let matches = regex.matches(in: allText, range: range)
+
+        var unresolved: Set<String> = []
+        for match in matches {
+            if let varRange = Range(match.range(at: 1), in: allText) {
+                let varName = String(allText[varRange])
+                if !allKnown.contains(varName) {
+                    unresolved.insert(varName)
+                }
+            }
+        }
+
+        return unresolved.sorted()
+    }
+}

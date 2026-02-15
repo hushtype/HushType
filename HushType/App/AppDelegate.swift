@@ -14,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var modelContainer: ModelContainer?
     private var dictationController: DictationController?
     private var modelDownloader: ModelDownloader?
+    private var llmService: LLMService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Kill any other running instances of HushType
@@ -120,6 +121,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 await controller.loadWhisperModel(fileName: modelFileName)
             }
             autoDownloadDefaultModelIfNeeded(in: context)
+
+            // Configure LLM service
+            let service = LLMService()
+            let provider = LlamaCppProvider()
+            service.setProvider(provider)
+            controller.setLLMService(service)
+            self.llmService = service
+
+            // Load LLM model if configured
+            if let llmModelName = settings.selectedLLMModel {
+                Task {
+                    await controller.loadLLMModel(fileName: llmModelName)
+                }
+            }
 
             try controller.start(hotkey: settings.globalHotkey)
             appState.currentError = nil

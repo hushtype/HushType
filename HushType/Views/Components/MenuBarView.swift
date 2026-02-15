@@ -41,7 +41,7 @@ struct MenuBarView: View {
 
                 // Active mode indicator
                 HStack(spacing: 6) {
-                    Image(systemName: "wand.and.stars")
+                    Image(systemName: appState.activeMode.iconName)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Text(appState.activeMode.displayName)
