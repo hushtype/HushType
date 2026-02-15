@@ -93,6 +93,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func startPipeline() {
+        // Skip pipeline when running inside XCTest host to prevent crashes
+        // from audio hardware and model loading during unit tests
+        if NSClassFromString("XCTestCase") != nil {
+            Logger.general.info("Test environment detected — skipping pipeline startup")
+            return
+        }
+
         guard let modelContainer else {
             Logger.general.error("ModelContainer not set — pipeline not started")
             return

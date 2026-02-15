@@ -9,6 +9,7 @@ final class ModelManagerTests: XCTestCase {
     private var modelContainer: ModelContainer!
     private var modelContext: ModelContext!
     private var manager: ModelManager!
+    private var createdFilePaths: [URL] = []
 
     override func setUp() async throws {
         try await super.setUp()
@@ -24,6 +25,7 @@ final class ModelManagerTests: XCTestCase {
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
             modelContext = ModelContext(modelContainer)
             manager = ModelManager()
+            createdFilePaths = []
         } catch {
             XCTFail("Failed to create ModelContainer: \(error)")
             throw error
@@ -31,10 +33,25 @@ final class ModelManagerTests: XCTestCase {
     }
 
     override func tearDown() async throws {
+        // Clean up any temp files created during tests
+        for path in createdFilePaths {
+            try? FileManager.default.removeItem(at: path)
+        }
+        createdFilePaths = []
         manager = nil
         modelContext = nil
         modelContainer = nil
         try await super.tearDown()
+    }
+
+    // MARK: - Helpers
+
+    /// Create a placeholder file at the model's expected filePath so fileExistsOnDisk returns true.
+    private func createPlaceholderFile(for model: ModelInfo) throws {
+        let dir = model.filePath.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: model.filePath.path, contents: Data([0]))
+        createdFilePaths.append(model.filePath)
     }
 
     // MARK: - Total Disk Usage Tests
@@ -47,11 +64,11 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(usage, 0)
     }
 
-    func test_totalDiskUsage_withDownloadedModels() {
+    func test_totalDiskUsage_withDownloadedModels() throws {
         let model1 = ModelInfo(
             name: "Model 1",
             type: .whisper,
-            fileName: "model1.bin",
+            fileName: "test-model1.bin",
             fileSize: 100_000_000,
             isDownloaded: true
         )
@@ -59,10 +76,13 @@ final class ModelManagerTests: XCTestCase {
         let model2 = ModelInfo(
             name: "Model 2",
             type: .llm,
-            fileName: "model2.gguf",
+            fileName: "test-model2.gguf",
             fileSize: 200_000_000,
             isDownloaded: true
         )
+
+        try createPlaceholderFile(for: model1)
+        try createPlaceholderFile(for: model2)
 
         let models = [model1, model2]
 
@@ -71,11 +91,11 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(usage, 300_000_000)
     }
 
-    func test_totalDiskUsage_ignoresNotDownloaded() {
+    func test_totalDiskUsage_ignoresNotDownloaded() throws {
         let downloaded = ModelInfo(
             name: "Downloaded",
             type: .whisper,
-            fileName: "downloaded.bin",
+            fileName: "test-downloaded.bin",
             fileSize: 100_000_000,
             isDownloaded: true
         )
@@ -83,10 +103,12 @@ final class ModelManagerTests: XCTestCase {
         let notDownloaded = ModelInfo(
             name: "Not Downloaded",
             type: .whisper,
-            fileName: "not-downloaded.bin",
+            fileName: "test-not-downloaded.bin",
             fileSize: 200_000_000,
             isDownloaded: false
         )
+
+        try createPlaceholderFile(for: downloaded)
 
         let models = [downloaded, notDownloaded]
 
@@ -116,11 +138,11 @@ final class ModelManagerTests: XCTestCase {
 
     // MARK: - Disk Usage by Type Tests
 
-    func test_diskUsage_filtersByType() {
+    func test_diskUsage_filtersByType() throws {
         let whisperModel = ModelInfo(
             name: "Whisper",
             type: .whisper,
-            fileName: "whisper.bin",
+            fileName: "test-whisper.bin",
             fileSize: 100_000_000,
             isDownloaded: true
         )
@@ -128,10 +150,13 @@ final class ModelManagerTests: XCTestCase {
         let llmModel = ModelInfo(
             name: "LLM",
             type: .llm,
-            fileName: "llm.gguf",
+            fileName: "test-llm.gguf",
             fileSize: 200_000_000,
             isDownloaded: true
         )
+
+        try createPlaceholderFile(for: whisperModel)
+        try createPlaceholderFile(for: llmModel)
 
         let models = [whisperModel, llmModel]
 
@@ -142,11 +167,11 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(llmUsage, 200_000_000)
     }
 
-    func test_diskUsage_multipleModelsOfSameType() {
+    func test_diskUsage_multipleModelsOfSameType() throws {
         let whisper1 = ModelInfo(
             name: "Whisper 1",
             type: .whisper,
-            fileName: "whisper1.bin",
+            fileName: "test-whisper1.bin",
             fileSize: 100_000_000,
             isDownloaded: true
         )
@@ -154,10 +179,13 @@ final class ModelManagerTests: XCTestCase {
         let whisper2 = ModelInfo(
             name: "Whisper 2",
             type: .whisper,
-            fileName: "whisper2.bin",
+            fileName: "test-whisper2.bin",
             fileSize: 150_000_000,
             isDownloaded: true
         )
+
+        try createPlaceholderFile(for: whisper1)
+        try createPlaceholderFile(for: whisper2)
 
         let models = [whisper1, whisper2]
 
@@ -166,11 +194,11 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(usage, 250_000_000)
     }
 
-    func test_diskUsage_ignoresNotDownloaded() {
+    func test_diskUsage_ignoresNotDownloaded() throws {
         let downloaded = ModelInfo(
             name: "Downloaded",
             type: .whisper,
-            fileName: "downloaded.bin",
+            fileName: "test-dl.bin",
             fileSize: 100_000_000,
             isDownloaded: true
         )
@@ -178,10 +206,12 @@ final class ModelManagerTests: XCTestCase {
         let notDownloaded = ModelInfo(
             name: "Not Downloaded",
             type: .whisper,
-            fileName: "not-downloaded.bin",
+            fileName: "test-not-dl.bin",
             fileSize: 200_000_000,
             isDownloaded: false
         )
+
+        try createPlaceholderFile(for: downloaded)
 
         let models = [downloaded, notDownloaded]
 
@@ -190,14 +220,16 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(usage, 100_000_000)
     }
 
-    func test_diskUsage_noMatchingType() {
+    func test_diskUsage_noMatchingType() throws {
         let llmModel = ModelInfo(
             name: "LLM",
             type: .llm,
-            fileName: "llm.gguf",
+            fileName: "test-llm-only.gguf",
             fileSize: 200_000_000,
             isDownloaded: true
         )
+
+        try createPlaceholderFile(for: llmModel)
 
         let models = [llmModel]
 
