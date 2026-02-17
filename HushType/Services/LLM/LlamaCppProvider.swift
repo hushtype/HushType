@@ -93,7 +93,8 @@ actor LlamaCppProvider: LLMProvider {
         do {
             let result = try await ctx.generate(
                 prompt: fullPrompt,
-                maxTokens: maxTokens
+                maxTokens: maxTokens,
+                stopSequences: Self.defaultStopSequences
             )
             return result.text
         } catch {
@@ -109,18 +110,29 @@ actor LlamaCppProvider: LLMProvider {
 
     // MARK: - Private
 
+    /// Common stop sequences to catch model-specific end tokens.
+    private static let defaultStopSequences = [
+        "</s>",
+        "<|endoftext|>",
+        "<|im_end|>",
+        "<|end|>",
+        "<|eot_id|>",
+        "\nHuman:",
+        "\nUser:",
+    ]
+
     /// Format system and user prompts into a single prompt string.
-    /// Uses a generic chat format that works with most GGUF models.
+    /// Uses ChatML format compatible with Qwen, Llama, Gemma, Phi models.
     private func formatPrompt(system: String, user: String) -> String {
         if system.isEmpty {
             return user
         }
         return """
-        <|system|>
-        \(system)</s>
-        <|user|>
-        \(user)</s>
-        <|assistant|>
+        <|im_start|>system
+        \(system)<|im_end|>
+        <|im_start|>user
+        \(user)<|im_end|>
+        <|im_start|>assistant
         """
     }
 }

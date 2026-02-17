@@ -36,10 +36,13 @@ final class ProcessingModeRouter {
             variables: variables
         )
 
+        let maxTokens = maxTokensForMode(mode, inputLength: text.count)
+
         return try await llmService.process(
             text: text,
             systemPrompt: systemPrompt,
-            userPrompt: userPrompt
+            userPrompt: userPrompt,
+            maxTokens: maxTokens
         )
     }
 
@@ -69,6 +72,30 @@ final class ProcessingModeRouter {
             // No template provided — fall back to clean
             Logger.llm.warning("No template provided for \(mode.rawValue) mode, falling back to clean")
             return (cleanSystemPrompt, text)
+        }
+    }
+
+    // MARK: - Token Limits
+
+    /// Estimate appropriate max tokens based on mode and input length.
+    private func maxTokensForMode(_ mode: ProcessingMode, inputLength: Int) -> Int {
+        // Rough estimate: 1 token ≈ 4 chars
+        let estimatedInputTokens = max(inputLength / 4, 32)
+
+        switch mode {
+        case .raw:
+            return estimatedInputTokens
+        case .clean:
+            // Clean output ≈ same length as input
+            return min(estimatedInputTokens * 2, 256)
+        case .structure:
+            // Structure adds headings/bullets — allow more
+            return min(estimatedInputTokens * 3, 512)
+        case .code:
+            // Code can expand significantly from spoken instructions
+            return min(estimatedInputTokens * 4, 1024)
+        case .prompt, .custom:
+            return 512
         }
     }
 

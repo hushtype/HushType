@@ -51,6 +51,7 @@ final class DictationController: @unchecked Sendable {
     private var vadSensitivity: Float = 0.5
     private var injectionMethod: InjectionMethod = .auto
     private var pushToTalkEnabled: Bool = false
+    private var defaultMode: ProcessingMode = .raw
     private var playSoundEffects: Bool = true
 
     // MARK: - SwiftData (set after init)
@@ -154,9 +155,7 @@ final class DictationController: @unchecked Sendable {
             return
         }
 
-        if let mode {
-            appState.activeMode = mode
-        }
+        appState.activeMode = mode ?? defaultMode
 
         updateState(.recording)
         playSound(.start)
@@ -217,7 +216,7 @@ final class DictationController: @unchecked Sendable {
                 return
             }
 
-            Logger.general.info("Transcription: \"\(result.text.prefix(80))...\"")
+            Logger.general.info("Transcription: \(result.text)")
 
             // Voice prefix detection — switch mode if user said "code mode:", "clean this up:", etc.
             var rawText = result.text
@@ -230,18 +229,22 @@ final class DictationController: @unchecked Sendable {
             // LLM processing (if mode requires it)
             var outputText = rawText
 
-            if appState.activeMode.requiresLLM, let router = processingRouter {
+            let activeMode = self.appState.activeMode
+            if activeMode.requiresLLM, let router = processingRouter {
                 updateState(.processing)
+                Logger.general.info("LLM input [\(activeMode.rawValue)]: \(rawText)")
                 do {
                     outputText = try await router.process(
                         text: rawText,
-                        mode: appState.activeMode
+                        mode: activeMode
                     )
-                    Logger.general.info("LLM processed: \(outputText.count) chars")
+                    Logger.general.info("LLM output [\(activeMode.rawValue)]: \(outputText)")
                 } catch {
                     Logger.general.warning("LLM processing failed, using raw text: \(error.localizedDescription)")
                     outputText = rawText
                 }
+            } else {
+                Logger.general.info("Skipping LLM (mode: \(activeMode.rawValue))")
             }
 
             // Inject text
@@ -366,7 +369,8 @@ final class DictationController: @unchecked Sendable {
         playSoundEffects: Bool = true,
         audioInputDeviceID: String? = nil,
         useGPUAcceleration: Bool = true,
-        whisperThreadCount: Int = 0
+        whisperThreadCount: Int = 0,
+        defaultMode: ProcessingMode = .raw
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
@@ -376,6 +380,12 @@ final class DictationController: @unchecked Sendable {
         self.audioService.setInputDevice(id: audioInputDeviceID)
         self.whisperService.useGPU = useGPUAcceleration
         self.whisperService.threadCount = whisperThreadCount
+        self.defaultMode = defaultMode
+
+        // Update displayed mode when idle so menu bar reflects the setting
+        if state == .idle {
+            appState.activeMode = defaultMode
+        }
     }
 
     // MARK: - Sound Effects
