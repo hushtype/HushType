@@ -154,47 +154,47 @@
 ## Phase 3: Smart Features (v0.3.0)
 
 ### 3.1 App-Aware Context
-- [ ] Create `AppContextService.swift` — monitor `NSWorkspace.shared.frontmostApplication` for active app changes, emit notifications on app switch
-- [ ] Implement per-app profile auto-creation — create default AppProfile the first time user dictates into an unrecognized app, populate from NSRunningApplication
-- [ ] Add smart defaults — map known bundle IDs to sensible defaults (Xcode→Code mode, Mail→Clean, Terminal→Raw, VS Code→Code, Notes→Structure)
-- [ ] Create `AppProfileEditorView.swift` — settings UI for managing per-app profiles (mode, language, injection method, vocabulary overrides)
+- [x] Create `AppContextService.swift` — monitor `NSWorkspace.shared.frontmostApplication` for active app changes, emit notifications on app switch
+- [x] Implement per-app profile auto-creation — create default AppProfile the first time user dictates into an unrecognized app, populate from NSRunningApplication
+- [x] Add smart defaults — map known bundle IDs to sensible defaults (Xcode→Code mode, Mail→Clean, Terminal→Raw, VS Code→Code, Notes→Structure)
+- [x] Create `AppProfileEditorView.swift` — settings UI for managing per-app profiles (mode, language, injection method, vocabulary overrides)
 
 ### 3.2 Dictation History
-- [ ] Create `HistoryView.swift` — dedicated window with list of DictationEntry records, sorted by timestamp descending
-- [ ] Add full-text search — search across rawText and processedText using SwiftData predicates
-- [ ] Add filtering — filter by target app (appBundleIdentifier), date range, processing mode, favorites only
-- [ ] Add edit and re-inject — select a past transcription, edit text, inject at current cursor position
-- [ ] Add retention policies — configurable auto-deletion by age (historyRetentionDays) and count (maxHistoryEntries), favorites exempt from auto-delete
-- [ ] Create `HistoryCleanupService.swift` — runs retention policies on app launch and periodically, manual "Clear All History" and "Factory Reset" options
+- [x] Create `HistoryView.swift` — dedicated window with list of DictationEntry records, sorted by timestamp descending
+- [x] Add full-text search — search across rawText and processedText using SwiftData predicates
+- [x] Add filtering — filter by target app (appBundleIdentifier), date range, processing mode, favorites only
+- [x] Add edit and re-inject — select a past transcription, edit text, inject at current cursor position
+- [x] Add retention policies — configurable auto-deletion by age (historyRetentionDays) and count (maxHistoryEntries), favorites exempt from auto-delete
+- [x] Create `HistoryCleanupService.swift` — runs retention policies on app launch and periodically, manual "Clear All History" and "Factory Reset" options
 
 ### 3.3 Floating Overlay Window
-- [ ] Create `OverlayWindow.swift` — floating `NSPanel` (`.nonactivatingPanel`, `.floating`, `.fullSizeContentView`), always-on-top during dictation
-- [ ] Add real-time transcription display — show whisper output updating in real time as audio is processed
-- [ ] Add edit-before-inject — user can modify transcribed text in overlay before injecting, Enter to inject, Escape to cancel
-- [ ] Add overlay controls — mode indicator, language indicator, latency display, cancel/inject buttons
-- [ ] Add position and transparency settings — configurable overlay position (near cursor, corner, center), adjustable opacity
+- [x] Create `OverlayWindow.swift` — floating `NSPanel` (`.nonactivatingPanel`, `.floating`, `.fullSizeContentView`), always-on-top during dictation
+- [x] Add real-time transcription display — show whisper output updating in real time as audio is processed
+- [x] Add edit-before-inject — user can modify transcribed text in overlay before injecting, Enter to inject, Escape to cancel
+- [x] Add overlay controls — mode indicator, language indicator, latency display, cancel/inject buttons
+- [x] Add position and transparency settings — configurable overlay position (near cursor, corner, center), adjustable opacity
 
 ### 3.4 Custom Vocabulary
-- [ ] Create `VocabularyService.swift` — apply vocabulary replacements to transcription text before LLM processing, merge global + per-app entries
-- [ ] Create `VocabularyEditorView.swift` — settings UI for managing spoken form / replacement pairs, global vs per-app scope, import/export as JSON
+- [x] Create `VocabularyService.swift` — apply vocabulary replacements to transcription text before LLM processing, merge global + per-app entries
+- [x] Create `VocabularyEditorView.swift` — settings UI for managing spoken form / replacement pairs, global vs per-app scope, import/export as JSON
 
 ### 3.5 Multi-Language Support
-- [ ] Add language selection — explicit language setting in UserSettings and per-app AppProfile, auto-detect via whisper.cpp first-30-seconds analysis
-- [ ] Add language indicator — show detected/selected language code in menu bar popover and overlay
-- [ ] Pass language to LLM — include detected language in PromptTemplate `{{language}}` variable for language-aware processing
-- [ ] Add per-app language override — AppProfile.preferredLanguage overrides global default for specific apps
+- [x] Add language selection — explicit language setting in UserSettings and per-app AppProfile, auto-detect via whisper.cpp first-30-seconds analysis
+- [x] Add language indicator — show detected/selected language code in menu bar popover and overlay
+- [x] Pass language to LLM — include detected language in PromptTemplate `{{language}}` variable for language-aware processing
+- [x] Add per-app language override — AppProfile.preferredLanguage overrides global default for specific apps
 
 ### 3.6 Settings: Advanced Tabs
-- [ ] Create `AppProfilesSettingsTab.swift` — list of per-app profiles with edit/delete, auto-created profile indicators
-- [ ] Create `VocabularySettingsTab.swift` — vocabulary editor tab with global and per-app scopes
-- [ ] Create `LanguageSettingsTab.swift` — global language selection, auto-detect toggle, language priority list
-- [ ] Create `HistorySettingsTab.swift` — retention policies configuration, storage usage display, clear history button, export/import
+- [x] Create `AppProfilesSettingsTab.swift` — list of per-app profiles with edit/delete, auto-created profile indicators
+- [x] Create `VocabularySettingsTab.swift` — vocabulary editor tab with global and per-app scopes
+- [x] Create `LanguageSettingsTab.swift` — global language selection, auto-detect toggle, language priority list
+- [x] Create `HistorySettingsTab.swift` — retention policies configuration, storage usage display, clear history button, export/import
 
 ### 3.7 Phase 3 Tests
-- [ ] Create `AppContextServiceTests.swift` — unit tests for frontmost app detection, profile auto-creation, smart defaults mapping
-- [ ] Create `HistoryViewTests.swift` — unit tests for SwiftData queries, search, filtering, retention policy enforcement
-- [ ] Create `OverlayWindowTests.swift` — unit tests for overlay lifecycle (show/hide/dismiss), edit-before-inject flow
-- [ ] Create `VocabularyServiceTests.swift` — unit tests for replacement matching (case sensitive/insensitive), global vs per-app merge order
+- [x] Create `AppContextServiceTests.swift` — unit tests for frontmost app detection, profile auto-creation, smart defaults mapping
+- [x] Create `HistoryViewTests.swift` — unit tests for SwiftData queries, search, filtering, retention policy enforcement
+- [x] Create `OverlayWindowTests.swift` — unit tests for overlay lifecycle (show/hide/dismiss), edit-before-inject flow
+- [x] Create `VocabularyServiceTests.swift` — unit tests for replacement matching (case sensitive/insensitive), global vs per-app merge order
 
 ---
 

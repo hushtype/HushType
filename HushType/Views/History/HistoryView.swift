@@ -1,0 +1,705 @@
+import SwiftUI
+import SwiftData
+import os
+
+// MARK: - HistoryView
+
+struct HistoryView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \DictationEntry.timestamp, order: .reverse)
+    private var entries: [DictationEntry]
+
+    @State private var searchText: String = ""
+    @State private var selectedEntry: DictationEntry?
+    @State private var entryToDelete: DictationEntry?
+    @State private var showDeleteConfirmation = false
+
+    // Filters
+    @State private var filterApp: String? = nil
+    @State private var filterMode: ProcessingMode? = nil
+    @State private var filterFavoritesOnly: Bool = false
+    @State private var filterDateFrom: Date? = nil
+    @State private var filterDateTo: Date? = nil
+
+    // Edit/re-inject
+    @State private var isEditingForInject: Bool = false
+    @State private var editText: String = ""
+    @State private var editEntry: DictationEntry?
+
+    /// All unique app names in history, for the filter picker.
+    private var uniqueAppNames: [String] {
+        Array(Set(entries.compactMap(\.appName))).sorted()
+    }
+
+    private var filteredEntries: [DictationEntry] {
+        var result = entries
+
+        // Text search
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            result = result.filter { entry in
+                entry.outputText.lowercased().contains(query)
+                    || entry.rawText.lowercased().contains(query)
+                    || (entry.appName?.lowercased().contains(query) ?? false)
+                    || entry.mode.displayName.lowercased().contains(query)
+            }
+        }
+
+        // App filter
+        if let app = filterApp {
+            result = result.filter { $0.appName == app }
+        }
+
+        // Mode filter
+        if let mode = filterMode {
+            result = result.filter { $0.mode == mode }
+        }
+
+        // Favorites filter
+        if filterFavoritesOnly {
+            result = result.filter(\.isFavorite)
+        }
+
+        // Date range filter
+        if let from = filterDateFrom {
+            result = result.filter { $0.timestamp >= from }
+        }
+        if let to = filterDateTo {
+            let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: to) ?? to
+            result = result.filter { $0.timestamp < endOfDay }
+        }
+
+        return result
+    }
+
+    private var hasActiveFilters: Bool {
+        filterApp != nil || filterMode != nil || filterFavoritesOnly || filterDateFrom != nil || filterDateTo != nil
+    }
+
+    var body: some View {
+        NavigationSplitView {
+            listSidebar
+        } detail: {
+            detailPane
+        }
+        .navigationTitle("Dictation History")
+        .frame(minWidth: 600, minHeight: 400)
+        .alert("Delete Entry", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                if let entry = entryToDelete {
+                    deleteEntry(entry)
+                }
+            }
+        } message: {
+            Text("Delete this dictation entry? This action cannot be undone.")
+        }
+        .sheet(isPresented: $isEditingForInject) {
+            editAndInjectSheet
+        }
+    }
+
+    // MARK: - Edit & Re-inject Sheet
+
+    private var editAndInjectSheet: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Edit & Inject")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel") {
+                    isEditingForInject = false
+                }
+            }
+
+            TextEditor(text: $editText)
+                .font(.body)
+                .frame(minHeight: 120)
+                .border(Color.secondary.opacity(0.3))
+
+            HStack {
+                Spacer()
+                Button("Inject at Cursor") {
+                    injectText(editText)
+                    isEditingForInject = false
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.return, modifiers: .command)
+            }
+        }
+        .padding(20)
+        .frame(width: 450, height: 250)
+    }
+
+    private func injectText(_ text: String) {
+        let injector = TextInjectionService(permissionsManager: PermissionsManager())
+        Task {
+            do {
+                try await injector.inject(text, method: .auto)
+                Logger.ui.info("Re-injected text from history: \(text.count) chars")
+            } catch {
+                Logger.ui.error("Re-inject failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Sidebar
+
+    private var listSidebar: some View {
+        Group {
+            if filteredEntries.isEmpty {
+                emptyStateView
+            } else {
+                List(selection: $selectedEntry) {
+                    ForEach(filteredEntries) { entry in
+                        HistoryRowView(entry: entry, onToggleFavorite: {
+                            toggleFavorite(entry)
+                        })
+                        .tag(entry)
+                        .contextMenu {
+                            Button {
+                                toggleFavorite(entry)
+                            } label: {
+                                Label(
+                                    entry.isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                                    systemImage: entry.isFavorite ? "star.slash" : "star"
+                                )
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                entryToDelete = entry
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                entryToDelete = entry
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+
+                            Button {
+                                toggleFavorite(entry)
+                            } label: {
+                                Label(
+                                    entry.isFavorite ? "Unfavorite" : "Favorite",
+                                    systemImage: entry.isFavorite ? "star.slash.fill" : "star.fill"
+                                )
+                            }
+                            .tint(.yellow)
+                        }
+                    }
+                    .onDelete { offsets in
+                        deleteAtOffsets(offsets)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Dictation History")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Text("\(filteredEntries.count) entries")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    // App filter
+                    Menu("App") {
+                        Button("All Apps") { filterApp = nil }
+                        Divider()
+                        ForEach(uniqueAppNames, id: \.self) { name in
+                            Button(name) { filterApp = name }
+                        }
+                    }
+
+                    // Mode filter
+                    Menu("Mode") {
+                        Button("All Modes") { filterMode = nil }
+                        Divider()
+                        ForEach(ProcessingMode.allCases, id: \.self) { mode in
+                            Button(mode.displayName) { filterMode = mode }
+                        }
+                    }
+
+                    // Favorites toggle
+                    Toggle("Favorites Only", isOn: $filterFavoritesOnly)
+
+                    Divider()
+
+                    // Clear all filters
+                    Button("Clear Filters") {
+                        filterApp = nil
+                        filterMode = nil
+                        filterFavoritesOnly = false
+                        filterDateFrom = nil
+                        filterDateTo = nil
+                    }
+                } label: {
+                    Label("Filter", systemImage: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+            }
+        }
+        .searchable(text: $searchText, placement: .sidebar, prompt: "Search history")
+    }
+
+    // MARK: - Detail Pane
+
+    @ViewBuilder
+    private var detailPane: some View {
+        if let entry = selectedEntry {
+            HistoryDetailView(entry: entry, onToggleFavorite: {
+                toggleFavorite(entry)
+            }, onDelete: {
+                entryToDelete = entry
+                showDeleteConfirmation = true
+                selectedEntry = nil
+            }, onEditAndInject: {
+                editEntry = entry
+                editText = entry.outputText
+                isEditingForInject = true
+            })
+        } else {
+            ContentUnavailableView(
+                "No Entry Selected",
+                systemImage: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                description: Text("Select a dictation entry to view its full content")
+            )
+        }
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "waveform.slash")
+                .font(.system(size: 48))
+                .foregroundStyle(.tertiary)
+
+            VStack(spacing: 4) {
+                Text(searchText.isEmpty ? "No Dictation History" : "No Results")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.primary)
+
+                Text(
+                    searchText.isEmpty
+                        ? "Your dictation history will appear here after your first recording."
+                        : "No entries match \"\(searchText)\"."
+                )
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Actions
+
+    private func toggleFavorite(_ entry: DictationEntry) {
+        entry.isFavorite.toggle()
+        do {
+            try modelContext.save()
+            Logger.ui.debug("Toggled favorite for entry: \(entry.id)")
+        } catch {
+            Logger.ui.error("Failed to save favorite toggle: \(error.localizedDescription)")
+        }
+    }
+
+    private func deleteEntry(_ entry: DictationEntry) {
+        if selectedEntry?.id == entry.id {
+            selectedEntry = nil
+        }
+        modelContext.delete(entry)
+        do {
+            try modelContext.save()
+            Logger.ui.info("Deleted dictation entry: \(entry.id)")
+        } catch {
+            Logger.ui.error("Failed to delete entry: \(error.localizedDescription)")
+        }
+    }
+
+    private func deleteAtOffsets(_ offsets: IndexSet) {
+        for index in offsets {
+            let entry = filteredEntries[index]
+            if selectedEntry?.id == entry.id {
+                selectedEntry = nil
+            }
+            modelContext.delete(entry)
+        }
+        do {
+            try modelContext.save()
+            Logger.ui.info("Deleted \(offsets.count) dictation entries via swipe/keyboard")
+        } catch {
+            Logger.ui.error("Failed to delete entries: \(error.localizedDescription)")
+        }
+    }
+}
+
+// MARK: - History Row View
+
+private struct HistoryRowView: View {
+    let entry: DictationEntry
+    let onToggleFavorite: () -> Void
+
+    private var preview: String {
+        let text = entry.outputText
+        guard text.count > 80 else { return text }
+        return String(text.prefix(80)) + "…"
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 10) {
+            // Left: favorite star + mode icon
+            VStack(spacing: 6) {
+                Button {
+                    onToggleFavorite()
+                } label: {
+                    Image(systemName: entry.isFavorite ? "star.fill" : "star")
+                        .font(.system(size: 13))
+                        .foregroundStyle(entry.isFavorite ? Color.yellow : Color.gray.opacity(0.3))
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                .buttonStyle(.plain)
+
+                Image(systemName: entry.mode.iconName)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 22)
+
+            // Center: text preview + app name
+            VStack(alignment: .leading, spacing: 3) {
+                Text(preview)
+                    .font(.body)
+                    .lineLimit(2)
+                    .foregroundStyle(.primary)
+
+                HStack(spacing: 4) {
+                    if let appName = entry.appName, !appName.isEmpty {
+                        Text(appName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+
+                        Text("·")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    Text(entry.mode.displayName)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            // Right: relative time + word count
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(entry.timestamp.relativeFormatted)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+
+                Text("\(entry.wordCount)w")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .monospacedDigit()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - History Detail View
+
+private struct HistoryDetailView: View {
+    let entry: DictationEntry
+    let onToggleFavorite: () -> Void
+    let onDelete: () -> Void
+    var onEditAndInject: (() -> Void)? = nil
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Header metadata
+                metadataHeader
+
+                Divider()
+
+                // Output text (the injected text)
+                textSection(
+                    title: "Output Text",
+                    icon: "text.quote",
+                    content: entry.outputText
+                )
+
+                // Raw text if it differs
+                if let processed = entry.processedText, processed != entry.rawText {
+                    Divider()
+
+                    textSection(
+                        title: "Raw Transcription",
+                        icon: "waveform",
+                        content: entry.rawText
+                    )
+                }
+            }
+            .padding(24)
+        }
+        .navigationTitle("Entry Details")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    onToggleFavorite()
+                } label: {
+                    Label(
+                        entry.isFavorite ? "Remove Favorite" : "Add Favorite",
+                        systemImage: entry.isFavorite ? "star.fill" : "star"
+                    )
+                }
+                .foregroundStyle(entry.isFavorite ? .yellow : .secondary)
+            }
+
+            if let onEditAndInject {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        onEditAndInject()
+                    } label: {
+                        Label("Edit & Inject", systemImage: "text.cursor")
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var metadataHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: entry.mode.iconName)
+                    .font(.title3)
+                    .foregroundStyle(Color.accentColor)
+
+                Text(entry.mode.displayName)
+                    .font(.title3)
+                    .fontWeight(.semibold)
+
+                if entry.isFavorite {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundStyle(.yellow)
+                }
+
+                Spacer()
+            }
+
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
+                GridRow {
+                    metadataLabel("Date")
+                    Text(entry.timestamp, style: .date)
+                        .font(.callout)
+                }
+                GridRow {
+                    metadataLabel("Time")
+                    Text(entry.timestamp, style: .time)
+                        .font(.callout)
+                }
+                if let appName = entry.appName, !appName.isEmpty {
+                    GridRow {
+                        metadataLabel("App")
+                        Text(appName)
+                            .font(.callout)
+                    }
+                }
+                GridRow {
+                    metadataLabel("Words")
+                    Text("\(entry.wordCount)")
+                        .font(.callout)
+                }
+                GridRow {
+                    metadataLabel("Duration")
+                    Text(entry.audioDuration.durationFormatted)
+                        .font(.callout)
+                }
+                if entry.wordsPerMinute > 0 {
+                    GridRow {
+                        metadataLabel("WPM")
+                        Text(String(format: "%.0f", entry.wordsPerMinute))
+                            .font(.callout)
+                    }
+                }
+                GridRow {
+                    metadataLabel("Language")
+                    Text(entry.language.uppercased())
+                        .font(.callout)
+                }
+            }
+        }
+    }
+
+    private func metadataLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .frame(minWidth: 72, alignment: .leading)
+    }
+
+    private func textSection(title: String, icon: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Button {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(content, forType: .string)
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+            }
+
+            Text(content)
+                .font(.body)
+                .textSelection(.enabled)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 8))
+        }
+    }
+}
+
+// MARK: - Date Formatting Helpers
+
+private extension Date {
+    /// Returns a concise relative string like "2h ago", "3d ago", "just now".
+    var relativeFormatted: String {
+        let seconds = Date.now.timeIntervalSince(self)
+
+        switch seconds {
+        case ..<60:
+            return "just now"
+        case ..<3_600:
+            let minutes = Int(seconds / 60)
+            return "\(minutes)m ago"
+        case ..<86_400:
+            let hours = Int(seconds / 3_600)
+            return "\(hours)h ago"
+        case ..<604_800:
+            let days = Int(seconds / 86_400)
+            return "\(days)d ago"
+        default:
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .none
+            return formatter.string(from: self)
+        }
+    }
+}
+
+private extension TimeInterval {
+    /// Returns a human-readable duration like "1m 23s" or "45s".
+    var durationFormatted: String {
+        let total = Int(self)
+        let minutes = total / 60
+        let seconds = total % 60
+        if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        }
+        return "\(seconds)s"
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    @Previewable @State var container: ModelContainer = {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: DictationEntry.self, configurations: config)
+        let context = ModelContext(container)
+
+        let sampleEntries: [DictationEntry] = [
+            DictationEntry(
+                rawText: "this is a raw transcription without any processing applied to it",
+                processedText: "This is a raw transcription without any processing applied to it.",
+                mode: .clean,
+                language: "en",
+                appBundleIdentifier: "com.apple.TextEdit",
+                appName: "TextEdit",
+                audioDuration: 4.2,
+                wordCount: 13,
+                timestamp: Date().addingTimeInterval(-3_600),
+                isFavorite: true
+            ),
+            DictationEntry(
+                rawText: "write a function that calculates the fibonacci sequence recursively",
+                processedText: "func fibonacci(_ n: Int) -> Int {\n    guard n > 1 else { return n }\n    return fibonacci(n - 1) + fibonacci(n - 2)\n}",
+                mode: .code,
+                language: "en",
+                appBundleIdentifier: "com.apple.dt.Xcode",
+                appName: "Xcode",
+                audioDuration: 6.1,
+                wordCount: 10,
+                timestamp: Date().addingTimeInterval(-7_200),
+                isFavorite: false
+            ),
+            DictationEntry(
+                rawText: "meeting notes from today agenda items include project status update and team feedback session",
+                processedText: "## Meeting Notes\n\n**Agenda:**\n- Project status update\n- Team feedback session",
+                mode: .structure,
+                language: "en",
+                appBundleIdentifier: "com.apple.Notes",
+                appName: "Notes",
+                audioDuration: 8.5,
+                wordCount: 16,
+                timestamp: Date().addingTimeInterval(-86_400),
+                isFavorite: false
+            ),
+            DictationEntry(
+                rawText: "um so basically what I'm trying to say is that the quick brown fox jumps over the lazy dog",
+                mode: .raw,
+                language: "en",
+                appBundleIdentifier: "com.apple.Safari",
+                appName: "Safari",
+                audioDuration: 5.8,
+                wordCount: 18,
+                timestamp: Date().addingTimeInterval(-172_800),
+                isFavorite: false
+            ),
+        ]
+
+        for entry in sampleEntries {
+            context.insert(entry)
+        }
+        return container
+    }()
+
+    HistoryView()
+        .modelContainer(container)
+        .frame(width: 800, height: 550)
+}

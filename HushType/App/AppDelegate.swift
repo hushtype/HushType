@@ -18,8 +18,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var llmService: LLMService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Kill any other running instances of HushType
-        terminateOtherInstances()
+        // Kill any other running instances of HushType (skip during unit tests)
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            terminateOtherInstances()
+        }
 
         // Hide dock icon - this is a menu bar only app
         NSApp.setActivationPolicy(.accessory)
@@ -64,10 +66,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 audioInputDeviceID: settings.audioInputDeviceID,
                 useGPUAcceleration: settings.useGPUAcceleration,
                 whisperThreadCount: settings.whisperThreadCount,
-                defaultMode: settings.defaultMode
+                defaultMode: settings.defaultMode,
+                autoDetectLanguage: settings.autoDetectLanguage,
+                defaultLanguage: settings.defaultLanguage
             )
             try controller.reloadHotkey(settings.globalHotkey)
-            Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled), mode: \(settings.defaultMode.rawValue))")
+            Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled), mode: \(settings.defaultMode.rawValue), lang: \(settings.autoDetectLanguage ? "auto" : settings.defaultLanguage))")
         } catch {
             Logger.general.error("Failed to reload settings: \(error.localizedDescription)")
         }
@@ -151,7 +155,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 audioInputDeviceID: settings.audioInputDeviceID,
                 useGPUAcceleration: settings.useGPUAcceleration,
                 whisperThreadCount: settings.whisperThreadCount,
-                defaultMode: settings.defaultMode
+                defaultMode: settings.defaultMode,
+                autoDetectLanguage: settings.autoDetectLanguage,
+                defaultLanguage: settings.defaultLanguage
             )
 
             // Load whisper model — auto-download default if not on disk

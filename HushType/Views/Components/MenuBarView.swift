@@ -10,6 +10,7 @@ import os.log
 
 struct MenuBarView: View {
     var appState: AppState
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -47,6 +48,17 @@ struct MenuBarView: View {
                     Text(appState.activeMode.displayName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    // Language indicator
+                    if let lang = appState.detectedLanguage {
+                        Text(lang.uppercased())
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
                 }
             }
 
@@ -90,6 +102,18 @@ struct MenuBarView: View {
 
             // MARK: - Action Buttons
             VStack(spacing: 8) {
+                Button {
+                    openWindow(id: "history")
+                } label: {
+                    HStack {
+                        Image(systemName: "clock.arrow.circlepath")
+                        Text("History")
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+
                 SettingsLink {
                     HStack {
                         Image(systemName: "gearshape")

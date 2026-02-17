@@ -171,4 +171,24 @@ final class AppState {
     // MARK: - Error State
 
     var currentError: String?
+
+    // MARK: - Overlay State
+
+    /// Text to display in the overlay (set after transcription/processing completes).
+    var overlayText: String?
+
+    /// Whether the overlay should be visible.
+    var showOverlay: Bool = false
+
+    /// Detected language from the last transcription.
+    var detectedLanguage: String?
+
+    /// Text edited by the user in the overlay (for edit-before-inject).
+    var overlayEditedText: String?
+
+    /// Set to true when user confirms injection from overlay.
+    var overlayEditConfirmed: Bool = false
+
+    /// Set to true when user cancels injection from overlay.
+    var overlayEditCancelled: Bool = false
 }

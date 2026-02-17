@@ -31,6 +31,30 @@ struct SettingsView: View {
                     Label("Models", systemImage: "arrow.down.circle")
                 }
                 .tag(3)
+
+            AppProfilesSettingsTab()
+                .tabItem {
+                    Label("App Profiles", systemImage: "apps.iphone")
+                }
+                .tag(4)
+
+            VocabularySettingsTab()
+                .tabItem {
+                    Label("Vocabulary", systemImage: "textformat.abc")
+                }
+                .tag(5)
+
+            LanguageSettingsTab()
+                .tabItem {
+                    Label("Language", systemImage: "globe")
+                }
+                .tag(6)
+
+            HistorySettingsTab()
+                .tabItem {
+                    Label("History", systemImage: "clock.arrow.circlepath")
+                }
+                .tag(7)
         }
         .frame(minWidth: 500, minHeight: 700)
         .onAppear {
@@ -42,5 +66,8 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .modelContainer(for: [UserSettings.self, ModelInfo.self, PromptTemplate.self], inMemory: true)
+        .modelContainer(for: [
+            UserSettings.self, ModelInfo.self, PromptTemplate.self,
+            AppProfile.self, VocabularyEntry.self, DictationEntry.self
+        ], inMemory: true)
 }

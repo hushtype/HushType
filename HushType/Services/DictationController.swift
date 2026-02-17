@@ -53,6 +53,8 @@ final class DictationController: @unchecked Sendable {
     private var pushToTalkEnabled: Bool = false
     private var defaultMode: ProcessingMode = .raw
     private var playSoundEffects: Bool = true
+    private var autoDetectLanguage: Bool = false
+    private var defaultLanguage: String = "en"
 
     // MARK: - SwiftData (set after init)
 
@@ -218,6 +220,9 @@ final class DictationController: @unchecked Sendable {
 
             Logger.general.info("Transcription: \(result.text)")
 
+            // Update detected language in app state
+            appState.detectedLanguage = result.language
+
             // Voice prefix detection — switch mode if user said "code mode:", "clean this up:", etc.
             var rawText = result.text
             if let detection = VoicePrefixDetector.detect(in: rawText) {
@@ -246,6 +251,9 @@ final class DictationController: @unchecked Sendable {
             } else {
                 Logger.general.info("Skipping LLM (mode: \(activeMode.rawValue))")
             }
+
+            // Update overlay with result
+            appState.overlayText = outputText
 
             // Inject text
             updateState(.injecting)
@@ -370,7 +378,9 @@ final class DictationController: @unchecked Sendable {
         audioInputDeviceID: String? = nil,
         useGPUAcceleration: Bool = true,
         whisperThreadCount: Int = 0,
-        defaultMode: ProcessingMode = .raw
+        defaultMode: ProcessingMode = .raw,
+        autoDetectLanguage: Bool = false,
+        defaultLanguage: String = "en"
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
@@ -381,6 +391,11 @@ final class DictationController: @unchecked Sendable {
         self.whisperService.useGPU = useGPUAcceleration
         self.whisperService.threadCount = whisperThreadCount
         self.defaultMode = defaultMode
+        self.autoDetectLanguage = autoDetectLanguage
+        self.defaultLanguage = defaultLanguage
+
+        // Update whisper language setting
+        self.whisperService.language = autoDetectLanguage ? "auto" : defaultLanguage
 
         // Update displayed mode when idle so menu bar reflects the setting
         if state == .idle {

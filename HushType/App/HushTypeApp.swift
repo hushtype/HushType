@@ -57,6 +57,14 @@ struct HushTypeApp: App {
         .menuBarExtraStyle(.window)
         .modelContainer(modelContainer)
 
+        Window("Dictation History", id: "history") {
+            HistoryView()
+                .onAppear {
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+        }
+        .modelContainer(modelContainer)
+
         Settings {
             SettingsView()
                 .onAppear {

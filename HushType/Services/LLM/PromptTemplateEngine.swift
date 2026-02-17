@@ -9,15 +9,23 @@ struct PromptTemplateEngine {
     /// - Parameters:
     ///   - template: The prompt template to render.
     ///   - transcription: Raw transcription text.
+    ///   - detectedLanguage: Language detected by whisper (overrides Locale-based fallback).
     ///   - userVariables: Additional user-defined variable values.
     /// - Returns: Tuple of (renderedSystemPrompt, renderedUserPrompt).
     static func render(
         template: PromptTemplate,
         transcription: String,
+        detectedLanguage: String? = nil,
         userVariables: [String: String] = [:]
     ) -> (systemPrompt: String, userPrompt: String) {
         // Merge built-in variables with user variables
         var allVariables = builtInVariables()
+
+        // Override language with whisper-detected language if available
+        if let lang = detectedLanguage {
+            allVariables["language"] = lang
+        }
+
         allVariables.merge(userVariables) { _, user in user }
 
         // Render user prompt template
