@@ -85,7 +85,10 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
 
     /// Stop capturing audio and return all captured samples.
     func stopCapture() async -> [Float] {
-        await withCheckedContinuation { continuation in
+        // Wait briefly for in-flight audio buffers to flush before stopping the engine
+        try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+
+        return await withCheckedContinuation { continuation in
             queue.async { [weak self] in
                 guard let self = self else {
                     continuation.resume(returning: [])

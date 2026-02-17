@@ -11,8 +11,8 @@ final class VoiceActivityDetector {
     /// Frame size in samples (30ms at 16kHz).
     private let frameSizeInSamples: Int = 480
 
-    /// Hangover time in seconds to avoid cutting trailing syllables.
-    private let hangoverSeconds: Float = 0.3
+    /// Hangover time in seconds to avoid cutting trailing words.
+    private let hangoverSeconds: Float = 0.5
 
     // MARK: - Methods
 
