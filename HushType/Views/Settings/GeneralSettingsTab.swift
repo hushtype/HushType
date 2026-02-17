@@ -34,27 +34,6 @@ struct GeneralSettingsTab: View {
                 .help("Hold hotkey to record, release to stop. When disabled, press to start, press again to stop.")
             }
 
-            Section("Processing") {
-                Picker("Default Mode", selection: Binding(
-                    get: { settings?.defaultMode ?? .clean },
-                    set: { newValue in
-                        settings?.defaultMode = newValue
-                        saveSettings()
-                    }
-                )) {
-                    ForEach(ProcessingMode.allCases) { mode in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(mode.displayName)
-                            Text(mode.description)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        .tag(mode)
-                    }
-                }
-                .help("Processing mode applied when no app-specific override exists")
-            }
-
             Section("Startup & Appearance") {
                 Toggle("Launch at Login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in

@@ -141,5 +141,48 @@ extension ModelInfo {
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"),
             isDefault: false
         ),
+
+        // MARK: LLM Models
+
+        ModelInfo(
+            name: "Qwen 2.5 0.5B Instruct (Q4_K_M)",
+            type: .llm,
+            fileName: "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+            fileSize: 491_000_000,
+            downloadURL: URL(string: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"),
+            isDefault: true
+        ),
+        ModelInfo(
+            name: "Qwen 2.5 1.5B Instruct (Q4_K_M)",
+            type: .llm,
+            fileName: "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+            fileSize: 1_100_000_000,
+            downloadURL: URL(string: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Llama 3.2 1B Instruct (Q4_K_M)",
+            type: .llm,
+            fileName: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+            fileSize: 808_000_000,
+            downloadURL: URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Gemma 3 1B Instruct (Q4_K_M)",
+            type: .llm,
+            fileName: "gemma-3-1b-it-Q4_K_M.gguf",
+            fileSize: 806_000_000,
+            downloadURL: URL(string: "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf"),
+            isDefault: false
+        ),
+        ModelInfo(
+            name: "Phi-4 Mini Instruct (Q4_K_M)",
+            type: .llm,
+            fileName: "microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+            fileSize: 2_490_000_000,
+            downloadURL: URL(string: "https://huggingface.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF/resolve/main/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf"),
+            isDefault: false
+        ),
     ]
 }

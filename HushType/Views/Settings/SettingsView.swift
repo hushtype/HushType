@@ -4,9 +4,10 @@ import os
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @State private var selectedTab: Int = 0
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             GeneralSettingsTab()
                 .tabItem {
                     Label("General", systemImage: "gear.circle")
@@ -25,7 +26,7 @@ struct SettingsView: View {
                 }
                 .tag(2)
 
-            ModelsSettingsTab()
+            ModelManagementView()
                 .tabItem {
                     Label("Models", systemImage: "arrow.down.circle")
                 }
@@ -33,6 +34,7 @@ struct SettingsView: View {
         }
         .frame(minWidth: 500, minHeight: 700)
         .onAppear {
+            selectedTab = 0
             Logger.ui.info("Settings window opened")
         }
     }

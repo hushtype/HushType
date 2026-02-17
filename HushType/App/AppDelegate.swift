@@ -14,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var modelContainer: ModelContainer?
     private var dictationController: DictationController?
     private var modelDownloader: ModelDownloader?
+    private var llmModelDownloader: ModelDownloader?
     private var llmService: LLMService?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -29,6 +30,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(handleModelDownloaded(_:)),
             name: .whisperModelDownloaded,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLLMModelDownloaded(_:)),
+            name: .llmModelDownloaded,
             object: nil
         )
 
@@ -55,10 +63,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 playSoundEffects: settings.playSoundEffects,
                 audioInputDeviceID: settings.audioInputDeviceID,
                 useGPUAcceleration: settings.useGPUAcceleration,
-                whisperThreadCount: settings.whisperThreadCount
+                whisperThreadCount: settings.whisperThreadCount,
+                defaultMode: settings.defaultMode
             )
             try controller.reloadHotkey(settings.globalHotkey)
-            Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled))")
+            Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled), mode: \(settings.defaultMode.rawValue))")
         } catch {
             Logger.general.error("Failed to reload settings: \(error.localizedDescription)")
         }
@@ -75,6 +84,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let controller = dictationController else { return }
         Task {
             await controller.loadWhisperModel(fileName: fileName)
+        }
+    }
+
+    @objc private func handleLLMModelDownloaded(_ notification: Notification) {
+        guard let fileName = notification.userInfo?["fileName"] as? String else { return }
+
+        guard let context = modelContainer?.mainContext else { return }
+
+        // Persist isDownloaded = true
+        try? context.save()
+
+        // Auto-select if no LLM model is currently selected
+        if let settings = try? UserSettings.shared(in: context),
+           settings.selectedLLMModel == nil {
+            settings.selectedLLMModel = fileName
+            try? context.save()
+            Logger.general.info("Auto-selected LLM model: \(fileName)")
+        }
+
+        guard let controller = dictationController else { return }
+        Task {
+            await controller.loadLLMModel(fileName: fileName)
         }
     }
 
@@ -119,7 +150,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 playSoundEffects: settings.playSoundEffects,
                 audioInputDeviceID: settings.audioInputDeviceID,
                 useGPUAcceleration: settings.useGPUAcceleration,
-                whisperThreadCount: settings.whisperThreadCount
+                whisperThreadCount: settings.whisperThreadCount,
+                defaultMode: settings.defaultMode
             )
 
             // Load whisper model — auto-download default if not on disk
@@ -128,6 +160,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 await controller.loadWhisperModel(fileName: modelFileName)
             }
             autoDownloadDefaultModelIfNeeded(in: context)
+            autoDownloadDefaultLLMModelIfNeeded(in: context)
 
             // Configure LLM service
             let service = LLMService()
@@ -167,6 +200,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Logger.general.info("Default whisper model not downloaded — auto-downloading \(model.name)")
         let downloader = ModelDownloader()
         modelDownloader = downloader
+        downloader.download(model)
+
+        do {
+            try context.save()
+        } catch {
+            Logger.general.error("Failed to save model state: \(error.localizedDescription)")
+        }
+    }
+
+    @MainActor
+    private func autoDownloadDefaultLLMModelIfNeeded(in context: ModelContext) {
+        let descriptor = FetchDescriptor<ModelInfo>()
+        guard let models = try? context.fetch(descriptor) else { return }
+
+        let defaultModel = models.first { $0.isDefault && $0.type == .llm }
+        guard let model = defaultModel, !model.isDownloaded, !model.fileExistsOnDisk else { return }
+
+        Logger.general.info("Default LLM model not downloaded — auto-downloading \(model.name)")
+        let downloader = ModelDownloader()
+        llmModelDownloader = downloader
         downloader.download(model)
 
         do {

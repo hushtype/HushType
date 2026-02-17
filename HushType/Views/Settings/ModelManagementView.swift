@@ -32,29 +32,112 @@ struct ModelManagementView: View {
                 .pickerStyle(.segmented)
             }
 
+            // Model info guide (type-specific)
+            modelInfoSection
+
             // Active Model Selection
             activeModelSection
-
-            // Disk Usage Summary
-            diskUsageSection
 
             // Available Models List
             availableModelsSection
 
-            // Import Button
-            Section {
-                Button {
-                    importModel()
-                } label: {
-                    Label("Import GGUF Model", systemImage: "square.and.arrow.down")
-                }
-                .help("Import a custom \(selectedModelType == .whisper ? "Whisper" : "LLM") model from disk")
-            }
         }
         .formStyle(.grouped)
         .onAppear {
             loadSettings()
             modelManager.syncDownloadStates(allModels)
+        }
+    }
+
+    // MARK: - Model Info Section
+
+    @ViewBuilder
+    private var modelInfoSection: some View {
+        if selectedModelType == .whisper {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Larger models are more accurate but slower and use more memory. English-only models (.en) are optimized for English speech.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
+                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+                        GridRow {
+                            Text("Model").bold()
+                            Text("Size").bold()
+                            Text("RAM").bold()
+                            Text("Speed").bold()
+                            Text("Accuracy").bold()
+                        }
+                        .font(.caption)
+                        Divider().gridCellColumns(5)
+                        GridRow {
+                            Text("Tiny"); Text("75 MB"); Text("~273 MB"); Text("Fastest"); Text("Basic")
+                        }
+                        GridRow {
+                            Text("Base"); Text("142 MB"); Text("~388 MB"); Text("Fast"); Text("Good")
+                        }
+                        GridRow {
+                            Text("Small"); Text("466 MB"); Text("~852 MB"); Text("Moderate"); Text("Better")
+                        }
+                        GridRow {
+                            Text("Medium"); Text("1.5 GB"); Text("~2.1 GB"); Text("Slow"); Text("Very Good")
+                        }
+                        GridRow {
+                            Text("Large v3 Turbo"); Text("1.5 GB"); Text("~2.1 GB"); Text("Slow"); Text("Best")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                    Text("Recommended: Base for daily use. Upgrade to Small if you notice frequent errors.")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+            } header: {
+                Text("Choosing a Model")
+            }
+        } else {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("LLM models post-process transcriptions: fixing grammar, structuring text, or generating code. Larger models produce better results but use more memory.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+
+                    Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+                        GridRow {
+                            Text("Model").bold()
+                            Text("Size").bold()
+                            Text("RAM").bold()
+                            Text("Quality").bold()
+                        }
+                        .font(.caption)
+                        Divider().gridCellColumns(4)
+                        GridRow {
+                            Text("Qwen 2.5 0.5B"); Text("463 MB"); Text("~900 MB"); Text("Good")
+                        }
+                        GridRow {
+                            Text("Gemma 3 1B"); Text("806 MB"); Text("~1.5 GB"); Text("Better")
+                        }
+                        GridRow {
+                            Text("Llama 3.2 1B"); Text("808 MB"); Text("~1.5 GB"); Text("Better")
+                        }
+                        GridRow {
+                            Text("Qwen 2.5 1.5B"); Text("1.1 GB"); Text("~2 GB"); Text("Great")
+                        }
+                        GridRow {
+                            Text("Phi-4 Mini 3.8B"); Text("2.5 GB"); Text("~4 GB"); Text("Best")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                    Text("Recommended: Qwen 2.5 0.5B for fast cleanup. Phi-4 Mini for best quality.")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
+            } header: {
+                Text("Choosing a Model")
+            }
         }
     }
 
@@ -107,42 +190,6 @@ struct ModelManagementView: View {
                 }
                 .help("Language model used for post-processing")
             }
-        }
-    }
-
-    // MARK: - Disk Usage Section
-
-    @ViewBuilder
-    private var diskUsageSection: some View {
-        Section("Disk Usage") {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Whisper Models:")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(formatBytes(modelManager.diskUsage(for: .whisper, models: allModels)))
-                        .fontWeight(.medium)
-                }
-
-                HStack {
-                    Text("LLM Models:")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(formatBytes(modelManager.diskUsage(for: .llm, models: allModels)))
-                        .fontWeight(.medium)
-                }
-
-                Divider()
-
-                HStack {
-                    Text("Total:")
-                        .foregroundStyle(.primary)
-                    Spacer()
-                    Text(formatBytes(modelManager.totalDiskUsage(models: allModels)))
-                        .fontWeight(.semibold)
-                }
-            }
-            .font(.callout)
         }
     }
 
@@ -200,20 +247,7 @@ struct ModelManagementView: View {
         }
     }
 
-    private func importModel() {
-        if let importedModel = modelManager.importGGUFModel(type: selectedModelType, context: modelContext) {
-            do {
-                try modelContext.save()
-                Logger.ui.info("Successfully imported model: \(importedModel.name)")
-            } catch {
-                Logger.ui.error("Failed to save imported model: \(error.localizedDescription)")
-            }
-        }
-    }
 
-    private func formatBytes(_ bytes: Int64) -> String {
-        ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
-    }
 }
 
 // MARK: - Unified Model Row
@@ -322,7 +356,7 @@ struct UnifiedModelRow: View {
                 deleteModel()
             }
         } message: {
-            Text("Delete \(model.name) (\(model.formattedFileSize))? You can re-download it later if it has a download URL.")
+            Text("Delete \(model.name) (\(model.formattedFileSize))? You can re-download it later.")
         }
     }
 
