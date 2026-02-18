@@ -119,72 +119,7 @@ private struct VocabularyListView: View {
     }
 
     var body: some View {
-        List(selection: $selectedEntry) {
-            if entries.isEmpty {
-                emptyStateView
-            } else {
-                if !globalEntries.isEmpty {
-                    Section {
-                        ForEach(globalEntries) { entry in
-                            VocabularyEntryRow(entry: entry)
-                                .tag(entry)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        entryToDelete = entry
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        entryToDelete = entry
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                        }
-                    } header: {
-                        HStack {
-                            Image(systemName: "globe")
-                            Text("Global")
-                        }
-                    }
-                }
-
-                if !perAppEntries.isEmpty {
-                    Section {
-                        ForEach(perAppEntries) { entry in
-                            VocabularyEntryRow(entry: entry)
-                                .tag(entry)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        entryToDelete = entry
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        entryToDelete = entry
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                        }
-                    } header: {
-                        HStack {
-                            Image(systemName: "app.badge")
-                            Text("Per-App")
-                        }
-                    }
-                }
-            }
-        }
-        .safeAreaInset(edge: .top) {
+        VStack(spacing: 0) {
             HStack {
                 Picker("Scope", selection: $scopeFilter) {
                     ForEach(VocabularyEditorView.ScopeFilter.allCases) { filter in
@@ -201,10 +136,77 @@ private struct VocabularyListView: View {
                 } label: {
                     Label("New Entry", systemImage: "plus")
                 }
-                .buttonStyle(.borderless)
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
+
+            List(selection: $selectedEntry) {
+                if entries.isEmpty {
+                    emptyStateView
+                } else {
+                    if !globalEntries.isEmpty {
+                        Section {
+                            ForEach(globalEntries) { entry in
+                                VocabularyEntryRow(entry: entry)
+                                    .tag(entry)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            entryToDelete = entry
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            entryToDelete = entry
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        } header: {
+                            HStack {
+                                Image(systemName: "globe")
+                                Text("Global")
+                            }
+                        }
+                    }
+
+                    if !perAppEntries.isEmpty {
+                        Section {
+                            ForEach(perAppEntries) { entry in
+                                VocabularyEntryRow(entry: entry)
+                                    .tag(entry)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                        Button(role: .destructive) {
+                                            entryToDelete = entry
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            entryToDelete = entry
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
+                                    }
+                            }
+                        } header: {
+                            HStack {
+                                Image(systemName: "app.badge")
+                                Text("Per-App")
+                            }
+                        }
+                    }
+                }
+            }
         }
         .alert("Delete Vocabulary Entry", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
