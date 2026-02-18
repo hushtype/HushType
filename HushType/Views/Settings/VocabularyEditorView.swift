@@ -30,22 +30,25 @@ struct VocabularyEditorView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        HSplitView {
             VocabularyListView(
                 entries: filteredEntries,
                 selectedEntry: $selectedEntry,
                 scopeFilter: $scopeFilter,
                 onNew: { showNewEntrySheet = true }
             )
-        } detail: {
+            .frame(minWidth: 200, idealWidth: 250)
+
             if let entry = selectedEntry {
                 VocabularyDetailView(entry: entry)
+                    .frame(minWidth: 300)
             } else {
                 ContentUnavailableView(
                     "No Entry Selected",
                     systemImage: "character.book.closed",
                     description: Text("Select a vocabulary entry to edit or create a new one")
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .sheet(isPresented: $showNewEntrySheet) {
@@ -178,17 +181,8 @@ private struct VocabularyListView: View {
                 }
             }
         }
-        .navigationTitle("Vocabulary")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    onNew()
-                } label: {
-                    Label("New Entry", systemImage: "plus")
-                }
-            }
-
-            ToolbarItem(placement: .automatic) {
+        .safeAreaInset(edge: .top) {
+            HStack {
                 Picker("Scope", selection: $scopeFilter) {
                     ForEach(VocabularyEditorView.ScopeFilter.allCases) { filter in
                         Text(filter.rawValue).tag(filter)
@@ -196,7 +190,18 @@ private struct VocabularyListView: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 180)
+
+                Spacer()
+
+                Button {
+                    onNew()
+                } label: {
+                    Label("New Entry", systemImage: "plus")
+                }
+                .buttonStyle(.borderless)
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
         }
         .alert("Delete Vocabulary Entry", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -378,7 +383,6 @@ private struct VocabularyDetailView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Edit Entry")
     }
 
     private func saveChanges() {

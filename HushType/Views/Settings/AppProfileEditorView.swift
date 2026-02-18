@@ -8,7 +8,7 @@ struct AppProfileEditorView: View {
     @State private var selectedProfile: AppProfile?
 
     var body: some View {
-        NavigationSplitView {
+        HSplitView {
             List(profiles, selection: $selectedProfile) { profile in
                 HStack {
                     VStack(alignment: .leading) {
@@ -22,12 +22,14 @@ struct AppProfileEditorView: View {
                 }
                 .tag(profile)
             }
-            .navigationTitle("App Profiles")
-        } detail: {
+            .frame(minWidth: 200, idealWidth: 250)
+
             if let profile = selectedProfile {
                 AppProfileDetailView(profile: profile)
+                    .frame(minWidth: 300)
             } else {
                 ContentUnavailableView("No Profile Selected", systemImage: "apps.iphone", description: Text("Select a profile to edit"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }
@@ -76,7 +78,6 @@ private struct AppProfileDetailView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle(profile.appName)
         .onChange(of: profile.isEnabled) { _, _ in try? modelContext.save() }
         .onChange(of: profile.injectionMethod) { _, _ in try? modelContext.save() }
     }
