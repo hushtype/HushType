@@ -18,7 +18,8 @@ struct AppProfileEditorView: View {
                     } label: {
                         Label("Add Profile", systemImage: "plus")
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
