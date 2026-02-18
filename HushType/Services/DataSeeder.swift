@@ -39,6 +39,52 @@ struct DataSeeder {
 
         // Always check for LLM models — handles upgrades from pre-LLM versions
         seedLLMModelsIfNeeded(in: context)
+
+        // Always check for app profiles — handles upgrades from pre-Phase 3 versions
+        seedAppProfilesIfNeeded(in: context)
+    }
+
+    /// Pre-seeds AppProfile records for well-known macOS applications.
+    ///
+    /// Checks each known bundle ID and inserts a profile with smart defaults
+    /// only if one doesn't already exist. Handles both fresh installs and
+    /// upgrades from pre-Phase 3 versions.
+    @MainActor
+    static func seedAppProfilesIfNeeded(in context: ModelContext) {
+        let existing = (try? context.fetch(FetchDescriptor<AppProfile>())) ?? []
+        let existingBundleIDs = Set(existing.map(\.bundleIdentifier))
+
+        let knownApps: [(bundleID: String, name: String, mode: ProcessingMode)] = [
+            ("com.apple.dt.Xcode",        "Xcode",          .code),
+            ("com.microsoft.VSCode",       "Visual Studio Code", .code),
+            ("com.apple.mail",             "Mail",           .clean),
+            ("com.apple.Terminal",         "Terminal",       .raw),
+            ("com.apple.Notes",            "Notes",          .structure),
+            ("com.apple.Safari",           "Safari",         .clean),
+            ("com.google.Chrome",          "Google Chrome",  .clean),
+            ("com.apple.TextEdit",         "TextEdit",       .clean),
+            ("com.tinyspeck.slackmacgap",  "Slack",          .clean),
+            ("com.apple.iWork.Pages",      "Pages",          .structure),
+            ("com.microsoft.Word",         "Microsoft Word", .structure),
+            ("com.apple.MobileSMS",        "Messages",       .clean),
+        ]
+
+        var inserted = 0
+        for app in knownApps {
+            guard !existingBundleIDs.contains(app.bundleID) else { continue }
+            let profile = AppProfile(
+                bundleIdentifier: app.bundleID,
+                appName: app.name,
+                defaultMode: app.mode
+            )
+            context.insert(profile)
+            inserted += 1
+        }
+
+        if inserted > 0 {
+            try? context.save()
+            Logger.general.info("Seeded \(inserted) default app profiles")
+        }
     }
 
     /// Seeds missing LLM model entries.
