@@ -9,7 +9,7 @@ struct AppProfileEditorView: View {
     @State private var showNewProfileSheet = false
 
     var body: some View {
-        HSplitView {
+        HStack(spacing: 0) {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
@@ -37,17 +37,20 @@ struct AppProfileEditorView: View {
                     .tag(profile)
                 }
             }
-            .frame(minWidth: 200, idealWidth: 250)
+            .frame(maxWidth: .infinity)
 
-            if let profile = selectedProfile {
-                AppProfileDetailView(profile: profile, onDelete: {
-                    selectedProfile = nil
-                })
-                .frame(minWidth: 300)
-            } else {
-                ContentUnavailableView("No Profile Selected", systemImage: "apps.iphone", description: Text("Select a profile to edit"))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Divider()
+
+            Group {
+                if let profile = selectedProfile {
+                    AppProfileDetailView(profile: profile, onDelete: {
+                        selectedProfile = nil
+                    })
+                } else {
+                    ContentUnavailableView("No Profile Selected", systemImage: "apps.iphone", description: Text("Select a profile to edit"))
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .sheet(isPresented: $showNewProfileSheet) {
             NewProfileSheet { bundleID, appName in

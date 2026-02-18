@@ -30,26 +30,29 @@ struct VocabularyEditorView: View {
     }
 
     var body: some View {
-        HSplitView {
+        HStack(spacing: 0) {
             VocabularyListView(
                 entries: filteredEntries,
                 selectedEntry: $selectedEntry,
                 scopeFilter: $scopeFilter,
                 onNew: { showNewEntrySheet = true }
             )
-            .frame(minWidth: 200, idealWidth: 250)
+            .frame(maxWidth: .infinity)
 
-            if let entry = selectedEntry {
-                VocabularyDetailView(entry: entry)
-                    .frame(minWidth: 300)
-            } else {
-                ContentUnavailableView(
-                    "No Entry Selected",
-                    systemImage: "character.book.closed",
-                    description: Text("Select a vocabulary entry to edit or create a new one")
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Divider()
+
+            Group {
+                if let entry = selectedEntry {
+                    VocabularyDetailView(entry: entry)
+                } else {
+                    ContentUnavailableView(
+                        "No Entry Selected",
+                        systemImage: "character.book.closed",
+                        description: Text("Select a vocabulary entry to edit or create a new one")
+                    )
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .sheet(isPresented: $showNewEntrySheet) {
             NewVocabularyEntrySheet { spokenForm, replacement, language, isGlobal, caseSensitive in
