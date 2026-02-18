@@ -61,41 +61,41 @@ struct GeneralSettingsTab: View {
                 .help("Audio feedback when recording starts/stops")
             }
 
-            Section("Privacy & History") {
-                LabeledContent("Max History Entries") {
-                    TextField("Count", value: Binding(
-                        get: { settings?.maxHistoryEntries ?? 5000 },
-                        set: { newValue in
-                            settings?.maxHistoryEntries = newValue
-                            saveSettings()
-                        }
-                    ), format: .number)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 100)
-                    .help("Maximum number of dictation entries to retain (0 = unlimited)")
-                }
-
-                LabeledContent("Retention Days") {
-                    TextField("Days", value: Binding(
-                        get: { settings?.historyRetentionDays ?? 90 },
-                        set: { newValue in
-                            settings?.historyRetentionDays = newValue
-                            saveSettings()
-                        }
-                    ), format: .number)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 100)
-                    .help("Number of days to retain entries (0 = indefinite)")
-                }
-
-                Toggle("Store Transcription Text", isOn: Binding(
-                    get: { settings?.storeTranscriptionText ?? true },
+            Section("Text Injection") {
+                Picker("Default Method", selection: Binding(
+                    get: { settings?.defaultInjectionMethod ?? .auto },
                     set: { newValue in
-                        settings?.storeTranscriptionText = newValue
+                        settings?.defaultInjectionMethod = newValue
                         saveSettings()
                     }
-                ))
-                .help("When disabled, only metadata is stored (duration, word count, timestamp)")
+                )) {
+                    ForEach(InjectionMethod.allCases) { method in
+                        Text(method.displayName).tag(method)
+                    }
+                }
+                .help("How transcribed text is typed into the active app")
+
+                Text(injectionMethodHelp)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                LabeledContent("Keystroke Delay") {
+                    Stepper(
+                        value: Binding(
+                            get: { settings?.keystrokeDelay ?? 5 },
+                            set: { newValue in
+                                settings?.keystrokeDelay = newValue
+                                saveSettings()
+                            }
+                        ),
+                        in: 1...50,
+                        step: 1
+                    ) {
+                        Text("\(settings?.keystrokeDelay ?? 5) ms")
+                            .monospacedDigit()
+                    }
+                }
+                .help("Delay between simulated keystrokes (CGEvent mode)")
             }
         }
         .formStyle(.grouped)
@@ -131,6 +131,17 @@ struct GeneralSettingsTab: View {
         settings?.globalHotkey = newValue
         saveSettings()
         Logger.ui.info("Hotkey changed to: \(newValue)")
+    }
+
+    private var injectionMethodHelp: String {
+        switch settings?.defaultInjectionMethod ?? .auto {
+        case .auto:
+            return "Automatically picks the best method for each app."
+        case .cgEvent:
+            return "Simulates keystrokes directly. Preserves clipboard but requires Accessibility permission."
+        case .clipboard:
+            return "Copies text to clipboard and pastes with Cmd+V. Works everywhere but overwrites clipboard."
+        }
     }
 
     private func saveSettings() {

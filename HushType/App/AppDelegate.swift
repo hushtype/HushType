@@ -18,6 +18,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var llmModelDownloader: ModelDownloader?
     private var llmService: LLMService?
 
+    // Track currently loaded models to detect selection changes
+    private var currentWhisperModel: String?
+    private var currentLLMModel: String?
+    private var currentLLMContextLength: Int = 2048
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Kill any other running instances of HushType (skip during unit tests)
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
@@ -69,9 +74,52 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 whisperThreadCount: settings.whisperThreadCount,
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
-                defaultLanguage: settings.defaultLanguage
+                defaultLanguage: settings.defaultLanguage,
+                showOverlayEnabled: settings.showRecordingIndicator
             )
             try controller.reloadHotkey(settings.globalHotkey)
+
+            // Reload whisper model if selection changed
+            let newWhisperModel = settings.selectedWhisperModel
+            if newWhisperModel != currentWhisperModel {
+                currentWhisperModel = newWhisperModel
+                Task {
+                    await controller.loadWhisperModel(fileName: newWhisperModel)
+                }
+                Logger.general.info("Whisper model changed to: \(newWhisperModel)")
+            }
+
+            // Reload LLM model if selection changed
+            let newLLMModel = settings.selectedLLMModel
+            if newLLMModel != currentLLMModel {
+                currentLLMModel = newLLMModel
+                if let modelName = newLLMModel {
+                    Task {
+                        await controller.loadLLMModel(fileName: modelName)
+                    }
+                    Logger.general.info("LLM model changed to: \(modelName)")
+                }
+            }
+
+            // Recreate LLM provider if context length changed
+            let newContextLength = settings.llmContextLength
+            if newContextLength != currentLLMContextLength {
+                currentLLMContextLength = newContextLength
+                let service = LLMService()
+                let provider = LlamaCppProvider(contextSize: UInt32(newContextLength))
+                service.setProvider(provider)
+                controller.setLLMService(service)
+                self.llmService = service
+
+                // Reload current LLM model with new context
+                if let modelName = settings.selectedLLMModel {
+                    Task {
+                        await controller.loadLLMModel(fileName: modelName)
+                    }
+                }
+                Logger.general.info("LLM context length changed to: \(newContextLength)")
+            }
+
             Logger.general.info("Pipeline config updated from settings (hotkey: \(settings.globalHotkey), pushToTalk: \(settings.pushToTalkEnabled), mode: \(settings.defaultMode.rawValue), lang: \(settings.autoDetectLanguage ? "auto" : settings.defaultLanguage))")
         } catch {
             Logger.general.error("Failed to reload settings: \(error.localizedDescription)")
@@ -163,8 +211,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 whisperThreadCount: settings.whisperThreadCount,
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
-                defaultLanguage: settings.defaultLanguage
+                defaultLanguage: settings.defaultLanguage,
+                showOverlayEnabled: settings.showRecordingIndicator
             )
+
+            // Track initial model selections for change detection
+            currentWhisperModel = settings.selectedWhisperModel
+            currentLLMModel = settings.selectedLLMModel
+            currentLLMContextLength = settings.llmContextLength
 
             // Load whisper model — auto-download default if not on disk
             let modelFileName = settings.selectedWhisperModel
@@ -174,9 +228,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             autoDownloadDefaultModelIfNeeded(in: context)
             autoDownloadDefaultLLMModelIfNeeded(in: context)
 
-            // Configure LLM service
+            // Configure LLM service with user's context length
             let service = LLMService()
-            let provider = LlamaCppProvider()
+            let provider = LlamaCppProvider(contextSize: UInt32(settings.llmContextLength))
             service.setProvider(provider)
             controller.setLLMService(service)
             self.llmService = service

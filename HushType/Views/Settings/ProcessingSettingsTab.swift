@@ -6,8 +6,6 @@ struct ProcessingSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allTemplates: [PromptTemplate]
     @State private var settings: UserSettings?
-    @State private var selectedBackend: LLMBackend = .local
-
     private var templatesForMode: [PromptTemplate] {
         let mode = settings?.defaultMode ?? .clean
         return allTemplates.filter { $0.mode == mode }
@@ -42,33 +40,6 @@ struct ProcessingSettingsTab: View {
                     Text("This mode requires an LLM to be configured")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                }
-            }
-
-            Section("LLM Backend") {
-                Picker("Backend", selection: $selectedBackend) {
-                    Text("Local (llama.cpp)").tag(LLMBackend.local)
-                    Text("Ollama").tag(LLMBackend.ollama)
-                }
-                .help("LLM processing backend for text post-processing")
-
-                VStack(alignment: .leading, spacing: 4) {
-                    switch selectedBackend {
-                    case .local:
-                        Text("Uses locally installed GGUF models via llama.cpp")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text("Models are loaded directly into memory — no network required")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    case .ollama:
-                        Text("Connects to a local Ollama server (http://localhost:11434)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text("Requires Ollama to be installed and running separately")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
                 }
             }
 
@@ -186,14 +157,6 @@ struct ProcessingSettingsTab: View {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")
         }
     }
-}
-
-// MARK: - LLM Backend
-
-/// LLM backend selection for text processing.
-private enum LLMBackend: String, CaseIterable {
-    case local
-    case ollama
 }
 
 #Preview {

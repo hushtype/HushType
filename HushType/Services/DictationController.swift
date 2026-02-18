@@ -56,6 +56,7 @@ final class DictationController: @unchecked Sendable {
     private var playSoundEffects: Bool = true
     private var autoDetectLanguage: Bool = false
     private var defaultLanguage: String = "en"
+    private var showOverlayEnabled: Bool = true
 
     // Per-recording snapshots (captured at startRecording to avoid mid-recording app-switch race)
     private var recordingInjectionMethod: InjectionMethod = .auto
@@ -279,8 +280,11 @@ final class DictationController: @unchecked Sendable {
                 Logger.general.info("Skipping LLM (mode: \(activeMode.rawValue))")
             }
 
-            // Update overlay with result
+            // Update overlay with result (only show if enabled in settings)
             appState.overlayText = outputText
+            if showOverlayEnabled {
+                appState.showOverlay = true
+            }
 
             // Inject text (use snapshotted per-app injection method from recording start)
             updateState(.injecting)
@@ -458,7 +462,8 @@ final class DictationController: @unchecked Sendable {
         whisperThreadCount: Int = 0,
         defaultMode: ProcessingMode = .raw,
         autoDetectLanguage: Bool = false,
-        defaultLanguage: String = "en"
+        defaultLanguage: String = "en",
+        showOverlayEnabled: Bool = true
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
@@ -471,6 +476,7 @@ final class DictationController: @unchecked Sendable {
         self.defaultMode = defaultMode
         self.autoDetectLanguage = autoDetectLanguage
         self.defaultLanguage = defaultLanguage
+        self.showOverlayEnabled = showOverlayEnabled
 
         // Update whisper language setting
         self.whisperService.language = autoDetectLanguage ? "auto" : defaultLanguage

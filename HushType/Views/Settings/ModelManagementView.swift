@@ -241,6 +241,7 @@ struct ModelManagementView: View {
     private func saveSettings() {
         do {
             try modelContext.save()
+            NotificationCenter.default.post(name: .userSettingsChanged, object: nil)
             Logger.ui.debug("Saved user settings from ModelManagement view")
         } catch {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")

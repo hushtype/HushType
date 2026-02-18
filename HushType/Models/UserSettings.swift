@@ -50,9 +50,6 @@ final class UserSettings {
     /// Launch HushType at macOS login.
     var launchAtLogin: Bool
 
-    /// Show the HushType icon in the menu bar.
-    var showMenuBarIcon: Bool
-
     /// Show a floating indicator while recording.
     var showRecordingIndicator: Bool
 
@@ -107,7 +104,6 @@ final class UserSettings {
         defaultLanguage: String = "en",
         autoDetectLanguage: Bool = false,
         launchAtLogin: Bool = false,
-        showMenuBarIcon: Bool = true,
         showRecordingIndicator: Bool = true,
         playSoundEffects: Bool = true,
         maxHistoryEntries: Int = 5000,
@@ -130,7 +126,6 @@ final class UserSettings {
         self.defaultLanguage = defaultLanguage
         self.autoDetectLanguage = autoDetectLanguage
         self.launchAtLogin = launchAtLogin
-        self.showMenuBarIcon = showMenuBarIcon
         self.showRecordingIndicator = showRecordingIndicator
         self.playSoundEffects = playSoundEffects
         self.maxHistoryEntries = maxHistoryEntries
