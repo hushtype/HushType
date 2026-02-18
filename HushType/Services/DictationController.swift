@@ -57,6 +57,11 @@ final class DictationController: @unchecked Sendable {
     private var autoDetectLanguage: Bool = false
     private var defaultLanguage: String = "en"
 
+    // Per-recording snapshots (captured at startRecording to avoid mid-recording app-switch race)
+    private var recordingInjectionMethod: InjectionMethod = .auto
+    private var recordingBundleIdentifier: String?
+    private var recordingAppName: String?
+
     // MARK: - SwiftData (set after init)
 
     var modelContainer: ModelContainer?
@@ -158,8 +163,13 @@ final class DictationController: @unchecked Sendable {
             return
         }
 
-        // Resolve per-app profile overrides
+        // Resolve per-app profile overrides and snapshot state before recording
         resolveAppProfileOverrides()
+        recordingInjectionMethod = activeInjectionMethod
+        recordingBundleIdentifier = appContextService?.currentBundleIdentifier
+            ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        recordingAppName = appContextService?.currentAppName
+            ?? NSWorkspace.shared.frontmostApplication?.localizedName
 
         appState.activeMode = mode ?? activeMode
 
@@ -235,6 +245,19 @@ final class DictationController: @unchecked Sendable {
                 Logger.general.info("Voice prefix switched to \(detection.mode.rawValue), stripped text: \(rawText.count) chars")
             }
 
+            // Vocabulary replacements (per-app first, then global)
+            if let container = modelContainer {
+                let vocabContext = ModelContext(container)
+                let appEntries = appContextService?.currentProfile?.vocabularyEntries ?? []
+                let globalDescriptor = FetchDescriptor<VocabularyEntry>(
+                    predicate: #Predicate { $0.isGlobal }
+                )
+                let globalEntries = (try? vocabContext.fetch(globalDescriptor)) ?? []
+                if !appEntries.isEmpty || !globalEntries.isEmpty {
+                    rawText = VocabularyService.apply(to: rawText, globalEntries: globalEntries, appEntries: appEntries)
+                }
+            }
+
             // LLM processing (if mode requires it)
             var outputText = rawText
 
@@ -259,21 +282,19 @@ final class DictationController: @unchecked Sendable {
             // Update overlay with result
             appState.overlayText = outputText
 
-            // Inject text (use per-app injection method if set)
+            // Inject text (use snapshotted per-app injection method from recording start)
             updateState(.injecting)
-            try await injectionService.inject(outputText, method: activeInjectionMethod)
+            try await injectionService.inject(outputText, method: recordingInjectionMethod)
 
-            // Save history entry (use AppContextService if available)
+            // Save history entry (use snapshotted app info from recording start)
             let processedText = (outputText != rawText) ? outputText : nil
-            let bundleID = appContextService?.currentBundleIdentifier ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier
-            let appName = appContextService?.currentAppName ?? NSWorkspace.shared.frontmostApplication?.localizedName
             await saveDictationEntry(
                 rawText: rawText,
                 processedText: processedText,
                 language: result.language,
                 audioDuration: result.audioDuration,
-                appBundleIdentifier: bundleID,
-                appName: appName
+                appBundleIdentifier: recordingBundleIdentifier,
+                appName: recordingAppName
             )
 
             // Update preview
