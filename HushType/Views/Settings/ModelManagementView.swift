@@ -171,7 +171,7 @@ struct ModelManagementView: View {
                 Picker("Selected LLM", selection: Binding(
                     get: { settings?.selectedLLMModel ?? "" },
                     set: { newValue in
-                        settings?.selectedLLMModel = newValue
+                        settings?.selectedLLMModel = newValue.isEmpty ? nil : newValue
                         saveSettings()
                     }
                 )) {

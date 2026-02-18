@@ -557,32 +557,33 @@ final class DictationController: @unchecked Sendable {
         let retentionDays = settings?.historyRetentionDays ?? 90
 
         do {
-            // Purge entries exceeding max count (oldest first)
+            // Purge non-favorite entries exceeding max count (oldest first)
             if maxEntries > 0 {
-                let allEntries = FetchDescriptor<DictationEntry>(
+                let nonFavoriteDescriptor = FetchDescriptor<DictationEntry>(
+                    predicate: #Predicate { !$0.isFavorite },
                     sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
                 )
-                let entries = try context.fetch(allEntries)
+                let entries = try context.fetch(nonFavoriteDescriptor)
                 if entries.count > maxEntries {
                     for entry in entries.dropFirst(maxEntries) {
                         context.delete(entry)
                     }
-                    Logger.general.info("Purged \(entries.count - maxEntries) old history entries (max: \(maxEntries))")
+                    Logger.general.info("Purged \(entries.count - maxEntries) old history entries (max: \(maxEntries), favorites preserved)")
                 }
             }
 
-            // Delete entries older than retention period
+            // Delete non-favorite entries older than retention period
             if retentionDays > 0 {
                 let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? Date()
                 let expiredDescriptor = FetchDescriptor<DictationEntry>(
-                    predicate: #Predicate { $0.timestamp < cutoff }
+                    predicate: #Predicate { $0.timestamp < cutoff && !$0.isFavorite }
                 )
                 let expired = try context.fetch(expiredDescriptor)
                 for entry in expired {
                     context.delete(entry)
                 }
                 if !expired.isEmpty {
-                    Logger.general.info("Purged \(expired.count) expired history entries (retention: \(retentionDays) days)")
+                    Logger.general.info("Purged \(expired.count) expired history entries (retention: \(retentionDays) days, favorites preserved)")
                 }
             }
 
