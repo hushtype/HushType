@@ -127,6 +127,7 @@ private struct VocabularyListView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .labelsHidden()
                 .frame(width: 180)
 
                 Spacer()
