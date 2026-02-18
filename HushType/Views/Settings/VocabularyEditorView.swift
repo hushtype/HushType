@@ -512,7 +512,7 @@ private struct NewVocabularyEntrySheet: View {
             }
         }
         .padding()
-        .frame(width: 420, height: 420)
+        .frame(width: 420, height: 520)
     }
 }
 
