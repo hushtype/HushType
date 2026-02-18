@@ -102,9 +102,25 @@ private struct AppProfileDetailView: View {
             }
 
             Section("Language") {
-                TextField("Preferred Language (e.g., en, tr)", text: languageBinding)
-                    .textFieldStyle(.roundedBorder)
-                Text("Leave empty to use global default").font(.caption).foregroundStyle(.secondary)
+                Picker("Preferred Language", selection: languageBinding) {
+                    Text("Use Global Default").tag("")
+                    Text("English").tag("en")
+                    Text("Turkish").tag("tr")
+                    Text("German").tag("de")
+                    Text("French").tag("fr")
+                    Text("Spanish").tag("es")
+                    Text("Italian").tag("it")
+                    Text("Portuguese").tag("pt")
+                    Text("Dutch").tag("nl")
+                    Text("Polish").tag("pl")
+                    Text("Russian").tag("ru")
+                    Text("Japanese").tag("ja")
+                    Text("Korean").tag("ko")
+                    Text("Chinese").tag("zh")
+                    Text("Arabic").tag("ar")
+                    Text("Hindi").tag("hi")
+                    Text("Swedish").tag("sv")
+                }
             }
 
             Section("Injection") {
