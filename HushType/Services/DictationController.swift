@@ -41,6 +41,7 @@ final class DictationController: @unchecked Sendable {
     private let hotkeyManager: HotkeyManager
     private var llmService: LLMService?
     private var processingRouter: ProcessingModeRouter?
+    private var appContextService: AppContextService?
 
     // MARK: - App State
 
@@ -157,7 +158,10 @@ final class DictationController: @unchecked Sendable {
             return
         }
 
-        appState.activeMode = mode ?? defaultMode
+        // Resolve per-app profile overrides
+        resolveAppProfileOverrides()
+
+        appState.activeMode = mode ?? activeMode
 
         updateState(.recording)
         playSound(.start)
@@ -255,20 +259,21 @@ final class DictationController: @unchecked Sendable {
             // Update overlay with result
             appState.overlayText = outputText
 
-            // Inject text
+            // Inject text (use per-app injection method if set)
             updateState(.injecting)
-            try await injectionService.inject(outputText, method: injectionMethod)
+            try await injectionService.inject(outputText, method: activeInjectionMethod)
 
-            // Save history entry
-            let frontmostApp = NSWorkspace.shared.frontmostApplication
+            // Save history entry (use AppContextService if available)
             let processedText = (outputText != rawText) ? outputText : nil
+            let bundleID = appContextService?.currentBundleIdentifier ?? NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+            let appName = appContextService?.currentAppName ?? NSWorkspace.shared.frontmostApplication?.localizedName
             await saveDictationEntry(
                 rawText: rawText,
                 processedText: processedText,
                 language: result.language,
                 audioDuration: result.audioDuration,
-                appBundleIdentifier: frontmostApp?.bundleIdentifier,
-                appName: frontmostApp?.localizedName
+                appBundleIdentifier: bundleID,
+                appName: appName
             )
 
             // Update preview
@@ -281,6 +286,52 @@ final class DictationController: @unchecked Sendable {
         }
 
         updateState(.idle)
+    }
+
+    // MARK: - Per-App Profile Resolution
+
+    /// The effective processing mode — per-app override if available, else global default.
+    private var activeMode: ProcessingMode {
+        if let profile = appContextService?.currentProfile,
+           profile.isEnabled,
+           let mode = profile.defaultMode {
+            return mode
+        }
+        return defaultMode
+    }
+
+    /// The effective injection method — per-app override if available, else global default.
+    private var activeInjectionMethod: InjectionMethod {
+        if let profile = appContextService?.currentProfile,
+           profile.isEnabled {
+            return profile.injectionMethod
+        }
+        return injectionMethod
+    }
+
+    /// Resolve the current app's profile via AppContextService + SwiftData.
+    @MainActor
+    private func resolveAppProfileOverrides() {
+        guard let service = appContextService, let container = modelContainer else { return }
+        let context = container.mainContext
+        service.resolveProfile(in: context)
+
+        if let profile = service.currentProfile, profile.isEnabled {
+            // Apply per-app language override if set
+            if let lang = profile.preferredLanguage, !lang.isEmpty {
+                whisperService.language = lang
+                Logger.general.info("Per-app language override: \(lang) for \(service.currentAppName ?? "unknown")")
+            } else if autoDetectLanguage {
+                whisperService.language = "auto"
+            } else {
+                whisperService.language = defaultLanguage
+            }
+
+            Logger.general.info("Per-app profile active: \(service.currentAppName ?? "unknown") — mode: \(profile.defaultMode?.rawValue ?? "global"), injection: \(profile.injectionMethod.rawValue)")
+        } else {
+            // Reset to global defaults
+            whisperService.language = autoDetectLanguage ? "auto" : defaultLanguage
+        }
     }
 
     // MARK: - State Management
@@ -329,6 +380,12 @@ final class DictationController: @unchecked Sendable {
     }
 
     // MARK: - LLM Setup
+
+    /// Set the app context service for per-app profile resolution.
+    func setAppContextService(_ service: AppContextService) {
+        self.appContextService = service
+        Logger.general.info("AppContextService configured for pipeline")
+    }
 
     /// Configure the LLM service and processing router.
     func setLLMService(_ service: LLMService) {

@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
     var modelContainer: ModelContainer?
     private var dictationController: DictationController?
+    private var appContextService: AppContextService?
     private var modelDownloader: ModelDownloader?
     private var llmModelDownloader: ModelDownloader?
     private var llmService: LLMService?
@@ -142,6 +143,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let controller = DictationController(appState: appState)
         controller.modelContainer = modelContainer
+
+        // Wire app context service for per-app profile overrides
+        let contextService = AppContextService()
+        controller.setAppContextService(contextService)
+        self.appContextService = contextService
 
         let context = modelContainer.mainContext
         do {
