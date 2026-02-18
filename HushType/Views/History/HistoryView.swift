@@ -205,52 +205,67 @@ struct HistoryView: View {
             if filteredEntries.isEmpty {
                 emptyStateView
             } else {
-                List(selection: $selectedEntry) {
-                    ForEach(filteredEntries) { entry in
-                        HistoryRowView(entry: entry, onToggleFavorite: {
-                            toggleFavorite(entry)
-                        })
-                        .tag(entry)
-                        .contextMenu {
-                            Button {
+                ScrollViewReader { proxy in
+                    List(selection: $selectedEntry) {
+                        ForEach(filteredEntries) { entry in
+                            HistoryRowView(entry: entry, onToggleFavorite: {
                                 toggleFavorite(entry)
-                            } label: {
-                                Label(
-                                    entry.isFavorite ? "Remove from Favorites" : "Add to Favorites",
-                                    systemImage: entry.isFavorite ? "star.slash" : "star"
-                                )
+                            })
+                            .tag(entry)
+                            .id(entry.id)
+                            .contextMenu {
+                                Button {
+                                    toggleFavorite(entry)
+                                } label: {
+                                    Label(
+                                        entry.isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                                        systemImage: entry.isFavorite ? "star.slash" : "star"
+                                    )
+                                }
+
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    entryToDelete = entry
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    entryToDelete = entry
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
 
-                            Divider()
-
-                            Button(role: .destructive) {
-                                entryToDelete = entry
-                                showDeleteConfirmation = true
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                                Button {
+                                    toggleFavorite(entry)
+                                } label: {
+                                    Label(
+                                        entry.isFavorite ? "Unfavorite" : "Favorite",
+                                        systemImage: entry.isFavorite ? "star.slash.fill" : "star.fill"
+                                    )
+                                }
+                                .tint(.yellow)
                             }
                         }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                entryToDelete = entry
-                                showDeleteConfirmation = true
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-
-                            Button {
-                                toggleFavorite(entry)
-                            } label: {
-                                Label(
-                                    entry.isFavorite ? "Unfavorite" : "Favorite",
-                                    systemImage: entry.isFavorite ? "star.slash.fill" : "star.fill"
-                                )
-                            }
-                            .tint(.yellow)
+                        .onDelete { offsets in
+                            deleteAtOffsets(offsets)
                         }
                     }
-                    .onDelete { offsets in
-                        deleteAtOffsets(offsets)
+                    .onChange(of: searchText) {
+                        scrollToTop(proxy: proxy)
+                    }
+                    .onChange(of: filterApp) {
+                        scrollToTop(proxy: proxy)
+                    }
+                    .onChange(of: filterMode) {
+                        scrollToTop(proxy: proxy)
+                    }
+                    .onChange(of: filterFavoritesOnly) {
+                        scrollToTop(proxy: proxy)
                     }
                 }
             }
@@ -311,6 +326,14 @@ struct HistoryView: View {
     }
 
     // MARK: - Actions
+
+    private func scrollToTop(proxy: ScrollViewProxy) {
+        if let first = filteredEntries.first {
+            withAnimation {
+                proxy.scrollTo(first.id, anchor: .top)
+            }
+        }
+    }
 
     private func toggleFavorite(_ entry: DictationEntry) {
         entry.isFavorite.toggle()
