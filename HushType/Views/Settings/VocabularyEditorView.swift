@@ -377,15 +377,28 @@ private struct VocabularyDetailView: View {
             }
 
             Section("Language") {
-                TextField("Language Code (optional)", text: Binding(
+                Picker("Language", selection: Binding(
                     get: { entry.language ?? "" },
                     set: { entry.language = $0.isEmpty ? nil : $0; saveChanges() }
-                ))
-                .help("ISO 639-1 language code, e.g. \"en\" or \"fr\". Leave blank to apply to all languages.")
-
-                Text("Leave blank to apply this entry to all languages. Use an ISO 639-1 code (e.g. \"en\", \"fr\", \"de\") to restrict to a specific language.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                )) {
+                    Text("All Languages").tag("")
+                    Text("English").tag("en")
+                    Text("Turkish").tag("tr")
+                    Text("German").tag("de")
+                    Text("French").tag("fr")
+                    Text("Spanish").tag("es")
+                    Text("Italian").tag("it")
+                    Text("Portuguese").tag("pt")
+                    Text("Dutch").tag("nl")
+                    Text("Polish").tag("pl")
+                    Text("Russian").tag("ru")
+                    Text("Japanese").tag("ja")
+                    Text("Korean").tag("ko")
+                    Text("Chinese").tag("zh")
+                    Text("Arabic").tag("ar")
+                    Text("Hindi").tag("hi")
+                    Text("Swedish").tag("sv")
+                }
             }
         }
         .formStyle(.grouped)
@@ -453,8 +466,25 @@ private struct NewVocabularyEntrySheet: View {
                 Section("Options") {
                     Toggle("Case Sensitive", isOn: $caseSensitive)
                     Toggle("Global (all apps)", isOn: $isGlobal)
-                    TextField("Language Code (optional)", text: $language)
-                        .textFieldStyle(.roundedBorder)
+                    Picker("Language", selection: $language) {
+                        Text("All Languages").tag("")
+                        Text("English").tag("en")
+                        Text("Turkish").tag("tr")
+                        Text("German").tag("de")
+                        Text("French").tag("fr")
+                        Text("Spanish").tag("es")
+                        Text("Italian").tag("it")
+                        Text("Portuguese").tag("pt")
+                        Text("Dutch").tag("nl")
+                        Text("Polish").tag("pl")
+                        Text("Russian").tag("ru")
+                        Text("Japanese").tag("ja")
+                        Text("Korean").tag("ko")
+                        Text("Chinese").tag("zh")
+                        Text("Arabic").tag("ar")
+                        Text("Hindi").tag("hi")
+                        Text("Swedish").tag("sv")
+                    }
                 }
             }
             .formStyle(.grouped)
