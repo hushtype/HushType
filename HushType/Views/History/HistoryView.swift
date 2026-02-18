@@ -77,12 +77,15 @@ struct HistoryView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        HStack(spacing: 0) {
             listSidebar
-        } detail: {
+                .frame(maxWidth: .infinity)
+
+            Divider()
+
             detailPane
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .navigationTitle("Dictation History")
         .frame(minWidth: 600, minHeight: 400)
         .alert("Delete Entry", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -146,7 +149,59 @@ struct HistoryView: View {
     // MARK: - Sidebar
 
     private var listSidebar: some View {
-        Group {
+        VStack(spacing: 0) {
+            // Search + filter bar
+            HStack(spacing: 6) {
+                HStack(spacing: 4) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                    TextField("Search history", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.callout)
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 6))
+
+                Menu {
+                    Menu("App") {
+                        Button("All Apps") { filterApp = nil }
+                        Divider()
+                        ForEach(uniqueAppNames, id: \.self) { name in
+                            Button(name) { filterApp = name }
+                        }
+                    }
+                    Menu("Mode") {
+                        Button("All Modes") { filterMode = nil }
+                        Divider()
+                        ForEach(ProcessingMode.allCases, id: \.self) { mode in
+                            Button(mode.displayName) { filterMode = mode }
+                        }
+                    }
+                    Toggle("Favorites Only", isOn: $filterFavoritesOnly)
+                    Divider()
+                    Button("Clear Filters") {
+                        filterApp = nil
+                        filterMode = nil
+                        filterFavoritesOnly = false
+                        filterDateFrom = nil
+                        filterDateTo = nil
+                    }
+                } label: {
+                    Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                Text("\(filteredEntries.count)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+
             if filteredEntries.isEmpty {
                 emptyStateView
             } else {
@@ -200,53 +255,6 @@ struct HistoryView: View {
                 }
             }
         }
-        .navigationTitle("Dictation History")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Text("\(filteredEntries.count) entries")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    // App filter
-                    Menu("App") {
-                        Button("All Apps") { filterApp = nil }
-                        Divider()
-                        ForEach(uniqueAppNames, id: \.self) { name in
-                            Button(name) { filterApp = name }
-                        }
-                    }
-
-                    // Mode filter
-                    Menu("Mode") {
-                        Button("All Modes") { filterMode = nil }
-                        Divider()
-                        ForEach(ProcessingMode.allCases, id: \.self) { mode in
-                            Button(mode.displayName) { filterMode = mode }
-                        }
-                    }
-
-                    // Favorites toggle
-                    Toggle("Favorites Only", isOn: $filterFavoritesOnly)
-
-                    Divider()
-
-                    // Clear all filters
-                    Button("Clear Filters") {
-                        filterApp = nil
-                        filterMode = nil
-                        filterFavoritesOnly = false
-                        filterDateFrom = nil
-                        filterDateTo = nil
-                    }
-                } label: {
-                    Label("Filter", systemImage: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                }
-            }
-        }
-        .searchable(text: $searchText, placement: .sidebar, prompt: "Search history")
     }
 
     // MARK: - Detail Pane
@@ -455,37 +463,42 @@ private struct HistoryDetailView: View {
             }
             .padding(24)
         }
-        .navigationTitle("Entry Details")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(role: .destructive) {
-                    onDelete()
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    onToggleFavorite()
-                } label: {
-                    Label(
-                        entry.isFavorite ? "Remove Favorite" : "Add Favorite",
-                        systemImage: entry.isFavorite ? "star.fill" : "star"
-                    )
-                }
-                .foregroundStyle(entry.isFavorite ? .yellow : .secondary)
-            }
-
-            if let onEditAndInject {
-                ToolbarItem(placement: .primaryAction) {
+        .safeAreaInset(edge: .top) {
+            HStack(spacing: 10) {
+                if let onEditAndInject {
                     Button {
                         onEditAndInject()
                     } label: {
                         Label("Edit & Inject", systemImage: "text.cursor")
                     }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
+
+                Spacer()
+
+                Button {
+                    onToggleFavorite()
+                } label: {
+                    Label(
+                        entry.isFavorite ? "Unfavorite" : "Favorite",
+                        systemImage: entry.isFavorite ? "star.fill" : "star"
+                    )
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .foregroundStyle(entry.isFavorite ? .yellow : .secondary)
+
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 6)
         }
     }
 
