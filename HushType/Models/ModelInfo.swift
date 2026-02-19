@@ -135,8 +135,7 @@ extension ModelInfo {
             fileSize: 77_691_713,
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"),
             isDefault: false,
-            sha256: "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f",
-            mirrorURLs: ["https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"]
+            sha256: "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f"
         ),
         ModelInfo(
             name: "Whisper Base (English)",
@@ -145,8 +144,7 @@ extension ModelInfo {
             fileSize: 147_951_465,
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"),
             isDefault: true,
-            sha256: "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002",
-            mirrorURLs: ["https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"]
+            sha256: "a03779c86df3323075f5e796cb2ce5029f00ec8869eee3fdfb897afe36c6d002"
         ),
         ModelInfo(
             name: "Whisper Small (English)",
@@ -155,8 +153,7 @@ extension ModelInfo {
             fileSize: 487_601_967,
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"),
             isDefault: false,
-            sha256: "c6138d6d58ecc8322097e0f987c32f1be8bb0a18532a3f88f734d1bbf9c41e5d",
-            mirrorURLs: ["https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"]
+            sha256: "c6138d6d58ecc8322097e0f987c32f1be8bb0a18532a3f88f734d1bbf9c41e5d"
         ),
         ModelInfo(
             name: "Whisper Medium (English)",
@@ -165,8 +162,7 @@ extension ModelInfo {
             fileSize: 1_533_774_781,
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.en.bin"),
             isDefault: false,
-            sha256: "cc37e93478338ec7700281a7ac30a10128929eb8f427dda2e865faa8f6da4356",
-            mirrorURLs: ["https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-medium.en.bin"]
+            sha256: "cc37e93478338ec7700281a7ac30a10128929eb8f427dda2e865faa8f6da4356"
         ),
         ModelInfo(
             name: "Whisper Large v3 Turbo",
@@ -175,8 +171,7 @@ extension ModelInfo {
             fileSize: 1_622_089_216,
             downloadURL: URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"),
             isDefault: false,
-            sha256: "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69",
-            mirrorURLs: ["https://hf-mirror.com/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"]
+            sha256: "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
         ),
 
         // MARK: LLM Models
@@ -188,8 +183,7 @@ extension ModelInfo {
             fileSize: 491_000_000,
             downloadURL: URL(string: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"),
             isDefault: true,
-            sha256: "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db",
-            mirrorURLs: ["https://hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"]
+            sha256: "74a4da8c9fdbcd15bd1f6d01d621410d31c6fc00986f5eb687824e7b93d7a9db"
         ),
         ModelInfo(
             name: "Qwen 2.5 1.5B Instruct (Q4_K_M)",
@@ -198,8 +192,7 @@ extension ModelInfo {
             fileSize: 1_100_000_000,
             downloadURL: URL(string: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"),
             isDefault: false,
-            sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
-            mirrorURLs: ["https://hf-mirror.com/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"]
+            sha256: "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
         ),
         ModelInfo(
             name: "Llama 3.2 1B Instruct (Q4_K_M)",
@@ -208,8 +201,7 @@ extension ModelInfo {
             fileSize: 808_000_000,
             downloadURL: URL(string: "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"),
             isDefault: false,
-            sha256: "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83",
-            mirrorURLs: ["https://hf-mirror.com/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"]
+            sha256: "6f85a640a97cf2bf5b8e764087b1e83da0fdb51d7c9fab7d0fece9385611df83"
         ),
         ModelInfo(
             name: "Gemma 3 1B Instruct (Q4_K_M)",
@@ -218,8 +210,7 @@ extension ModelInfo {
             fileSize: 806_000_000,
             downloadURL: URL(string: "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf"),
             isDefault: false,
-            sha256: "f36668ddf22403a332f978057d527cf285b01468bc3431b04094a7bafa6aba59",
-            mirrorURLs: ["https://hf-mirror.com/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf"]
+            sha256: "f36668ddf22403a332f978057d527cf285b01468bc3431b04094a7bafa6aba59"
         ),
         ModelInfo(
             name: "Phi-4 Mini Instruct (Q4_K_M)",
@@ -228,8 +219,7 @@ extension ModelInfo {
             fileSize: 2_490_000_000,
             downloadURL: URL(string: "https://huggingface.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF/resolve/main/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf"),
             isDefault: false,
-            sha256: "01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2",
-            mirrorURLs: ["https://hf-mirror.com/bartowski/microsoft_Phi-4-mini-instruct-GGUF/resolve/main/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf"]
+            sha256: "01999f17c39cc3074afae5e9c539bc82d45f2dd7faa3917c66cbef76fce8c0c2"
         ),
     ]
 }
