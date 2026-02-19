@@ -50,20 +50,6 @@ final class ModelManager {
         return digest.map { String(format: "%02x", $0) }.joined()
     }
 
-    // MARK: - Storage Management
-
-    /// Get total disk usage for all downloaded models.
-    func totalDiskUsage(models: [ModelInfo]) -> Int64 {
-        models.filter { $0.isDownloaded && $0.fileExistsOnDisk }
-            .reduce(0) { $0 + $1.fileSize }
-    }
-
-    /// Get disk usage by model type.
-    func diskUsage(for type: ModelType, models: [ModelInfo]) -> Int64 {
-        models.filter { $0.type == type && $0.isDownloaded && $0.fileExistsOnDisk }
-            .reduce(0) { $0 + $1.fileSize }
-    }
-
     /// Delete a model's file from disk.
     func deleteModelFile(_ model: ModelInfo) throws {
         guard model.fileExistsOnDisk else { return }

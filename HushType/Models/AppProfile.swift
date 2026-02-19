@@ -21,10 +21,6 @@ final class AppProfile {
     /// If nil, the global default is used.
     var defaultMode: ProcessingMode?
 
-    /// App-specific vocabulary words and technical terms that whisper
-    /// may not recognize correctly.
-    var customVocabulary: [String]
-
     /// Override the global language setting for this app.
     /// If nil, the global default language is used.
     var preferredLanguage: String?
@@ -48,7 +44,6 @@ final class AppProfile {
         bundleIdentifier: String,
         appName: String,
         defaultMode: ProcessingMode? = nil,
-        customVocabulary: [String] = [],
         preferredLanguage: String? = nil,
         injectionMethod: InjectionMethod = .auto,
         isEnabled: Bool = true,
@@ -58,7 +53,6 @@ final class AppProfile {
         self.bundleIdentifier = bundleIdentifier
         self.appName = appName
         self.defaultMode = defaultMode
-        self.customVocabulary = customVocabulary
         self.preferredLanguage = preferredLanguage
         self.injectionMethod = injectionMethod
         self.isEnabled = isEnabled

@@ -54,11 +54,6 @@ final class ModelInfo {
     /// Optional notes from the registry (e.g., "Recommended for daily use").
     var registryNotes: String?
 
-    // MARK: - Usage Tracking
-
-    /// When this model was last used for inference.
-    var lastUsed: Date?
-
     // MARK: - Initializer
 
     init(
@@ -75,8 +70,7 @@ final class ModelInfo {
         mirrorURLs: [String] = [],
         lastDownloadError: String? = nil,
         isDeprecated: Bool = false,
-        registryNotes: String? = nil,
-        lastUsed: Date? = nil
+        registryNotes: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -92,7 +86,6 @@ final class ModelInfo {
         self.lastDownloadError = lastDownloadError
         self.isDeprecated = isDeprecated
         self.registryNotes = registryNotes
-        self.lastUsed = lastUsed
     }
 
     // MARK: - Computed Properties

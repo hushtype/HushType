@@ -42,14 +42,14 @@ struct GeneralSettingsTab: View {
                         saveSettings()
                     }
 
-                Toggle("Show Recording Indicator", isOn: Binding(
-                    get: { settings?.showRecordingIndicator ?? true },
+                Toggle("Show Overlay After Dictation", isOn: Binding(
+                    get: { settings?.showOverlayAfterDictation ?? true },
                     set: { newValue in
-                        settings?.showRecordingIndicator = newValue
+                        settings?.showOverlayAfterDictation = newValue
                         saveSettings()
                     }
                 ))
-                .help("Display floating indicator while recording")
+                .help("Show a floating panel to review and edit text before injection")
 
                 Toggle("Play Sound Effects", isOn: Binding(
                     get: { settings?.playSoundEffects ?? true },

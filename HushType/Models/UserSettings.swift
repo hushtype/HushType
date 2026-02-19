@@ -50,8 +50,9 @@ final class UserSettings {
     /// Launch HushType at macOS login.
     var launchAtLogin: Bool
 
-    /// Show a floating indicator while recording.
-    var showRecordingIndicator: Bool
+    /// Show a floating overlay panel to review/edit text after dictation.
+    @Attribute(originalName: "showRecordingIndicator")
+    var showOverlayAfterDictation: Bool
 
     /// Play audio feedback when recording starts/stops.
     var playSoundEffects: Bool
@@ -104,7 +105,7 @@ final class UserSettings {
         defaultLanguage: String = "en",
         autoDetectLanguage: Bool = false,
         launchAtLogin: Bool = false,
-        showRecordingIndicator: Bool = true,
+        showOverlayAfterDictation: Bool = true,
         playSoundEffects: Bool = true,
         maxHistoryEntries: Int = 5000,
         historyRetentionDays: Int = 90,
@@ -126,7 +127,7 @@ final class UserSettings {
         self.defaultLanguage = defaultLanguage
         self.autoDetectLanguage = autoDetectLanguage
         self.launchAtLogin = launchAtLogin
-        self.showRecordingIndicator = showRecordingIndicator
+        self.showOverlayAfterDictation = showOverlayAfterDictation
         self.playSoundEffects = playSoundEffects
         self.maxHistoryEntries = maxHistoryEntries
         self.historyRetentionDays = historyRetentionDays

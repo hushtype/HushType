@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var llmModelDownloader: ModelDownloader?
     private var llmService: LLMService?
     private var registryService: ModelRegistryService?
+    private var overlayWindow: OverlayWindow?
 
     // Track currently loaded models to detect selection changes
     private var currentWhisperModel: String?
@@ -76,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
                 defaultLanguage: settings.defaultLanguage,
-                showOverlayEnabled: settings.showRecordingIndicator
+                showOverlayEnabled: settings.showOverlayAfterDictation
             )
             try controller.reloadHotkey(settings.globalHotkey)
 
@@ -213,7 +214,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
                 defaultLanguage: settings.defaultLanguage,
-                showOverlayEnabled: settings.showRecordingIndicator
+                showOverlayEnabled: settings.showOverlayAfterDictation
             )
 
             // Track initial model selections for change detection
@@ -253,10 +254,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         dictationController = controller
 
-        // Start model registry service for background URL updates
+        // Create and wire overlay window for edit-before-inject
+        let overlay = OverlayWindow()
+        overlay.setContent(appState: appState)
+        self.overlayWindow = overlay
+        startOverlayObservation()
+
+        // Note: ModelManagementView creates its own instance for UI state.
+        // Both share lastRefreshDate via UserDefaults, preventing redundant fetches.
         let registry = ModelRegistryService(modelContainer: modelContainer)
         self.registryService = registry
         Task { await registry.refreshIfNeeded() }
+    }
+
+    // MARK: - Overlay Observation
+
+    private func startOverlayObservation() {
+        Task { @MainActor [weak self] in
+            while let self = self {
+                await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                    withObservationTracking {
+                        _ = self.appState.showOverlay
+                    } onChange: {
+                        continuation.resume()
+                    }
+                }
+                if self.appState.showOverlay {
+                    self.overlayWindow?.showOverlay(position: .bottomCenter)
+                } else {
+                    self.overlayWindow?.hideOverlay()
+                }
+            }
+        }
     }
 
     // MARK: - Auto-Download Default Model

@@ -266,10 +266,38 @@ final class DictationController: @unchecked Sendable {
             if activeMode.requiresLLM, let router = processingRouter {
                 updateState(.processing)
                 Logger.general.info("LLM input [\(activeMode.rawValue)]: \(rawText)")
+
+                // Fetch appropriate PromptTemplate for prompt/custom modes
+                var template: PromptTemplate?
+                if (activeMode == .prompt || activeMode == .custom),
+                   let container = modelContainer {
+                    let ctx = ModelContext(container)
+                    let targetModeRaw = activeMode.rawValue
+                    var desc = FetchDescriptor<PromptTemplate>(
+                        predicate: #Predicate<PromptTemplate> { $0.mode.rawValue == targetModeRaw && $0.isDefault }
+                    )
+                    desc.fetchLimit = 1
+                    template = try? ctx.fetch(desc).first
+
+                    // Fallback: any template matching this mode
+                    if template == nil {
+                        var fallback = FetchDescriptor<PromptTemplate>(
+                            predicate: #Predicate<PromptTemplate> { $0.mode.rawValue == targetModeRaw }
+                        )
+                        fallback.fetchLimit = 1
+                        template = try? ctx.fetch(fallback).first
+                    }
+
+                    if let tmpl = template {
+                        Logger.general.info("Using template '\(tmpl.name)' for \(activeMode.rawValue) mode")
+                    }
+                }
+
                 do {
                     outputText = try await router.process(
                         text: rawText,
-                        mode: activeMode
+                        mode: activeMode,
+                        template: template
                     )
                     Logger.general.info("LLM output [\(activeMode.rawValue)]: \(outputText)")
                 } catch {
@@ -280,18 +308,42 @@ final class DictationController: @unchecked Sendable {
                 Logger.general.info("Skipping LLM (mode: \(activeMode.rawValue))")
             }
 
-            // Update overlay with result (only show if enabled in settings)
+            // Determine final text — wait for overlay if enabled
             appState.overlayText = outputText
+
+            let finalText: String
             if showOverlayEnabled {
+                // Clear processing state so overlay shows the result (not spinner)
+                appState.isProcessing = false
+
+                // Reset overlay flags and show
+                appState.overlayEditConfirmed = false
+                appState.overlayEditCancelled = false
+                appState.overlayEditedText = nil
                 appState.showOverlay = true
+
+                // Wait for user decision in overlay
+                let confirmed = await waitForOverlayDecision()
+                appState.showOverlay = false
+
+                guard confirmed else {
+                    Logger.general.info("Dictation cancelled from overlay")
+                    resetOverlayState()
+                    updateState(.idle)
+                    return
+                }
+                finalText = appState.overlayEditedText ?? outputText
+                resetOverlayState()
+            } else {
+                finalText = outputText
             }
 
             // Inject text (use snapshotted per-app injection method from recording start)
             updateState(.injecting)
-            try await injectionService.inject(outputText, method: recordingInjectionMethod)
+            try await injectionService.inject(finalText, method: recordingInjectionMethod)
 
             // Save history entry (use snapshotted app info from recording start)
-            let processedText = (outputText != rawText) ? outputText : nil
+            let processedText = (finalText != rawText) ? finalText : nil
             await saveDictationEntry(
                 rawText: rawText,
                 processedText: processedText,
@@ -302,8 +354,8 @@ final class DictationController: @unchecked Sendable {
             )
 
             // Update preview
-            appState.lastTranscriptionPreview = outputText
-            Logger.general.info("Dictation complete: \(outputText.count) chars injected")
+            appState.lastTranscriptionPreview = finalText
+            Logger.general.info("Dictation complete: \(finalText.count) chars injected")
 
         } catch {
             Logger.general.error("Pipeline error: \(error.localizedDescription)")
@@ -311,6 +363,36 @@ final class DictationController: @unchecked Sendable {
         }
 
         updateState(.idle)
+    }
+
+    // MARK: - Overlay Helpers
+
+    /// Poll for overlay user decision (confirm or cancel).
+    /// Returns true if confirmed, false if cancelled or timed out.
+    @MainActor
+    private func waitForOverlayDecision() async -> Bool {
+        let deadline = Date().addingTimeInterval(60)
+        while !appState.overlayEditConfirmed && !appState.overlayEditCancelled {
+            if Date() > deadline {
+                Logger.general.warning("Overlay decision timeout — auto-confirming")
+                return true
+            }
+            if !appState.showOverlay {
+                return false
+            }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        return appState.overlayEditConfirmed
+    }
+
+    /// Reset all overlay-related state after handling.
+    @MainActor
+    private func resetOverlayState() {
+        appState.showOverlay = false
+        appState.overlayText = nil
+        appState.overlayEditedText = nil
+        appState.overlayEditConfirmed = false
+        appState.overlayEditCancelled = false
     }
 
     // MARK: - Per-App Profile Resolution

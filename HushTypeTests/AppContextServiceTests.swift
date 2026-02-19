@@ -304,15 +304,6 @@ final class AppContextServiceTests: XCTestCase {
                        "Auto-created profiles should use .auto injection method")
     }
 
-    func testAutoCreatedProfileHasEmptyCustomVocabulary() throws {
-        let profile = insertAndResolveProfile(
-            bundleID: "com.example.vocab.test",
-            appName: "Vocabulary Test App"
-        )
-        XCTAssertTrue(profile.customVocabulary.isEmpty,
-                      "Auto-created profiles should start with an empty custom vocabulary")
-    }
-
     // MARK: - Multiple Profiles Tests
 
     func testMultipleDistinctProfilesCanCoexist() throws {

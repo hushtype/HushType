@@ -156,14 +156,6 @@ final class AppState {
         animationTimer = nil
     }
 
-    private static func sfSymbolImage(_ name: String) -> NSImage {
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
-        let image = NSImage(systemSymbolName: name, accessibilityDescription: "HushType")?
-            .withSymbolConfiguration(config) ?? NSImage()
-        image.isTemplate = true
-        return image
-    }
-
     // MARK: - Last Transcription Preview
 
     var lastTranscriptionPreview: String?

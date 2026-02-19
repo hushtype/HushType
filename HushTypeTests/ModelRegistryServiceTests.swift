@@ -138,14 +138,12 @@ final class ModelRegistryServiceTests: XCTestCase {
     }
 
     func test_applyManifest_preservesLocalState() throws {
-        let lastUsedDate = Date(timeIntervalSince1970: 1_000_000)
         let model = ModelInfo(
             name: "Model",
             type: .whisper,
             fileName: "test-model.bin",
             fileSize: 100_000,
-            isDownloaded: true,
-            lastUsed: lastUsedDate
+            isDownloaded: true
         )
         model.downloadProgress = 0.5
         model.lastDownloadError = "Some error"
@@ -163,7 +161,6 @@ final class ModelRegistryServiceTests: XCTestCase {
 
         // These should NOT be changed by manifest
         XCTAssertTrue(updated.isDownloaded)
-        XCTAssertEqual(updated.lastUsed, lastUsedDate)
         XCTAssertEqual(updated.downloadProgress, 0.5)
         XCTAssertEqual(updated.lastDownloadError, "Some error")
     }

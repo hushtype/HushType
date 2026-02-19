@@ -108,9 +108,6 @@ struct ProcessingSettingsTab: View {
                         .frame(height: 150)
                     }
 
-                    Text("Templates can be created and customized in the Templates tab (coming soon)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
             }
 
