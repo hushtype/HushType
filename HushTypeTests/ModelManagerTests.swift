@@ -358,6 +358,69 @@ final class ModelManagerTests: XCTestCase {
         XCTAssertEqual(usage, 0)
     }
 
+    // MARK: - SHA-256 Verification Tests
+
+    func test_verifySHA256_matchingHash() throws {
+        let model = ModelInfo(
+            name: "Hash Test",
+            type: .whisper,
+            fileName: "hash-test.bin",
+            fileSize: 5
+        )
+
+        // Create a file with known content
+        let dir = model.filePath.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let content = Data("hello".utf8) // SHA-256 of "hello"
+        try content.write(to: model.filePath)
+        createdFilePaths.append(model.filePath)
+        model.isDownloaded = true
+
+        // SHA-256 of "hello" = 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+        let expectedHash = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        XCTAssertTrue(manager.verifySHA256(for: model, expectedHash: expectedHash))
+    }
+
+    func test_verifySHA256_mismatchingHash() throws {
+        let model = ModelInfo(
+            name: "Hash Mismatch",
+            type: .whisper,
+            fileName: "hash-mismatch.bin",
+            fileSize: 5
+        )
+
+        let dir = model.filePath.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let content = Data("hello".utf8)
+        try content.write(to: model.filePath)
+        createdFilePaths.append(model.filePath)
+        model.isDownloaded = true
+
+        XCTAssertFalse(manager.verifySHA256(for: model, expectedHash: "wrong_hash"))
+    }
+
+    func test_verifySHA256_missingFile() {
+        let model = ModelInfo(
+            name: "Missing",
+            type: .whisper,
+            fileName: "nonexistent-file.bin",
+            fileSize: 100
+        )
+
+        XCTAssertFalse(manager.verifySHA256(for: model, expectedHash: "any_hash"))
+    }
+
+    func test_computeSHA256_knownContent() throws {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("sha-test-\(UUID().uuidString).bin")
+        try Data("hello".utf8).write(to: tempURL)
+        defer { try? FileManager.default.removeItem(at: tempURL) }
+
+        let hash = manager.computeSHA256(at: tempURL)
+        XCTAssertEqual(hash, "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824")
+    }
+
+    // MARK: - Mixed Download States Tests
+
     func test_totalDiskUsage_mixedDownloadStates() {
         let downloaded1 = ModelInfo(
             name: "D1",

@@ -1,8 +1,14 @@
 import Foundation
 import SwiftData
 
-// MARK: - Schema Versions
+// MARK: - Current Schema
 
+/// Single schema definition listing all SwiftData model types.
+///
+/// SwiftData handles lightweight migrations automatically when properties are
+/// added with default values. No explicit `SchemaMigrationPlan` is needed
+/// because all schema changes so far (e.g., new nullable or defaulted fields
+/// on `ModelInfo`) qualify as lightweight.
 enum HushTypeSchemaV1: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 0, 0)
 
@@ -15,19 +21,5 @@ enum HushTypeSchemaV1: VersionedSchema {
             UserSettings.self,
             ModelInfo.self
         ]
-    }
-}
-
-// MARK: - Migration Plan
-
-enum HushTypeMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] {
-        [
-            HushTypeSchemaV1.self
-        ]
-    }
-
-    static var stages: [MigrationStage] {
-        []
     }
 }

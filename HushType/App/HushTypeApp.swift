@@ -34,7 +34,6 @@ struct HushTypeApp: App {
         do {
             modelContainer = try ModelContainer(
                 for: schema,
-                migrationPlan: HushTypeMigrationPlan.self,
                 configurations: [configuration]
             )
         } catch {

@@ -10,6 +10,7 @@ struct ModelManagementView: View {
     @State private var settings: UserSettings?
     @State private var downloader = ModelDownloader()
     @State private var modelManager = ModelManager()
+    @State private var registryService = ModelRegistryService()
     @State private var selectedModelType: ModelType = .whisper
 
     private var whisperModels: [ModelInfo] {
@@ -22,6 +23,9 @@ struct ModelManagementView: View {
 
     var body: some View {
         Form {
+            // Model Registry Status
+            registrySection
+
             // Model Type Selector
             Section {
                 Picker("Model Type", selection: $selectedModelType) {
@@ -46,6 +50,49 @@ struct ModelManagementView: View {
         .onAppear {
             loadSettings()
             modelManager.syncDownloadStates(allModels)
+            registryService.modelContainer = modelContext.container
+            Task { await registryService.refreshIfNeeded() }
+        }
+    }
+
+    // MARK: - Registry Section
+
+    @ViewBuilder
+    private var registrySection: some View {
+        Section {
+            HStack {
+                if let lastRefresh = registryService.lastRefreshDate {
+                    Text("Last checked: \(lastRefresh, style: .relative) ago")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Model registry not yet checked")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Button {
+                    Task { await registryService.refresh() }
+                } label: {
+                    if registryService.isRefreshing {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Label("Check for Updates", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                }
+                .disabled(registryService.isRefreshing)
+            }
+
+            if let error = registryService.lastRefreshError {
+                Label(error, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Model Registry")
         }
     }
 
@@ -247,8 +294,6 @@ struct ModelManagementView: View {
             Logger.ui.error("Failed to save UserSettings: \(error.localizedDescription)")
         }
     }
-
-
 }
 
 // MARK: - Unified Model Row
@@ -293,6 +338,16 @@ struct UnifiedModelRow: View {
                             .foregroundStyle(.green)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
+
+                    if model.isDeprecated {
+                        Text("Deprecated")
+                            .font(.caption)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.orange.opacity(0.2))
+                            .foregroundStyle(.orange)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
                 }
 
                 HStack(spacing: 12) {
@@ -310,11 +365,22 @@ struct UnifiedModelRow: View {
                         Label("Downloaded", systemImage: "checkmark.circle.fill")
                             .font(.caption)
                             .foregroundStyle(.green)
+                    } else if let error = model.lastDownloadError {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .lineLimit(1)
                     } else {
                         Label("Not Downloaded", systemImage: "icloud.and.arrow.down")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                }
+
+                if let notes = model.registryNotes {
+                    Text(notes)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
 
@@ -339,6 +405,15 @@ struct UnifiedModelRow: View {
                     }
                     .help(isActiveModel ? "Cannot delete the active model" : "Delete this model from disk")
                     .disabled(isActiveModel)
+                } else if model.lastDownloadError != nil {
+                    Button {
+                        model.lastDownloadError = nil
+                        downloader.download(model)
+                    } label: {
+                        Label("Retry", systemImage: "arrow.clockwise")
+                            .labelStyle(.iconOnly)
+                    }
+                    .help("Retry download")
                 } else {
                     Button {
                         downloader.download(model)

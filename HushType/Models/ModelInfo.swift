@@ -37,6 +37,23 @@ final class ModelInfo {
     /// Current download progress (0.0 to 1.0). Nil if not downloading.
     var downloadProgress: Double?
 
+    // MARK: - Registry & Integrity
+
+    /// SHA-256 checksum for download integrity validation. Nil for manually imported models.
+    var sha256: String?
+
+    /// Alternate download URLs (mirrors/fallbacks). Empty for locally imported models.
+    var mirrorURLs: [String] = []
+
+    /// Most recent error message from a failed download attempt. Nil when no error.
+    var lastDownloadError: String?
+
+    /// Whether this model is deprecated in the remote registry.
+    var isDeprecated: Bool = false
+
+    /// Optional notes from the registry (e.g., "Recommended for daily use").
+    var registryNotes: String?
+
     // MARK: - Usage Tracking
 
     /// When this model was last used for inference.
@@ -54,6 +71,11 @@ final class ModelInfo {
         isDownloaded: Bool = false,
         isDefault: Bool = false,
         downloadProgress: Double? = nil,
+        sha256: String? = nil,
+        mirrorURLs: [String] = [],
+        lastDownloadError: String? = nil,
+        isDeprecated: Bool = false,
+        registryNotes: String? = nil,
         lastUsed: Date? = nil
     ) {
         self.id = id
@@ -65,6 +87,11 @@ final class ModelInfo {
         self.isDownloaded = isDownloaded
         self.isDefault = isDefault
         self.downloadProgress = downloadProgress
+        self.sha256 = sha256
+        self.mirrorURLs = mirrorURLs
+        self.lastDownloadError = lastDownloadError
+        self.isDeprecated = isDeprecated
+        self.registryNotes = registryNotes
         self.lastUsed = lastUsed
     }
 

@@ -28,7 +28,7 @@ final class ModelManager {
     }
 
     /// Compute SHA-256 hash of a file.
-    private func computeSHA256(at url: URL) -> String? {
+    func computeSHA256(at url: URL) -> String? {
         guard let stream = InputStream(url: url) else { return nil }
         stream.open()
         defer { stream.close() }

@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var modelDownloader: ModelDownloader?
     private var llmModelDownloader: ModelDownloader?
     private var llmService: LLMService?
+    private var registryService: ModelRegistryService?
 
     // Track currently loaded models to detect selection changes
     private var currentWhisperModel: String?
@@ -251,6 +252,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         dictationController = controller
+
+        // Start model registry service for background URL updates
+        let registry = ModelRegistryService(modelContainer: modelContainer)
+        self.registryService = registry
+        Task { await registry.refreshIfNeeded() }
     }
 
     // MARK: - Auto-Download Default Model

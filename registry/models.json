@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "updatedAt": "2026-02-19T12:00:00Z",
+  "models": [
+    {
+      "fileName": "ggml-tiny.en.bin",
+      "name": "Whisper Tiny (English)",
+      "type": "whisper",
+      "fileSize": 77691713,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"
+      ],
+      "deprecated": false,
+      "notes": "Fastest, basic accuracy. Good for testing."
+    },
+    {
+      "fileName": "ggml-base.en.bin",
+      "name": "Whisper Base (English)",
+      "type": "whisper",
+      "fileSize": 147951465,
+      "isDefault": true,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+      ],
+      "deprecated": false,
+      "notes": "Recommended for daily use."
+    },
+    {
+      "fileName": "ggml-small.en.bin",
+      "name": "Whisper Small (English)",
+      "type": "whisper",
+      "fileSize": 487601967,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"
+      ],
+      "deprecated": false,
+      "notes": "Better accuracy when Base isn't enough."
+    },
+    {
+      "fileName": "ggml-medium.en.bin",
+      "name": "Whisper Medium (English)",
+      "type": "whisper",
+      "fileSize": 1533774781,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.en.bin"
+      ],
+      "deprecated": false,
+      "notes": "Very good accuracy. Requires 2+ GB RAM."
+    },
+    {
+      "fileName": "ggml-large-v3-turbo.bin",
+      "name": "Whisper Large v3 Turbo",
+      "type": "whisper",
+      "fileSize": 1622089216,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
+      ],
+      "deprecated": false,
+      "notes": "Best accuracy. Multilingual. Requires 2+ GB RAM."
+    },
+    {
+      "fileName": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "name": "Qwen 2.5 0.5B Instruct (Q4_K_M)",
+      "type": "llm",
+      "fileSize": 491000000,
+      "isDefault": true,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+      ],
+      "deprecated": false,
+      "notes": "Fast cleanup. Good for grammar and punctuation."
+    },
+    {
+      "fileName": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "name": "Qwen 2.5 1.5B Instruct (Q4_K_M)",
+      "type": "llm",
+      "fileSize": 1100000000,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+      ],
+      "deprecated": false,
+      "notes": "Great quality for grammar and structuring."
+    },
+    {
+      "fileName": "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
+      "name": "Llama 3.2 1B Instruct (Q4_K_M)",
+      "type": "llm",
+      "fileSize": 808000000,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+      ],
+      "deprecated": false,
+      "notes": null
+    },
+    {
+      "fileName": "gemma-3-1b-it-Q4_K_M.gguf",
+      "name": "Gemma 3 1B Instruct (Q4_K_M)",
+      "type": "llm",
+      "fileSize": 806000000,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf"
+      ],
+      "deprecated": false,
+      "notes": null
+    },
+    {
+      "fileName": "microsoft_Phi-4-mini-instruct-Q4_K_M.gguf",
+      "name": "Phi-4 Mini Instruct (Q4_K_M)",
+      "type": "llm",
+      "fileSize": 2490000000,
+      "isDefault": false,
+      "sha256": null,
+      "downloadURLs": [
+        "https://huggingface.co/bartowski/microsoft_Phi-4-mini-instruct-GGUF/resolve/main/microsoft_Phi-4-mini-instruct-Q4_K_M.gguf"
+      ],
+      "deprecated": false,
+      "notes": "Best quality. Requires 4+ GB RAM."
+    }
+  ]
+}
