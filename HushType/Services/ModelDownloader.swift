@@ -89,9 +89,12 @@ final class ModelDownloader: @unchecked Sendable {
     }
 
     private func handleCompletion(model: ModelInfo, tempURL: URL?, response: URLResponse?, error: Error?) {
-        defer { cleanup(model) }
+        // NOTE: cleanup(model) is called explicitly on each path rather than
+        // via `defer`, because tryNextMirror() calls startDownload() which
+        // sets up new state. A defer would wipe that new state after return.
 
         if let error = error as? URLError, error.code == .cancelled {
+            cleanup(model)
             return
         }
 
@@ -99,6 +102,7 @@ final class ModelDownloader: @unchecked Sendable {
         if let error {
             let msg = error.localizedDescription
             Logger.models.error("Download failed for \(model.name): \(msg)")
+            cleanup(model)
             if tryNextMirror(model: model, error: msg) { return }
             model.downloadProgress = nil
             model.lastDownloadError = msg
@@ -110,6 +114,7 @@ final class ModelDownloader: @unchecked Sendable {
            !(200...299).contains(httpResponse.statusCode) {
             let msg = "HTTP \(httpResponse.statusCode)"
             Logger.models.error("Download rejected for \(model.name): \(msg)")
+            cleanup(model)
             if tryNextMirror(model: model, error: msg) { return }
             model.downloadProgress = nil
             model.lastDownloadError = msg
@@ -119,6 +124,7 @@ final class ModelDownloader: @unchecked Sendable {
         guard let tempURL else {
             let msg = "No file received"
             Logger.models.error("\(msg) for \(model.name)")
+            cleanup(model)
             if tryNextMirror(model: model, error: msg) { return }
             model.downloadProgress = nil
             model.lastDownloadError = msg
@@ -138,6 +144,7 @@ final class ModelDownloader: @unchecked Sendable {
         } catch {
             let msg = "Failed to save: \(error.localizedDescription)"
             Logger.models.error("Failed to save model \(model.name): \(error.localizedDescription)")
+            cleanup(model)
             model.downloadProgress = nil
             model.lastDownloadError = msg
             return
@@ -150,6 +157,7 @@ final class ModelDownloader: @unchecked Sendable {
                 try? FileManager.default.removeItem(at: model.filePath)
                 let msg = "Checksum mismatch — file deleted"
                 Logger.models.error("SHA-256 verification failed for \(model.name)")
+                cleanup(model)
                 if tryNextMirror(model: model, error: msg) { return }
                 model.downloadProgress = nil
                 model.lastDownloadError = msg
@@ -159,6 +167,7 @@ final class ModelDownloader: @unchecked Sendable {
         }
 
         // Success
+        cleanup(model)
         model.isDownloaded = true
         model.downloadProgress = nil
         model.lastDownloadError = nil
