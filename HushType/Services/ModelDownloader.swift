@@ -18,7 +18,12 @@ final class ModelDownloader: @unchecked Sendable {
     private var observations: [String: NSKeyValueObservation] = [:]
 
     /// Tracks which URL index is being tried for mirror fallback.
-    private var urlIndices: [String: Int] = [:]
+    var urlIndices: [String: Int] = [:]
+
+    /// SHA-256 verification function. Override in tests to avoid ModelManager dependency.
+    var verifyChecksum: (ModelInfo, String) -> Bool = { model, expectedHash in
+        ModelManager().verifySHA256(for: model, expectedHash: expectedHash)
+    }
 
     func download(_ model: ModelInfo) {
         startDownload(model, urlIndex: 0)
@@ -39,7 +44,7 @@ final class ModelDownloader: @unchecked Sendable {
     // MARK: - Private
 
     /// Builds the ordered list of URLs to try: primary + mirrors.
-    private func allURLs(for model: ModelInfo) -> [URL] {
+    func allURLs(for model: ModelInfo) -> [URL] {
         var urls: [URL] = []
         if let primary = model.downloadURL {
             urls.append(primary)
@@ -88,7 +93,7 @@ final class ModelDownloader: @unchecked Sendable {
         task.resume()
     }
 
-    private func handleCompletion(model: ModelInfo, tempURL: URL?, response: URLResponse?, error: Error?) {
+    func handleCompletion(model: ModelInfo, tempURL: URL?, response: URLResponse?, error: Error?) {
         // NOTE: cleanup(model) is called explicitly on each path rather than
         // via `defer`, because tryNextMirror() calls startDownload() which
         // sets up new state. A defer would wipe that new state after return.
@@ -152,8 +157,7 @@ final class ModelDownloader: @unchecked Sendable {
 
         // SHA-256 checksum validation
         if let expectedHash = model.sha256 {
-            let manager = ModelManager()
-            if !manager.verifySHA256(for: model, expectedHash: expectedHash) {
+            if !verifyChecksum(model, expectedHash) {
                 try? FileManager.default.removeItem(at: model.filePath)
                 let msg = "Checksum mismatch — file deleted"
                 Logger.models.error("SHA-256 verification failed for \(model.name)")
@@ -197,7 +201,7 @@ final class ModelDownloader: @unchecked Sendable {
         }
 
         Logger.models.info("Trying mirror \(nextIndex + 1)/\(urls.count) for \(model.name) after: \(error)")
-        // cleanup was called by defer, so we can start fresh
+        // cleanup was already called, so we can start fresh
         startDownload(model, urlIndex: nextIndex)
         return true
     }
