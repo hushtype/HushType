@@ -349,47 +349,6 @@ final class LlamaContext: @unchecked Sendable {
         batch.n_tokens += 1
     }
 
-    // MARK: - Configuration
-
-    /// Reconfigure the sampler chain with temperature and top-p.
-    /// - Parameters:
-    ///   - temperature: Sampling temperature (0 = greedy, > 0 = more random).
-    ///   - topP: Top-p (nucleus) sampling threshold.
-    func configureSampler(temperature: Float = 0.0, topP: Float = 0.9) {
-        queue.sync {
-            if let oldSampler = sampler {
-                llama_sampler_free(oldSampler)
-            }
-
-            let chainParams = llama_sampler_chain_default_params()
-            let chain = llama_sampler_chain_init(chainParams)
-
-            if temperature <= 0 {
-                llama_sampler_chain_add(chain, llama_sampler_init_greedy())
-            } else {
-                llama_sampler_chain_add(chain, llama_sampler_init_top_p(topP, 1))
-                llama_sampler_chain_add(chain, llama_sampler_init_temp(temperature))
-                llama_sampler_chain_add(chain, llama_sampler_init_dist(UInt32.random(in: 0...UInt32.max)))
-            }
-
-            self.sampler = chain
-        }
-    }
-
-    // MARK: - Model Info
-
-    /// Get the context window size.
-    var contextSize: UInt32? {
-        guard let ctx = context else { return nil }
-        return llama_n_ctx(ctx)
-    }
-
-    /// Get the model's training context size.
-    var trainContextSize: Int32? {
-        guard let mdl = model else { return nil }
-        return llama_model_n_ctx_train(mdl)
-    }
-
     /// Unload the model and free resources.
     func unload() {
         queue.sync {

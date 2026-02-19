@@ -2,8 +2,6 @@ import Foundation
 import SwiftData
 import CryptoKit
 import os
-import AppKit
-import UniformTypeIdentifiers
 
 /// Manages model lifecycle — download, verification, storage, and import.
 @Observable
@@ -70,68 +68,4 @@ final class ModelManager {
         }
     }
 
-    // MARK: - Custom Model Import
-
-    /// Import a GGUF model file via NSOpenPanel.
-    /// Returns the created ModelInfo, or nil if user cancelled.
-    @MainActor
-    func importGGUFModel(type: ModelType, context: ModelContext) -> ModelInfo? {
-        let panel = NSOpenPanel()
-        panel.title = "Import GGUF Model"
-        panel.allowedContentTypes = [.data]  // GGUF files
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.nameFieldStringValue = ""
-        panel.message = "Select a GGUF model file to import"
-
-        guard panel.runModal() == .OK, let sourceURL = panel.url else {
-            return nil
-        }
-
-        // Validate file extension
-        let fileName = sourceURL.lastPathComponent
-        guard fileName.hasSuffix(".gguf") || fileName.hasSuffix(".bin") else {
-            Logger.models.error("Invalid model file format: \(fileName)")
-            return nil
-        }
-
-        // Get file size
-        guard let attrs = try? FileManager.default.attributesOfItem(atPath: sourceURL.path),
-              let fileSize = attrs[.size] as? Int64 else {
-            Logger.models.error("Cannot read file size: \(fileName)")
-            return nil
-        }
-
-        // Create ModelInfo
-        let modelName = fileName
-            .replacingOccurrences(of: ".gguf", with: "")
-            .replacingOccurrences(of: ".bin", with: "")
-            .replacingOccurrences(of: "-", with: " ")
-            .replacingOccurrences(of: "_", with: " ")
-            .capitalized
-
-        let model = ModelInfo(
-            name: modelName,
-            type: type,
-            fileName: fileName,
-            fileSize: fileSize
-        )
-
-        // Copy file to app's model directory
-        let destDir = model.filePath.deletingLastPathComponent()
-        do {
-            try FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
-            if FileManager.default.fileExists(atPath: model.filePath.path) {
-                try FileManager.default.removeItem(at: model.filePath)
-            }
-            try FileManager.default.copyItem(at: sourceURL, to: model.filePath)
-            model.isDownloaded = true
-            context.insert(model)
-            Logger.models.info("Imported model: \(modelName) (\(model.formattedFileSize))")
-            return model
-        } catch {
-            Logger.models.error("Failed to import model: \(error.localizedDescription)")
-            return nil
-        }
-    }
 }

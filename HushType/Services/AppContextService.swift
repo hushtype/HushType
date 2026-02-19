@@ -66,7 +66,7 @@ final class AppContextService {
 
     deinit {
         if let observer {
-            NotificationCenter.default.removeObserver(observer)
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
         }
     }
 

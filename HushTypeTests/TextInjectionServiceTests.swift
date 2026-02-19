@@ -104,9 +104,6 @@ final class TextInjectionServiceTests: XCTestCase {
     // MARK: - CGEventInjector Tests
 
     func testCGEventInjectorCreatesEvents() {
-        // Test that CGEventInjector can create events for simple text
-        let injector = CGEventInjector()
-
         // Test event source creation
         guard let eventSource = CGEventSource(stateID: .combinedSessionState) else {
             XCTFail("Failed to create CGEventSource")
@@ -135,7 +132,6 @@ final class TextInjectionServiceTests: XCTestCase {
 
     func testCGEventInjectorMultipleCharacters() {
         // Test that we can create events for multiple characters
-        let injector = CGEventInjector()
         let text = "ABC"
 
         guard let eventSource = CGEventSource(stateID: .combinedSessionState) else {

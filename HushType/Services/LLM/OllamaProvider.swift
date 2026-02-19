@@ -143,10 +143,6 @@ actor OllamaProvider: LLMProvider {
         currentModelName != nil
     }
 
-    var estimatedMemoryUsage: UInt64 {
-        0
-    }
-
     // MARK: - Static Helper
 
     static func isOllamaRunning() async -> Bool {

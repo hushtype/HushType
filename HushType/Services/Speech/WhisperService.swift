@@ -1,26 +1,6 @@
 import Foundation
 import os
 
-// MARK: - TranscriptionEngine Protocol
-
-/// Protocol for speech-to-text transcription backends.
-protocol TranscriptionEngine: Sendable {
-    /// Transcribe audio samples to text.
-    /// - Parameter samples: Float32 audio samples at 16kHz mono.
-    /// - Returns: Transcription result with text, language, and timing.
-    func transcribe(samples: [Float]) async throws -> WhisperTranscriptionResult
-
-    /// Load a model from disk.
-    /// - Parameter path: Path to the model file.
-    func loadModel(at path: URL) async throws
-
-    /// Unload the current model from memory.
-    func unloadModel()
-
-    /// Whether a model is currently loaded and ready for inference.
-    var isModelLoaded: Bool { get }
-}
-
 // MARK: - WhisperTranscriptionResult
 
 /// Result of a whisper transcription within the app.
@@ -80,9 +60,6 @@ final class WhisperService: @unchecked Sendable {
     /// Whether a model is currently loaded.
     private(set) var isModelLoaded: Bool = false
 
-    /// Name of the currently loaded model.
-    private(set) var loadedModelName: String?
-
     /// Language to use for transcription ("en" or "auto").
     var language: String = "en"
 
@@ -114,7 +91,6 @@ final class WhisperService: @unchecked Sendable {
             self.context = whisperContext
 
             await MainActor.run {
-                self.loadedModelName = path.deletingPathExtension().lastPathComponent
                 self.isModelLoaded = true
             }
 
@@ -131,17 +107,8 @@ final class WhisperService: @unchecked Sendable {
         context?.unload()
         context = nil
         isModelLoaded = false
-        loadedModelName = nil
 
         Logger.whisper.info("Whisper model unloaded")
-    }
-
-    /// Load model based on UserSettings selection.
-    /// - Parameters:
-    ///   - modelInfo: The ModelInfo entry describing the model.
-    func loadModel(from modelInfo: ModelInfoRef) async throws {
-        let path = modelInfo.filePath
-        try await loadModel(at: path)
     }
 
     // MARK: - Transcription

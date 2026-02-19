@@ -13,10 +13,6 @@ final class AppState {
         didSet { updateMenuBarState() }
     }
 
-    var isPipelineActive: Bool {
-        isRecording || isProcessing
-    }
-
     // MARK: - Active Mode
 
     var activeMode: ProcessingMode = .raw

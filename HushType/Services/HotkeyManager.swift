@@ -13,10 +13,6 @@ struct HotkeyBinding: Equatable, Identifiable {
     var mode: ProcessingMode?
     var isEnabled: Bool
 
-    private static let modifierMask: CGEventFlags = [
-        .maskCommand, .maskShift, .maskAlternate, .maskControl,
-    ]
-
     init(
         keyCode: CGKeyCode,
         modifiers: CGEventFlags,
@@ -259,21 +255,6 @@ final class HotkeyManager: @unchecked Sendable {
         }
         _bindings.append(binding)
         Logger.hotkey.info("Registered hotkey: \(binding.displayString)")
-    }
-
-    func unregister(id: UUID) {
-        bindingsLock.lock()
-        defer { bindingsLock.unlock() }
-        _bindings.removeAll { $0.id == id }
-        Logger.hotkey.info("Unregistered hotkey binding")
-    }
-
-    func updateBinding(_ binding: HotkeyBinding) {
-        bindingsLock.lock()
-        defer { bindingsLock.unlock() }
-        guard let index = _bindings.firstIndex(where: { $0.id == binding.id }) else { return }
-        _bindings[index] = binding
-        Logger.hotkey.info("Updated hotkey: \(binding.displayString)")
     }
 
     func loadFromSettings(hotkey: String) throws {

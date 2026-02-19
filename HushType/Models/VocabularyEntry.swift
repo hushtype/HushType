@@ -55,16 +55,7 @@ final class VocabularyEntry {
         self.appProfile = appProfile
     }
 
-    // MARK: - Matching
-
-    /// Tests whether this entry matches the given text.
-    func matches(in text: String) -> Bool {
-        if caseSensitive {
-            return text.contains(spokenForm)
-        } else {
-            return text.localizedCaseInsensitiveContains(spokenForm)
-        }
-    }
+    // MARK: - Replacement
 
     /// Applies the replacement to the given text.
     func apply(to text: String) -> String {

@@ -323,7 +323,6 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
 enum AudioCaptureError: Error, LocalizedError {
     case serviceReleased
     case formatConversionFailed
-    case permissionDenied
 
     var errorDescription: String? {
         switch self {
@@ -331,8 +330,6 @@ enum AudioCaptureError: Error, LocalizedError {
             return "Audio capture service was released"
         case .formatConversionFailed:
             return "Failed to create audio format converter"
-        case .permissionDenied:
-            return "Microphone permission denied"
         }
     }
 }

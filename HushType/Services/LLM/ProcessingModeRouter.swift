@@ -15,12 +15,14 @@ final class ProcessingModeRouter {
     ///   - text: Raw transcription text from whisper.
     ///   - mode: The processing mode to apply.
     ///   - template: Optional PromptTemplate for prompt/custom modes.
+    ///   - detectedLanguage: Language detected by whisper (passed to PromptTemplateEngine).
     ///   - variables: Variable values for template rendering.
     /// - Returns: Processed text (or raw text if mode is .raw or LLM fails).
     func process(
         text: String,
         mode: ProcessingMode,
         template: PromptTemplate? = nil,
+        detectedLanguage: String? = nil,
         variables: [String: String] = [:]
     ) async throws -> String {
         // If mode doesn't require LLM, return raw
@@ -33,6 +35,7 @@ final class ProcessingModeRouter {
             text: text,
             mode: mode,
             template: template,
+            detectedLanguage: detectedLanguage,
             variables: variables
         )
 
@@ -51,11 +54,18 @@ final class ProcessingModeRouter {
         text: String,
         mode: ProcessingMode,
         template: PromptTemplate?,
+        detectedLanguage: String?,
         variables: [String: String]
     ) -> (systemPrompt: String, userPrompt: String) {
-        // If a template is provided, use it
+        // If a template is provided, use PromptTemplateEngine for full variable substitution
+        // (built-in vars: app_name, app_bundle_id, language, timestamp, date, time)
         if let template = template {
-            return (template.systemPrompt, template.render(transcription: text, values: variables))
+            return PromptTemplateEngine.render(
+                template: template,
+                transcription: text,
+                detectedLanguage: detectedLanguage,
+                userVariables: variables
+            )
         }
 
         // Otherwise use built-in defaults per mode

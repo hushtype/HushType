@@ -212,17 +212,6 @@ final class WhisperContext: @unchecked Sendable {
         )
     }
 
-    // MARK: - Model Info
-
-    /// Get the model type string.
-    var modelType: String? {
-        guard let ctx = context else { return nil }
-        if let typeStr = whisper_model_type_readable(ctx) {
-            return String(cString: typeStr)
-        }
-        return nil
-    }
-
     /// Unload the model and free resources.
     func unload() {
         queue.sync {

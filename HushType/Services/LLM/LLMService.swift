@@ -34,9 +34,6 @@ final class LLMService: @unchecked Sendable {
     /// Whether currently processing/generating text.
     private(set) var isProcessing: Bool = false
 
-    /// Last error message for UI display.
-    private(set) var lastError: String?
-
     // MARK: - Initialization
 
     init() {
@@ -66,12 +63,9 @@ final class LLMService: @unchecked Sendable {
 
         do {
             try await provider.loadModel(at: path)
-            lastError = nil
             Logger.llm.info("LLM model loaded successfully")
         } catch {
-            let errorMessage = error.localizedDescription
-            lastError = errorMessage
-            Logger.llm.error("Failed to load LLM model: \(errorMessage)")
+            Logger.llm.error("Failed to load LLM model: \(error.localizedDescription)")
             throw error
         }
     }
@@ -123,21 +117,12 @@ final class LLMService: @unchecked Sendable {
                 maxTokens: maxTokens
             )
 
-            lastError = nil
             Logger.llm.info("LLM processing complete: \(result.count) chars generated")
             return result
         } catch {
-            let errorMessage = error.localizedDescription
-            lastError = errorMessage
-            Logger.llm.error("LLM processing failed: \(errorMessage)")
-            throw LLMServiceError.processingFailed(errorMessage)
+            Logger.llm.error("LLM processing failed: \(error.localizedDescription)")
+            throw LLMServiceError.processingFailed(error.localizedDescription)
         }
     }
 
-    // MARK: - Status
-
-    /// Whether a model is currently loaded and ready for inference.
-    var isModelLoaded: Bool {
-        activeProvider?.isModelLoaded ?? false
-    }
 }

@@ -176,9 +176,9 @@ final class VoiceActivityDetectorTests: XCTestCase {
         // Test with maximum sensitivity (1.0)
         let maxSensitivity = detector.detectVoiceActivity(in: samples, sensitivity: 1.0)
 
-        // Both should work without crashing
-        XCTAssertGreaterThanOrEqual(minSensitivity.count, 0)
-        XCTAssertGreaterThanOrEqual(maxSensitivity.count, 0)
+        // Both should work without crashing — verify they return valid results
+        XCTAssertNotNil(minSensitivity)
+        XCTAssertNotNil(maxSensitivity)
     }
 
     // MARK: - Edge Cases
@@ -189,8 +189,7 @@ final class VoiceActivityDetectorTests: XCTestCase {
 
         let result = detector.trimSilence(from: samples, sensitivity: 0.5)
 
-        // Should handle gracefully (might return empty or the full input)
-        XCTAssertGreaterThanOrEqual(result.count, 0)
+        // Should handle gracefully — output no longer than input
         XCTAssertLessThanOrEqual(result.count, samples.count)
     }
 
@@ -204,8 +203,8 @@ final class VoiceActivityDetectorTests: XCTestCase {
 
         let result = detector.trimSilence(from: samples, sensitivity: 0.5)
 
-        // Should process the single frame
-        XCTAssertGreaterThanOrEqual(result.count, 0)
+        // Should process the single frame — output no longer than input
+        XCTAssertLessThanOrEqual(result.count, samples.count)
     }
 
     func testAlternatingSignalAndSilence() {

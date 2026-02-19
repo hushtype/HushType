@@ -85,14 +85,6 @@ enum ModelType: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    /// File extension expected for this model type.
-    var expectedExtension: String {
-        switch self {
-        case .whisper: "bin"
-        case .llm: "gguf"
-        }
-    }
-
     /// Directory name within the app's model storage.
     var storageDirectory: String {
         switch self {
@@ -127,17 +119,4 @@ enum InjectionMethod: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var description: String {
-        switch self {
-        case .cgEvent:
-            "Simulates keystrokes directly — preserves clipboard contents "
-            + "but requires Accessibility permission"
-        case .clipboard:
-            "Copies text to clipboard and pastes — works everywhere but "
-            + "overwrites clipboard contents"
-        case .auto:
-            "Tries CGEvent first, falls back to clipboard if the target "
-            + "app blocks synthetic events"
-        }
-    }
 }

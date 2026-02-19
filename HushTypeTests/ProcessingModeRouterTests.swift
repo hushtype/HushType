@@ -256,10 +256,6 @@ final class MockLLMProvider: LLMProvider, @unchecked Sendable {
     var lastSystemPrompt: String?
     var lastUserPrompt: String?
 
-    var estimatedMemoryUsage: UInt64 {
-        1024 * 1024
-    }
-
     func loadModel(at path: String) async throws {
         isModelLoaded = true
     }

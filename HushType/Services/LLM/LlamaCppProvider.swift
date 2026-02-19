@@ -27,7 +27,6 @@ enum LlamaCppProviderError: Error, LocalizedError {
 actor LlamaCppProvider: LLMProvider {
     private var context: LlamaContext?
     private var modelPath: String?
-    private var _estimatedMemoryUsage: UInt64 = 0
 
     /// GPU layers to offload (99 = all).
     private let gpuLayers: Int32
@@ -42,10 +41,6 @@ actor LlamaCppProvider: LLMProvider {
 
     var isModelLoaded: Bool {
         context?.isLoaded ?? false
-    }
-
-    var estimatedMemoryUsage: UInt64 {
-        _estimatedMemoryUsage
     }
 
     func loadModel(at path: String) async throws {
@@ -63,10 +58,6 @@ actor LlamaCppProvider: LLMProvider {
             self.context = ctx
             self.modelPath = path
 
-            // Estimate memory from file size (rough approximation)
-            let attrs = try? FileManager.default.attributesOfItem(atPath: path)
-            self._estimatedMemoryUsage = (attrs?[.size] as? UInt64) ?? 0
-
             Logger.llm.info("LlamaCppProvider: model loaded from \(path)")
         } catch {
             Logger.llm.error("LlamaCppProvider: failed to load model: \(error.localizedDescription)")
@@ -78,7 +69,6 @@ actor LlamaCppProvider: LLMProvider {
         context?.unload()
         context = nil
         modelPath = nil
-        _estimatedMemoryUsage = 0
         Logger.llm.info("LlamaCppProvider: model unloaded")
     }
 
@@ -101,11 +91,6 @@ actor LlamaCppProvider: LLMProvider {
             Logger.llm.error("LlamaCppProvider: generation failed: \(error.localizedDescription)")
             throw LlamaCppProviderError.generationFailed(error.localizedDescription)
         }
-    }
-
-    /// Configure sampling parameters.
-    func configureSampler(temperature: Float = 0.0, topP: Float = 0.9) {
-        context?.configureSampler(temperature: temperature, topP: topP)
     }
 
     // MARK: - Private

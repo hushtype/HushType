@@ -22,7 +22,4 @@ protocol LLMProvider: Sendable {
 
     /// Whether a model is currently loaded and ready for inference.
     var isModelLoaded: Bool { get }
-
-    /// Estimated memory usage of the loaded model in bytes.
-    var estimatedMemoryUsage: UInt64 { get }
 }

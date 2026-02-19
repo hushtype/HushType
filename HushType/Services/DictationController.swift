@@ -13,13 +13,6 @@ enum DictationState: Equatable {
     case processing
     case injecting
     case error(String)
-
-    var isActive: Bool {
-        switch self {
-        case .idle, .error: false
-        case .recording, .transcribing, .processing, .injecting: true
-        }
-    }
 }
 
 // MARK: - DictationController
@@ -183,6 +176,8 @@ final class DictationController: @unchecked Sendable {
         } catch {
             Logger.general.error("Failed to start recording: \(error.localizedDescription)")
             updateState(.error(error.localizedDescription))
+            // Delay idle transition so the error is observable by the UI
+            try? await Task.sleep(for: .seconds(3))
             updateState(.idle)
         }
     }
@@ -297,7 +292,8 @@ final class DictationController: @unchecked Sendable {
                     outputText = try await router.process(
                         text: rawText,
                         mode: activeMode,
-                        template: template
+                        template: template,
+                        detectedLanguage: result.language
                     )
                     Logger.general.info("LLM output [\(activeMode.rawValue)]: \(outputText)")
                 } catch {
@@ -629,49 +625,8 @@ final class DictationController: @unchecked Sendable {
             Logger.general.error("Failed to save DictationEntry: \(error.localizedDescription)")
         }
 
-        // Enforce retention policies
-        enforceHistoryLimits(in: context, settings: settings)
-    }
-
-    @MainActor
-    private func enforceHistoryLimits(in context: ModelContext, settings: UserSettings?) {
-        let maxEntries = settings?.maxHistoryEntries ?? 5000
-        let retentionDays = settings?.historyRetentionDays ?? 90
-
-        do {
-            // Purge non-favorite entries exceeding max count (oldest first)
-            if maxEntries > 0 {
-                let nonFavoriteDescriptor = FetchDescriptor<DictationEntry>(
-                    predicate: #Predicate { !$0.isFavorite },
-                    sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
-                )
-                let entries = try context.fetch(nonFavoriteDescriptor)
-                if entries.count > maxEntries {
-                    for entry in entries.dropFirst(maxEntries) {
-                        context.delete(entry)
-                    }
-                    Logger.general.info("Purged \(entries.count - maxEntries) old history entries (max: \(maxEntries), favorites preserved)")
-                }
-            }
-
-            // Delete non-favorite entries older than retention period
-            if retentionDays > 0 {
-                let cutoff = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? Date()
-                let expiredDescriptor = FetchDescriptor<DictationEntry>(
-                    predicate: #Predicate { $0.timestamp < cutoff && !$0.isFavorite }
-                )
-                let expired = try context.fetch(expiredDescriptor)
-                for entry in expired {
-                    context.delete(entry)
-                }
-                if !expired.isEmpty {
-                    Logger.general.info("Purged \(expired.count) expired history entries (retention: \(retentionDays) days, favorites preserved)")
-                }
-            }
-
-            try context.save()
-        } catch {
-            Logger.general.error("Failed to enforce history limits: \(error.localizedDescription)")
-        }
+        // Enforce retention policies using HistoryCleanupService (count + age limits, favorites exempt)
+        let cleanup = HistoryCleanupService(modelContainer: modelContainer)
+        cleanup.runCleanup()
     }
 }
