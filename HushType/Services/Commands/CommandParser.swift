@@ -148,7 +148,6 @@ final class CommandParser: Sendable {
                     parts.append(beforePart)
                     remaining = String(remaining[range.upperBound...])
                     searchStart = remaining.startIndex
-                    break
                 } else {
                     searchStart = range.upperBound
                 }

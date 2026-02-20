@@ -61,6 +61,23 @@ final class CommandRegistry {
         Logger.commands.info("Command \(intent.rawValue) \(enabled ? "enabled" : "disabled")")
     }
 
+    /// Load persisted disabled intents from UserSettings.
+    ///
+    /// Resets all entries to enabled first, then disables those in the list.
+    /// This prevents stale disabled state from accumulating across calls.
+    func loadDisabledIntents(_ disabledRawValues: [String]) {
+        let disabledSet = Set(disabledRawValues)
+        for index in entries.indices {
+            entries[index].isEnabled = !disabledSet.contains(entries[index].intent.rawValue)
+        }
+        Logger.commands.info("Loaded \(disabledRawValues.count) disabled command intents from settings")
+    }
+
+    /// Returns the raw values of all currently disabled intents (for persistence).
+    func disabledIntentRawValues() -> [String] {
+        entries.filter { !$0.isEnabled }.map { $0.intent.rawValue }
+    }
+
     // MARK: - Custom Command Resolution
 
     /// Match transcribed text against user-defined custom commands.

@@ -4,12 +4,17 @@ import os
 
 struct CommandSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @Query private var customCommands: [CustomCommand]
     @State private var settings: UserSettings?
     @State private var commandsEnabled = true
     @State private var commandWakePhrase = "Hey Type"
-    @State private var registry = CommandRegistry()
     @State private var showCustomCommandEditor = false
+
+    /// The shared registry from the pipeline (via AppState), or a local fallback.
+    private var registry: CommandRegistry {
+        appState.commandRegistry ?? CommandRegistry()
+    }
 
     var body: some View {
         Form {
@@ -44,6 +49,7 @@ struct CommandSettingsTab: View {
                     ForEach(registry.entries(for: category)) { entry in
                         BuiltInCommandRow(entry: entry, isParentEnabled: commandsEnabled) { intent, enabled in
                             registry.setEnabled(intent, enabled: enabled)
+                            persistRegistryState()
                         }
                     }
                 } header: {
@@ -85,7 +91,6 @@ struct CommandSettingsTab: View {
         }
         .sheet(isPresented: $showCustomCommandEditor) {
             CustomCommandEditorView()
-                .modelContainer(for: CustomCommand.self)
                 .frame(minWidth: 700, minHeight: 500)
         }
     }
@@ -101,6 +106,12 @@ struct CommandSettingsTab: View {
         } catch {
             Logger.ui.error("Failed to load UserSettings in Commands tab: \(error.localizedDescription)")
         }
+    }
+
+    /// Persist the registry's disabled intents to UserSettings.
+    private func persistRegistryState() {
+        settings?.disabledCommandIntents = registry.disabledIntentRawValues()
+        saveSettings()
     }
 
     private func saveSettings() {
@@ -196,6 +207,7 @@ private struct CustomCommandRow: View {
 
 #Preview {
     CommandSettingsTab()
+        .environment(AppState())
         .modelContainer(for: [UserSettings.self, CustomCommand.self], inMemory: true)
         .frame(width: 500, height: 600)
 }

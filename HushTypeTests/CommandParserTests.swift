@@ -188,6 +188,24 @@ final class CommandParserTests: XCTestCase {
         XCTAssertEqual(results[1].intent, .darkModeToggle)
     }
 
+    func testChainWithMultipleSameConjunction() {
+        let results = parser.parseChain("open Safari and open Chrome and volume up")
+        XCTAssertEqual(results.count, 3, "Expected 3 parsed commands with repeated 'and' conjunction")
+        XCTAssertEqual(results[0].intent, .openApp)
+        XCTAssertEqual(results[0].entities["appName"], "Safari")
+        XCTAssertEqual(results[1].intent, .openApp)
+        XCTAssertEqual(results[1].entities["appName"], "Chrome")
+        XCTAssertEqual(results[2].intent, .volumeUp)
+    }
+
+    func testChainWithMixedConjunctions() {
+        let results = parser.parseChain("open Safari and volume up then mute")
+        XCTAssertEqual(results.count, 3, "Expected 3 parsed commands with mixed conjunctions")
+        XCTAssertEqual(results[0].intent, .openApp)
+        XCTAssertEqual(results[1].intent, .volumeUp)
+        XCTAssertEqual(results[2].intent, .volumeMute)
+    }
+
     func testNoChainForNonCommand() {
         // "and cheese" should not be split because "cheese" is not a command verb
         let results = parser.parseChain("open Safari and cheese")

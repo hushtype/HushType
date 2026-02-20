@@ -99,6 +99,9 @@ final class UserSettings {
     /// Wake phrase prefix that triggers command mode (e.g., "Hey Type", "Computer").
     var commandWakePhrase: String
 
+    /// Raw values of CommandIntent cases that are disabled by the user.
+    var disabledCommandIntents: [String]
+
     // MARK: - Initializer
 
     init(
@@ -124,7 +127,8 @@ final class UserSettings {
         defaultInjectionMethod: InjectionMethod = .auto,
         keystrokeDelay: Int = 5,
         commandsEnabled: Bool = true,
-        commandWakePhrase: String = "Hey Type"
+        commandWakePhrase: String = "Hey Type",
+        disabledCommandIntents: [String] = []
     ) {
         self.id = id
         self.selectedWhisperModel = selectedWhisperModel
@@ -149,6 +153,7 @@ final class UserSettings {
         self.keystrokeDelay = keystrokeDelay
         self.commandsEnabled = commandsEnabled
         self.commandWakePhrase = commandWakePhrase
+        self.disabledCommandIntents = disabledCommandIntents
     }
 
     // MARK: - Singleton Access

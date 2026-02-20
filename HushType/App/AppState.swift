@@ -187,4 +187,7 @@ final class AppState {
 
     /// Human-readable result of the last voice command execution.
     var lastCommandResult: String?
+
+    /// Shared command registry used by both the pipeline and settings UI.
+    var commandRegistry: CommandRegistry?
 }

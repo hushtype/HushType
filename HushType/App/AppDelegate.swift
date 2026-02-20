@@ -81,6 +81,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 commandsEnabled: settings.commandsEnabled,
                 commandWakePhrase: settings.commandWakePhrase
             )
+
+            // Sync disabled command intents to the pipeline registry
+            appState.commandRegistry?.loadDisabledIntents(settings.disabledCommandIntents)
+
             try controller.reloadHotkey(settings.globalHotkey)
 
             // Reload whisper model if selection changed
@@ -236,6 +240,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // Wire voice command services
             let commandRegistry = CommandRegistry()
+            commandRegistry.loadDisabledIntents(settings.disabledCommandIntents)
             let commandParser = CommandParser()
             let commandExecutor = CommandExecutor(registry: commandRegistry)
             controller.setCommandServices(
@@ -243,6 +248,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 executor: commandExecutor,
                 registry: commandRegistry
             )
+            appState.commandRegistry = commandRegistry
 
             // Configure LLM service with user's context length
             let service = LLMService()

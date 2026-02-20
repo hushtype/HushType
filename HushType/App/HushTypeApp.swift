@@ -67,6 +67,7 @@ struct HushTypeApp: App {
 
         Settings {
             SettingsView()
+                .environment(appDelegate.appState)
                 .onAppear {
                     NSApp.activate(ignoringOtherApps: true)
                 }
