@@ -31,6 +31,13 @@ final class AppProfile {
     /// Whether this profile is active. Disabled profiles use global defaults.
     var isEnabled: Bool
 
+    // MARK: - Shortcut Aliases
+
+    /// App-specific shortcut aliases: spoken phrase (lowercased) → shortcut string.
+    /// Example: ["build and run": "cmd+r", "save all": "cmd+option+s"]
+    /// Values use the same format as HotkeyBinding.parse() (e.g., "cmd+r", "ctrl+shift+n").
+    var shortcutAliases: [String: String] = [:]
+
     // MARK: - Relationships
 
     /// Vocabulary entries specific to this application.
@@ -47,6 +54,7 @@ final class AppProfile {
         preferredLanguage: String? = nil,
         injectionMethod: InjectionMethod = .auto,
         isEnabled: Bool = true,
+        shortcutAliases: [String: String] = [:],
         vocabularyEntries: [VocabularyEntry] = []
     ) {
         self.id = id
@@ -56,6 +64,7 @@ final class AppProfile {
         self.preferredLanguage = preferredLanguage
         self.injectionMethod = injectionMethod
         self.isEnabled = isEnabled
+        self.shortcutAliases = shortcutAliases
         self.vocabularyEntries = vocabularyEntries
     }
 }

@@ -131,6 +131,10 @@ private struct AppProfileDetailView: View {
                 }
             }
 
+            Section("Shortcut Aliases") {
+                ShortcutAliasesView(profile: profile)
+            }
+
             Section {
                 Button("Delete Profile", role: .destructive) {
                     modelContext.delete(profile)
@@ -199,6 +203,113 @@ private struct NewProfileSheet: View {
                     onSave(
                         bundleID.trimmingCharacters(in: .whitespaces),
                         appName.trimmingCharacters(in: .whitespaces)
+                    )
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(!canSave)
+            }
+        }
+        .padding()
+        .frame(width: 400, height: 280)
+    }
+}
+
+// MARK: - Shortcut Aliases View
+
+private struct ShortcutAliasesView: View {
+    @Bindable var profile: AppProfile
+    @Environment(\.modelContext) private var modelContext
+    @State private var showAddSheet = false
+
+    private var sortedAliases: [(key: String, value: String)] {
+        profile.shortcutAliases
+            .sorted { $0.key < $1.key }
+            .map { (key: $0.key, value: $0.value) }
+    }
+
+    var body: some View {
+        if sortedAliases.isEmpty {
+            Text("No aliases defined")
+                .foregroundStyle(.secondary)
+                .font(.callout)
+        } else {
+            ForEach(sortedAliases, id: \.key) { alias in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(alias.key)
+                            .font(.body)
+                        Text(alias.value)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button(role: .destructive) {
+                        profile.shortcutAliases.removeValue(forKey: alias.key)
+                        try? modelContext.save()
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .foregroundStyle(.red)
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+        }
+
+        Button {
+            showAddSheet = true
+        } label: {
+            Label("Add Alias", systemImage: "plus")
+        }
+        .sheet(isPresented: $showAddSheet) {
+            AddAliasSheet { phrase, shortcut in
+                profile.shortcutAliases[phrase] = shortcut
+                try? modelContext.save()
+            }
+        }
+    }
+}
+
+// MARK: - Add Alias Sheet
+
+private struct AddAliasSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let onSave: (String, String) -> Void
+
+    @State private var phrase = ""
+    @State private var shortcut = ""
+
+    private var canSave: Bool {
+        !phrase.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !shortcut.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Text("Add Shortcut Alias")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Form {
+                Section("Alias") {
+                    TextField("Spoken phrase (e.g., build and run)", text: $phrase)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Shortcut (e.g., cmd+r)", text: $shortcut)
+                        .textFieldStyle(.roundedBorder)
+                }
+            }
+            .formStyle(.grouped)
+
+            HStack {
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Add") {
+                    onSave(
+                        phrase.trimmingCharacters(in: .whitespaces).lowercased(),
+                        shortcut.trimmingCharacters(in: .whitespaces).lowercased()
                     )
                     dismiss()
                 }

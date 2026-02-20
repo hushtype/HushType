@@ -54,19 +54,37 @@ struct DataSeeder {
         let existing = (try? context.fetch(FetchDescriptor<AppProfile>())) ?? []
         let existingBundleIDs = Set(existing.map(\.bundleIdentifier))
 
-        let knownApps: [(bundleID: String, name: String, mode: ProcessingMode)] = [
-            ("com.apple.dt.Xcode",        "Xcode",          .code),
-            ("com.microsoft.VSCode",       "Visual Studio Code", .code),
-            ("com.apple.mail",             "Mail",           .clean),
-            ("com.apple.Terminal",         "Terminal",       .raw),
-            ("com.apple.Notes",            "Notes",          .structure),
-            ("com.apple.Safari",           "Safari",         .clean),
-            ("com.google.Chrome",          "Google Chrome",  .clean),
-            ("com.apple.TextEdit",         "TextEdit",       .clean),
-            ("com.tinyspeck.slackmacgap",  "Slack",          .clean),
-            ("com.apple.iWork.Pages",      "Pages",          .structure),
-            ("com.microsoft.Word",         "Microsoft Word", .structure),
-            ("com.apple.MobileSMS",        "Messages",       .clean),
+        let knownApps: [(bundleID: String, name: String, mode: ProcessingMode, aliases: [String: String])] = [
+            ("com.apple.dt.Xcode", "Xcode", .code, [
+                "build and run": "cmd+r",
+                "build": "cmd+b",
+                "stop": "cmd+.",
+                "clean build": "cmd+shift+k",
+                "open quickly": "cmd+shift+o",
+                "new file": "cmd+n",
+                "save all": "cmd+option+s",
+            ]),
+            ("com.microsoft.VSCode", "Visual Studio Code", .code, [:]),
+            ("com.apple.mail",             "Mail",           .clean, [:]),
+            ("com.apple.Terminal", "Terminal", .raw, [
+                "new tab": "cmd+t",
+                "close tab": "cmd+w",
+                "clear": "cmd+k",
+            ]),
+            ("com.apple.Notes",            "Notes",          .structure, [:]),
+            ("com.apple.Safari", "Safari", .clean, [
+                "new tab": "cmd+t",
+                "close tab": "cmd+w",
+                "reload": "cmd+r",
+                "new window": "cmd+n",
+                "new private window": "cmd+shift+n",
+            ]),
+            ("com.google.Chrome",          "Google Chrome",  .clean, [:]),
+            ("com.apple.TextEdit",         "TextEdit",       .clean, [:]),
+            ("com.tinyspeck.slackmacgap",  "Slack",          .clean, [:]),
+            ("com.apple.iWork.Pages",      "Pages",          .structure, [:]),
+            ("com.microsoft.Word",         "Microsoft Word", .structure, [:]),
+            ("com.apple.MobileSMS",        "Messages",       .clean, [:]),
         ]
 
         var inserted = 0
@@ -75,7 +93,8 @@ struct DataSeeder {
             let profile = AppProfile(
                 bundleIdentifier: app.bundleID,
                 appName: app.name,
-                defaultMode: app.mode
+                defaultMode: app.mode,
+                shortcutAliases: app.aliases
             )
             context.insert(profile)
             inserted += 1

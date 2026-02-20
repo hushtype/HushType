@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import os
 
@@ -38,6 +39,38 @@ final class CommandParser: Sendable {
 
     init() {
         self.patterns = Self.buildPatterns()
+    }
+
+    /// Attempt to resolve input text as an app-specific shortcut alias.
+    /// - Parameters:
+    ///   - input: Command text (wake phrase already stripped).
+    ///   - aliases: The active app profile's shortcutAliases dictionary.
+    /// - Returns: A ParsedCommand with .injectShortcut intent if a match is found, otherwise nil.
+    func resolveAlias(_ input: String, aliases: [String: String]) -> ParsedCommand? {
+        let normalized = input.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalized.isEmpty, let shortcutString = aliases[normalized] else { return nil }
+
+        guard let binding = HotkeyBinding.parse(shortcutString) else {
+            Logger.commands.warning("Shortcut alias '\(normalized)' has unparseable shortcut '\(shortcutString)'")
+            return nil
+        }
+
+        // Build modifier string matching what CommandExecutor.handleInjectShortcut expects
+        var modifiers = ""
+        if binding.modifiers.contains(.maskCommand) { modifiers += "command " }
+        if binding.modifiers.contains(.maskControl) { modifiers += "control " }
+        if binding.modifiers.contains(.maskAlternate) { modifiers += "option " }
+        if binding.modifiers.contains(.maskShift) { modifiers += "shift " }
+
+        let keyName = HotkeyBinding.keyCodeName(binding.keyCode).lowercased()
+
+        Logger.commands.info("Alias resolved: '\(normalized)' → \(shortcutString)")
+        return ParsedCommand(
+            intent: .injectShortcut,
+            entities: ["modifiers": modifiers, "key": keyName],
+            rawText: input,
+            displayName: "\(input) → \(shortcutString)"
+        )
     }
 
     /// Parse a single command from text.

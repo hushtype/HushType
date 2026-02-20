@@ -56,6 +56,7 @@ final class DictationController: @unchecked Sendable {
     private var showOverlayEnabled: Bool = false
     private var commandsEnabled: Bool = true
     private var commandWakePhrase: String = "Hey Type"
+    private var globalShortcutAliases: [String: String] = [:]
 
     // Per-recording snapshots (captured at startRecording to avoid mid-recording app-switch race)
     private var recordingInjectionMethod: InjectionMethod = .cgEvent
@@ -595,7 +596,8 @@ final class DictationController: @unchecked Sendable {
         defaultLanguage: String = "en",
         showOverlayEnabled: Bool = true,
         commandsEnabled: Bool = true,
-        commandWakePhrase: String = "Hey Type"
+        commandWakePhrase: String = "Hey Type",
+        globalShortcutAliases: [String: String] = [:]
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
@@ -614,6 +616,7 @@ final class DictationController: @unchecked Sendable {
         self.showOverlayEnabled = showOverlayEnabled
         self.commandsEnabled = commandsEnabled
         self.commandWakePhrase = commandWakePhrase
+        self.globalShortcutAliases = globalShortcutAliases
 
         // Update whisper language setting
         self.whisperService.language = autoDetectLanguage ? "auto" : defaultLanguage
@@ -666,6 +669,44 @@ final class DictationController: @unchecked Sendable {
                 }
                 return
             }
+        }
+
+        // Try app-specific shortcut alias resolution before regex-based parsing
+        if let profile = appContextService?.currentProfile,
+           profile.isEnabled,
+           !profile.shortcutAliases.isEmpty,
+           let aliasCommand = parser.resolveAlias(commandText, aliases: profile.shortcutAliases) {
+            Logger.commands.info("Shortcut alias matched for '\(commandText)' in \(profile.appName)")
+            let results = await executor.executeChain([aliasCommand])
+            let allSucceeded = results.allSatisfy { $0.success }
+            let summary = results.map { $0.message }.joined(separator: "; ")
+            appState.lastCommandResult = summary
+            appState.lastTranscriptionPreview = allSucceeded ? summary : "Failed: \(summary)"
+            appState.isExecutingCommand = false
+            if allSucceeded {
+                soundService.play(.commandSuccess)
+            } else {
+                soundService.play(.commandError)
+            }
+            return
+        }
+
+        // Try global shortcut aliases next (after app-specific, before regex)
+        if !globalShortcutAliases.isEmpty,
+           let globalAliasCommand = parser.resolveAlias(commandText, aliases: globalShortcutAliases) {
+            Logger.commands.info("Global shortcut alias matched for '\(commandText)'")
+            let results = await executor.executeChain([globalAliasCommand])
+            let allSucceeded = results.allSatisfy { $0.success }
+            let summary = results.map { $0.message }.joined(separator: "; ")
+            appState.lastCommandResult = summary
+            appState.lastTranscriptionPreview = allSucceeded ? summary : "Failed: \(summary)"
+            appState.isExecutingCommand = false
+            if allSucceeded {
+                soundService.play(.commandSuccess)
+            } else {
+                soundService.play(.commandError)
+            }
+            return
         }
 
         // Fall through to regex-based parsing for built-in commands
