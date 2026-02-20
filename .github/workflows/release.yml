@@ -88,9 +88,9 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Decode certificate
+          # Decode certificate (printf avoids echo mangling multiline base64)
           CERT_PATH="$RUNNER_TEMP/certificate.p12"
-          echo "$CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+          printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
 
           # Create and configure temporary keychain
           KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
