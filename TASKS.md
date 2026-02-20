@@ -201,41 +201,41 @@
 ## Phase 4: Voice Commands (v0.4.0)
 
 ### 4.1 Command Engine
-- [ ] Create `CommandDetector.swift` — distinguish between dictation text and voice commands using configurable wake phrase prefix (e.g., "Hey Type", "Computer")
-- [ ] Create `CommandParser.swift` — parse natural language commands into structured `ParsedCommand` objects with action type and arguments
-- [ ] Create `CommandExecutor.swift` — dispatch parsed commands to registered handlers, return `CommandResult` with success/failure/feedback
-- [ ] Create `CommandRegistry.swift` — registry of built-in and custom commands, enable/disable per command, command lookup by pattern
+- [x] Create `CommandDetector.swift` — distinguish between dictation text and voice commands using configurable wake phrase prefix (e.g., "Hey Type", "Computer")
+- [x] Create `CommandParser.swift` — parse natural language commands into structured `ParsedCommand` objects with action type and arguments
+- [x] Create `CommandExecutor.swift` — dispatch parsed commands to registered handlers, return `CommandResult` with success/failure/feedback
+- [x] Create `CommandRegistry.swift` — registry of built-in and custom commands, enable/disable per command, command lookup by pattern
 
 ### 4.2 App Management Commands
-- [ ] Implement "Open {app}" — launch application by name using `NSWorkspace.shared.open`
-- [ ] Implement "Switch to {app}" — bring application to foreground using `NSRunningApplication.activate`
-- [ ] Implement "Close/Quit/Hide {app}" — close frontmost window, terminate app, hide app via NSRunningApplication APIs
-- [ ] Implement "Show all windows" — invoke Mission Control via `CGEvent` or private API
+- [x] Implement "Open {app}" — launch application by name using `NSWorkspace.shared.open`
+- [x] Implement "Switch to {app}" — bring application to foreground using `NSRunningApplication.activate`
+- [x] Implement "Close/Quit/Hide {app}" — close frontmost window, terminate app, hide app via NSRunningApplication APIs
+- [x] Implement "Show all windows" — invoke Mission Control via `CGEvent` or private API
 
 ### 4.3 Window Management Commands
-- [ ] Implement window tiling — "Move window left/right" tiles to half screen, "Maximize/Minimize/Center window" using Accessibility API (`AXUIElement`)
-- [ ] Implement full screen toggle — "Full screen" enters/exits macOS native full-screen mode
-- [ ] Implement multi-display — "Next screen" moves window to the next connected display
+- [x] Implement window tiling — "Move window left/right" tiles to half screen, "Maximize/Minimize/Center window" using Accessibility API (`AXUIElement`)
+- [x] Implement full screen toggle — "Full screen" enters/exits macOS native full-screen mode
+- [x] Implement multi-display — "Next screen" moves window to the next connected display
 
 ### 4.4 System Control Commands
-- [ ] Implement volume controls — "Volume up/down" adjusts by 10%, "Volume {number}" sets specific level, "Mute/Unmute" toggles via CoreAudio
-- [ ] Implement brightness controls — "Brightness up/down" adjusts display brightness
-- [ ] Implement system toggles — "Do not disturb on/off", "Dark mode / Light mode", "Lock screen", "Screenshot"
+- [x] Implement volume controls — "Volume up/down" adjusts by 10%, "Volume {number}" sets specific level, "Mute/Unmute" toggles via CoreAudio
+- [x] Implement brightness controls — "Brightness up/down" adjusts display brightness
+- [x] Implement system toggles — "Do not disturb on/off", "Dark mode / Light mode", "Lock screen", "Screenshot"
 
 ### 4.5 Workflow Automation
-- [ ] Implement command chaining — execute multiple commands in sequence from a single voice input (e.g., "Open Safari and switch to dark mode")
-- [ ] Add Apple Shortcuts integration — trigger Shortcuts app workflows by name via `NSUserActivity` or URL scheme
-- [ ] Add custom command definitions — users define named commands mapped to action sequences, stored in SwiftData
+- [x] Implement command chaining — execute multiple commands in sequence from a single voice input (e.g., "Open Safari and switch to dark mode")
+- [x] Add Apple Shortcuts integration — trigger Shortcuts app workflows by name via `NSUserActivity` or URL scheme
+- [x] Add custom command definitions — users define named commands mapped to action sequences, stored in SwiftData
 
 ### 4.6 Settings: Commands Tab
-- [ ] Create `CommandSettingsTab.swift` — list of all commands (built-in + custom), enable/disable toggles, wake phrase configuration
-- [ ] Create `CustomCommandEditorView.swift` — create/edit custom commands with action sequence builder, test execution
+- [x] Create `CommandSettingsTab.swift` — list of all commands (built-in + custom), enable/disable toggles, wake phrase configuration
+- [x] Create `CustomCommandEditorView.swift` — create/edit custom commands with action sequence builder, test execution
 
 ### 4.7 Phase 4 Tests
-- [ ] Create `CommandDetectorTests.swift` — unit tests for command vs dictation classification, wake phrase detection
-- [ ] Create `CommandParserTests.swift` — unit tests for natural language parsing, argument extraction, edge cases
-- [ ] Create `CommandExecutorTests.swift` — unit tests for command dispatch, error handling, result reporting
-- [ ] Create `CommandRegistryTests.swift` — unit tests for command registration, lookup, enable/disable state
+- [x] Create `CommandDetectorTests.swift` — unit tests for command vs dictation classification, wake phrase detection
+- [x] Create `CommandParserTests.swift` — unit tests for natural language parsing, argument extraction, edge cases
+- [x] Create `CommandExecutorTests.swift` — unit tests for command dispatch, error handling, result reporting
+- [x] Create `CommandRegistryTests.swift` — unit tests for command registration, lookup, enable/disable state
 
 ---
 
