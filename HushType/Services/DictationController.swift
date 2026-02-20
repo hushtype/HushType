@@ -638,7 +638,21 @@ final class DictationController: @unchecked Sendable {
         }
 
         // Fall through to regex-based parsing for built-in commands
-        let commands = parser.parseChain(commandText)
+        var commands = parser.parseChain(commandText)
+
+        // LLM fallback: translate non-English commands before re-parsing
+        if commands.isEmpty {
+            let lang = appState.detectedLanguage ?? defaultLanguage
+            if lang != "en",
+               let llm = llmService,
+               llm.activeProvider?.isModelLoaded == true {
+                Logger.commands.info("No English match for '\(commandText)', attempting LLM translation from \(lang)")
+                if let translated = await translateCommand(commandText, from: lang) {
+                    commands = parser.parseChain(translated)
+                }
+            }
+        }
+
         guard !commands.isEmpty else {
             Logger.commands.info("No parseable command in: \(commandText)")
             appState.lastCommandResult = "Unrecognized command: \(commandText)"
@@ -661,6 +675,39 @@ final class DictationController: @unchecked Sendable {
             Logger.commands.info("Command executed: \(summary)")
         } else {
             Logger.commands.warning("Command failed: \(summary)")
+        }
+    }
+
+    // MARK: - Command Translation
+
+    /// Translate a non-English voice command to English via the LLM.
+    /// Returns the translated command string, or nil on failure.
+    private func translateCommand(_ text: String, from language: String) async -> String? {
+        guard let llm = llmService else { return nil }
+
+        let systemPrompt = """
+            You are a voice command translator. Convert the voice command to English.
+            Supported commands: open/launch [app], close [app], quit [app], switch to [app], \
+            hide [app], show all windows, move window left/right, maximize/minimize/center window, \
+            full screen, next screen, volume up/down/mute, volume [0-100], brightness up/down, \
+            dark mode, lock screen, screenshot, run shortcut [name], do not disturb.
+            Respond with ONLY the English command. No explanation.
+            """
+
+        do {
+            let result = try await llm.process(
+                text: text,
+                systemPrompt: systemPrompt,
+                userPrompt: "Language: \(language)\nCommand: \(text)",
+                maxTokens: 64
+            )
+            let translated = result.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !translated.isEmpty else { return nil }
+            Logger.commands.info("Translated command: '\(text)' → '\(translated)'")
+            return translated
+        } catch {
+            Logger.commands.warning("Command translation failed: \(error.localizedDescription)")
+            return nil
         }
     }
 
