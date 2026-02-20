@@ -32,6 +32,7 @@ final class DictationController: @unchecked Sendable {
     private let whisperService: WhisperService
     private let injectionService: TextInjectionService
     private let hotkeyManager: HotkeyManager
+    private let soundService = SoundFeedbackService()
     private var llmService: LLMService?
     private var processingRouter: ProcessingModeRouter?
     private var appContextService: AppContextService?
@@ -173,7 +174,7 @@ final class DictationController: @unchecked Sendable {
         appState.activeMode = mode ?? activeMode
 
         updateState(.recording)
-        playSound(.start)
+        soundService.play(.recordingStart)
 
         do {
             try await audioService.startCapture()
@@ -195,7 +196,7 @@ final class DictationController: @unchecked Sendable {
             return
         }
 
-        playSound(.stop)
+        soundService.play(.recordingStop)
 
         // Stop capture and get samples
         let rawSamples = await audioService.stopCapture()
@@ -545,6 +546,25 @@ final class DictationController: @unchecked Sendable {
         }
     }
 
+    // MARK: - Power Management
+
+    /// Unload the whisper model to free memory.
+    func unloadWhisperModel() {
+        whisperService.unloadModel()
+        Logger.general.info("Whisper model unloaded (power management)")
+    }
+
+    /// Unload the LLM model to free memory.
+    func unloadLLMModel() async {
+        await llmService?.unloadModel()
+        Logger.general.info("LLM model unloaded (power management)")
+    }
+
+    /// Update whisper thread count (0 = auto).
+    func setWhisperThreadCount(_ count: Int) {
+        whisperService.threadCount = count
+    }
+
     // MARK: - Configuration
 
     /// Reload the hotkey binding from a serialized string (e.g. "cmd+shift+d").
@@ -575,6 +595,7 @@ final class DictationController: @unchecked Sendable {
         self.injectionService.keystrokeDelayMs = keystrokeDelayMs
         self.pushToTalkEnabled = pushToTalkEnabled
         self.playSoundEffects = playSoundEffects
+        self.soundService.isEnabled = playSoundEffects
         self.audioService.setInputDevice(id: audioInputDeviceID)
         self.whisperService.useGPU = useGPUAcceleration
         self.whisperService.threadCount = whisperThreadCount
@@ -628,7 +649,7 @@ final class DictationController: @unchecked Sendable {
                 appState.lastTranscriptionPreview = allSucceeded ? summary : "Failed: \(summary)"
                 appState.isExecutingCommand = false
                 if allSucceeded {
-                    playSound(.stop)
+                    soundService.play(.commandSuccess)
                     Logger.commands.info("Custom command executed: \(summary)")
                 } else {
                     Logger.commands.warning("Custom command failed: \(summary)")
@@ -671,7 +692,7 @@ final class DictationController: @unchecked Sendable {
         appState.isExecutingCommand = false
 
         if allSucceeded {
-            playSound(.stop)
+            soundService.play(.commandSuccess)
             Logger.commands.info("Command executed: \(summary)")
         } else {
             Logger.commands.warning("Command failed: \(summary)")
@@ -749,22 +770,6 @@ final class DictationController: @unchecked Sendable {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
             .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    // MARK: - Sound Effects
-
-    private enum SoundEvent {
-        case start, stop
-    }
-
-    private func playSound(_ event: SoundEvent) {
-        guard playSoundEffects else { return }
-        switch event {
-        case .start:
-            NSSound(named: "Tink")?.play()
-        case .stop:
-            NSSound(named: "Pop")?.play()
-        }
     }
 
     // MARK: - History
