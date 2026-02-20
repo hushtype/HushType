@@ -77,7 +77,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
                 defaultLanguage: settings.defaultLanguage,
-                showOverlayEnabled: settings.showOverlayAfterDictation
+                showOverlayEnabled: settings.showOverlayAfterDictation,
+                commandsEnabled: settings.commandsEnabled,
+                commandWakePhrase: settings.commandWakePhrase
             )
             try controller.reloadHotkey(settings.globalHotkey)
 
@@ -214,7 +216,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
                 defaultLanguage: settings.defaultLanguage,
-                showOverlayEnabled: settings.showOverlayAfterDictation
+                showOverlayEnabled: settings.showOverlayAfterDictation,
+                commandsEnabled: settings.commandsEnabled,
+                commandWakePhrase: settings.commandWakePhrase
             )
 
             // Track initial model selections for change detection
@@ -229,6 +233,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             autoDownloadDefaultModelIfNeeded(in: context)
             autoDownloadDefaultLLMModelIfNeeded(in: context)
+
+            // Wire voice command services
+            let commandRegistry = CommandRegistry()
+            let commandParser = CommandParser()
+            let commandExecutor = CommandExecutor(registry: commandRegistry)
+            controller.setCommandServices(
+                parser: commandParser,
+                executor: commandExecutor,
+                registry: commandRegistry
+            )
 
             // Configure LLM service with user's context length
             let service = LLMService()

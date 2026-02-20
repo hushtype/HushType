@@ -1,0 +1,201 @@
+import SwiftUI
+import SwiftData
+import os
+
+struct CommandSettingsTab: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var customCommands: [CustomCommand]
+    @State private var settings: UserSettings?
+    @State private var commandsEnabled = true
+    @State private var commandWakePhrase = "Hey Type"
+    @State private var registry = CommandRegistry()
+    @State private var showCustomCommandEditor = false
+
+    var body: some View {
+        Form {
+            // MARK: - Voice Commands section
+            Section("Voice Commands") {
+                Toggle("Enable Voice Commands", isOn: $commandsEnabled)
+                    .onChange(of: commandsEnabled) { _, newValue in
+                        settings?.commandsEnabled = newValue
+                        saveSettings()
+                    }
+                    .help("When enabled, HushType listens for the wake phrase and executes voice commands.")
+
+                LabeledContent("Wake Phrase") {
+                    TextField("e.g. Hey Type", text: $commandWakePhrase)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(maxWidth: 200)
+                        .disabled(!commandsEnabled)
+                        .onChange(of: commandWakePhrase) { _, newValue in
+                            settings?.commandWakePhrase = newValue
+                            saveSettings()
+                        }
+                }
+
+                Text("Say the wake phrase followed by a command. For example: \"\(commandWakePhrase), open Safari\" or \"\(commandWakePhrase), volume up\".")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            // MARK: - Built-in Commands section (grouped by category)
+            ForEach(CommandCategory.allCases) { category in
+                Section {
+                    ForEach(registry.entries(for: category)) { entry in
+                        BuiltInCommandRow(entry: entry, isParentEnabled: commandsEnabled) { intent, enabled in
+                            registry.setEnabled(intent, enabled: enabled)
+                        }
+                    }
+                } header: {
+                    Label(category.rawValue, systemImage: category.iconName)
+                }
+            }
+
+            // MARK: - Custom Commands section
+            Section {
+                if customCommands.isEmpty {
+                    Text("No custom commands yet.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 4)
+                } else {
+                    ForEach(customCommands) { command in
+                        CustomCommandRow(command: command)
+                    }
+                    .onDelete(perform: deleteCustomCommands)
+                }
+
+                Button {
+                    showCustomCommandEditor = true
+                } label: {
+                    Label("Manage Custom Commands", systemImage: "square.and.pencil")
+                }
+                .disabled(!commandsEnabled)
+            } header: {
+                Text("Custom Commands")
+            } footer: {
+                Text("Custom commands let you define your own trigger phrases and map them to one or more built-in actions.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear {
+            loadSettings()
+        }
+        .sheet(isPresented: $showCustomCommandEditor) {
+            CustomCommandEditorView()
+                .modelContainer(for: CustomCommand.self)
+                .frame(minWidth: 700, minHeight: 500)
+        }
+    }
+
+    // MARK: - Private helpers
+
+    private func loadSettings() {
+        do {
+            settings = try UserSettings.shared(in: modelContext)
+            commandsEnabled = settings?.commandsEnabled ?? true
+            commandWakePhrase = settings?.commandWakePhrase ?? "Hey Type"
+            Logger.ui.debug("Loaded user settings in Commands tab")
+        } catch {
+            Logger.ui.error("Failed to load UserSettings in Commands tab: \(error.localizedDescription)")
+        }
+    }
+
+    private func saveSettings() {
+        do {
+            try modelContext.save()
+            NotificationCenter.default.post(name: .userSettingsChanged, object: nil)
+            Logger.ui.debug("Saved user settings from Commands tab")
+        } catch {
+            Logger.ui.error("Failed to save UserSettings from Commands tab: \(error.localizedDescription)")
+        }
+    }
+
+    private func deleteCustomCommands(at offsets: IndexSet) {
+        for index in offsets {
+            let command = customCommands[index]
+            modelContext.delete(command)
+            Logger.commands.info("Deleted custom command: \"\(command.name)\"")
+        }
+        saveSettings()
+    }
+}
+
+// MARK: - BuiltInCommandRow
+
+private struct BuiltInCommandRow: View {
+    let entry: CommandRegistry.CommandEntry
+    let isParentEnabled: Bool
+    let onToggle: (CommandIntent, Bool) -> Void
+
+    @State private var isEnabled: Bool
+
+    init(
+        entry: CommandRegistry.CommandEntry,
+        isParentEnabled: Bool,
+        onToggle: @escaping (CommandIntent, Bool) -> Void
+    ) {
+        self.entry = entry
+        self.isParentEnabled = isParentEnabled
+        self.onToggle = onToggle
+        _isEnabled = State(initialValue: entry.isEnabled)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle(isOn: $isEnabled) {
+                Label(entry.intent.displayName, systemImage: entry.intent.iconName)
+            }
+            .disabled(!isParentEnabled)
+            .onChange(of: isEnabled) { _, newValue in
+                onToggle(entry.intent, newValue)
+            }
+
+            if !entry.examplePhrases.isEmpty {
+                Text(entry.examplePhrases.joined(separator: " • "))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 28)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - CustomCommandRow
+
+private struct CustomCommandRow: View {
+    let command: CustomCommand
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Image(systemName: "star")
+                    .foregroundStyle(command.isEnabled ? Color.accentColor : Color.secondary)
+                Text(command.name)
+                    .fontWeight(.medium)
+                Spacer()
+                if !command.isEnabled {
+                    Text("Disabled")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Text("\"\(command.triggerPhrase)\"")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.leading, 24)
+        }
+        .padding(.vertical, 2)
+    }
+}
+
+// MARK: - Preview
+
+#Preview {
+    CommandSettingsTab()
+        .modelContainer(for: [UserSettings.self, CustomCommand.self], inMemory: true)
+        .frame(width: 500, height: 600)
+}

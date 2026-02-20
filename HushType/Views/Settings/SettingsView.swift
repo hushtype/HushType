@@ -55,6 +55,12 @@ struct SettingsView: View {
                     Label("History", systemImage: "clock.arrow.circlepath")
                 }
                 .tag(7)
+
+            CommandSettingsTab()
+                .tabItem {
+                    Label("Commands", systemImage: "command")
+                }
+                .tag(8)
         }
         .frame(minWidth: 500, minHeight: 700)
         .onAppear {
@@ -68,6 +74,7 @@ struct SettingsView: View {
     SettingsView()
         .modelContainer(for: [
             UserSettings.self, ModelInfo.self, PromptTemplate.self,
-            AppProfile.self, VocabularyEntry.self, DictationEntry.self
+            AppProfile.self, VocabularyEntry.self, DictationEntry.self,
+            CustomCommand.self
         ], inMemory: true)
 }

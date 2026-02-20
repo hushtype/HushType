@@ -35,6 +35,9 @@ final class DictationController: @unchecked Sendable {
     private var llmService: LLMService?
     private var processingRouter: ProcessingModeRouter?
     private var appContextService: AppContextService?
+    private var commandParser: CommandParser?
+    private var commandExecutor: CommandExecutor?
+    private var commandRegistry: CommandRegistry?
 
     // MARK: - App State
 
@@ -50,6 +53,8 @@ final class DictationController: @unchecked Sendable {
     private var autoDetectLanguage: Bool = false
     private var defaultLanguage: String = "en"
     private var showOverlayEnabled: Bool = true
+    private var commandsEnabled: Bool = true
+    private var commandWakePhrase: String = "Hey Type"
 
     // Per-recording snapshots (captured at startRecording to avoid mid-recording app-switch race)
     private var recordingInjectionMethod: InjectionMethod = .auto
@@ -252,6 +257,18 @@ final class DictationController: @unchecked Sendable {
                 if !appEntries.isEmpty || !globalEntries.isEmpty {
                     rawText = VocabularyService.apply(to: rawText, globalEntries: globalEntries, appEntries: appEntries)
                 }
+            }
+
+            // Voice command detection (after vocabulary, before LLM)
+            if commandsEnabled,
+               let detection = CommandDetector.detect(
+                   in: rawText,
+                   wakePhrase: commandWakePhrase
+               ) {
+                Logger.commands.info("Wake phrase detected, command: \(detection.commandText)")
+                await handleVoiceCommand(detection.commandText)
+                updateState(.idle)
+                return
             }
 
             // LLM processing (if mode requires it)
@@ -490,6 +507,14 @@ final class DictationController: @unchecked Sendable {
         Logger.general.info("AppContextService configured for pipeline")
     }
 
+    /// Configure the voice command services for the pipeline.
+    func setCommandServices(parser: CommandParser, executor: CommandExecutor, registry: CommandRegistry) {
+        self.commandParser = parser
+        self.commandExecutor = executor
+        self.commandRegistry = registry
+        Logger.commands.info("Command services configured for pipeline")
+    }
+
     /// Configure the LLM service and processing router.
     func setLLMService(_ service: LLMService) {
         self.llmService = service
@@ -541,7 +566,9 @@ final class DictationController: @unchecked Sendable {
         defaultMode: ProcessingMode = .raw,
         autoDetectLanguage: Bool = false,
         defaultLanguage: String = "en",
-        showOverlayEnabled: Bool = true
+        showOverlayEnabled: Bool = true,
+        commandsEnabled: Bool = true,
+        commandWakePhrase: String = "Hey Type"
     ) {
         self.vadSensitivity = vadSensitivity
         self.injectionMethod = injectionMethod
@@ -555,6 +582,8 @@ final class DictationController: @unchecked Sendable {
         self.autoDetectLanguage = autoDetectLanguage
         self.defaultLanguage = defaultLanguage
         self.showOverlayEnabled = showOverlayEnabled
+        self.commandsEnabled = commandsEnabled
+        self.commandWakePhrase = commandWakePhrase
 
         // Update whisper language setting
         self.whisperService.language = autoDetectLanguage ? "auto" : defaultLanguage
@@ -562,6 +591,44 @@ final class DictationController: @unchecked Sendable {
         // Update displayed mode when idle so menu bar reflects the setting
         if state == .idle {
             appState.activeMode = defaultMode
+        }
+    }
+
+    // MARK: - Voice Command Handling
+
+    /// Parse and execute a detected voice command (supports chained commands).
+    @MainActor
+    private func handleVoiceCommand(_ commandText: String) async {
+        guard let parser = commandParser, let executor = commandExecutor else {
+            Logger.commands.warning("Command services not configured — ignoring command")
+            return
+        }
+
+        appState.isExecutingCommand = true
+
+        let commands = parser.parseChain(commandText)
+        guard !commands.isEmpty else {
+            Logger.commands.info("No parseable command in: \(commandText)")
+            appState.lastCommandResult = "Unrecognized command: \(commandText)"
+            appState.lastTranscriptionPreview = "? \(commandText)"
+            appState.isExecutingCommand = false
+            return
+        }
+
+        let results = await executor.executeChain(commands)
+
+        let allSucceeded = results.allSatisfy { $0.success }
+        let summary = results.map { $0.message }.joined(separator: "; ")
+
+        appState.lastCommandResult = summary
+        appState.lastTranscriptionPreview = allSucceeded ? summary : "Failed: \(summary)"
+        appState.isExecutingCommand = false
+
+        if allSucceeded {
+            playSound(.stop)
+            Logger.commands.info("Command executed: \(summary)")
+        } else {
+            Logger.commands.warning("Command failed: \(summary)")
         }
     }
 
