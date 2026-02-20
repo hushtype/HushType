@@ -113,12 +113,16 @@ struct HistoryView: View {
                 Button("Cancel") {
                     isEditingForInject = false
                 }
+                .accessibilityLabel("Cancel")
+                .accessibilityHint("Closes the editor without injecting")
             }
 
             TextEditor(text: $editText)
                 .font(.body)
                 .frame(minHeight: 120)
                 .border(Color.secondary.opacity(0.3))
+                .accessibilityLabel("Edit text before injection")
+                .accessibilityHint("Modify the text, then press Inject at Cursor to insert it")
 
             HStack {
                 Spacer()
@@ -128,6 +132,8 @@ struct HistoryView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.return, modifiers: .command)
+                .accessibilityLabel("Inject at cursor")
+                .accessibilityHint("Types the edited text at the current cursor position")
             }
         }
         .padding(20)
@@ -156,9 +162,12 @@ struct HistoryView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
                         .font(.caption)
+                        .accessibilityHidden(true)
                     TextField("Search history", text: $searchText)
                         .textFieldStyle(.plain)
                         .font(.callout)
+                        .accessibilityLabel("Search history")
+                        .accessibilityHint("Filter entries by text, app name, or processing mode")
                 }
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
@@ -190,14 +199,18 @@ struct HistoryView: View {
                     }
                 } label: {
                     Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .accessibilityLabel(hasActiveFilters ? "Filters active" : "Filter")
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
+                .accessibilityLabel(hasActiveFilters ? "Filter history (filters active)" : "Filter history")
+                .accessibilityHint("Filter by app, processing mode, or favorites")
 
                 Text("\(filteredEntries.count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+                    .accessibilityLabel("\(filteredEntries.count) entries")
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
@@ -400,10 +413,13 @@ private struct HistoryRowView: View {
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(entry.isFavorite ? "Remove from favorites" : "Add to favorites")
+                .accessibilityHint("Toggles the favorite status of this entry")
 
                 Image(systemName: entry.mode.iconName)
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+                    .accessibilityLabel("Mode: \(entry.mode.displayName)")
             }
             .frame(width: 22)
 
@@ -496,6 +512,8 @@ private struct HistoryDetailView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .accessibilityLabel("Edit and inject")
+                    .accessibilityHint("Opens the editor to modify this entry and inject text at the cursor")
                 }
 
                 Spacer()
@@ -511,6 +529,8 @@ private struct HistoryDetailView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .foregroundStyle(entry.isFavorite ? .yellow : .secondary)
+                .accessibilityLabel(entry.isFavorite ? "Remove from favorites" : "Add to favorites")
+                .accessibilityHint("Toggles the favorite status of this entry")
 
                 Button(role: .destructive) {
                     onDelete()
@@ -519,6 +539,8 @@ private struct HistoryDetailView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+                .accessibilityLabel("Delete entry")
+                .accessibilityHint("Permanently deletes this dictation entry")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 6)
@@ -618,6 +640,8 @@ private struct HistoryDetailView: View {
                         .font(.caption)
                 }
                 .buttonStyle(.borderless)
+                .accessibilityLabel("Copy \(title.lowercased())")
+                .accessibilityHint("Copies the text to the clipboard")
             }
 
             Text(content)

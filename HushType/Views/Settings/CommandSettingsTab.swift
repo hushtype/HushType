@@ -35,6 +35,7 @@ struct CommandSettingsTab: View {
                         saveSettings()
                     }
                     .help("When enabled, HushType listens for the wake phrase and executes voice commands.")
+                    .accessibilityHint("When on, say the wake phrase followed by a command to control your Mac by voice")
 
                 LabeledContent("Wake Phrase") {
                     TextField("e.g. Hey Type", text: $commandWakePhrase)
@@ -54,6 +55,8 @@ struct CommandSettingsTab: View {
                                 saveSettings()
                             }
                         }
+                        .accessibilityLabel("Wake phrase: \(commandWakePhrase)")
+                        .accessibilityHint("The phrase you say before a voice command, for example Hey Type open Safari")
                 }
 
                 Text("Say the wake phrase followed by a command. For example: \"\(commandWakePhrase), open Safari\" or \"\(commandWakePhrase), volume up\".")
@@ -95,6 +98,8 @@ struct CommandSettingsTab: View {
                     Label("Manage Custom Commands", systemImage: "square.and.pencil")
                 }
                 .disabled(!commandsEnabled)
+                .accessibilityLabel("Manage custom commands")
+                .accessibilityHint("Opens the editor to create or edit your own voice command triggers")
             } header: {
                 Text("Custom Commands")
             } footer: {
@@ -168,12 +173,18 @@ private struct BuiltInCommandRow: View {
                 Label(entry.intent.displayName, systemImage: entry.intent.iconName)
             }
             .disabled(!isParentEnabled)
+            .accessibilityHint(
+                entry.examplePhrases.isEmpty
+                    ? "Enables or disables the \(entry.intent.displayName) voice command"
+                    : "Enables or disables the \(entry.intent.displayName) command. Example: \(entry.examplePhrases[0])"
+            )
 
             if !entry.examplePhrases.isEmpty {
                 Text(entry.examplePhrases.joined(separator: " • "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding(.leading, 28)
+                    .accessibilityLabel("Example phrases: \(entry.examplePhrases.joined(separator: ", "))")
             }
         }
         .padding(.vertical, 2)

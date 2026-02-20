@@ -21,23 +21,30 @@ struct MenuBarView: View {
                         Circle()
                             .fill(.red)
                             .frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
                         Text("Recording...")
                             .font(.headline)
                             .foregroundStyle(.primary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Status: Recording")
                 } else if appState.isProcessing {
                     HStack(spacing: 8) {
                         ProgressView()
                             .scaleEffect(0.7)
                             .frame(width: 8, height: 8)
+                            .accessibilityHidden(true)
                         Text("Processing...")
                             .font(.headline)
                             .foregroundStyle(.primary)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Status: Processing transcription")
                 } else {
                     Text("Ready")
                         .font(.headline)
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("Status: Ready")
                 }
 
                 // Active mode indicator
@@ -45,6 +52,7 @@ struct MenuBarView: View {
                     Image(systemName: appState.activeMode.iconName)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
                     Text(appState.activeMode.displayName)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -60,6 +68,12 @@ struct MenuBarView: View {
                             .clipShape(Capsule())
                     }
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(
+                    appState.detectedLanguage.map { lang in
+                        "Mode: \(appState.activeMode.displayName), Language: \(lang.uppercased())"
+                    } ?? "Mode: \(appState.activeMode.displayName)"
+                )
             }
 
             Divider()
@@ -76,6 +90,8 @@ struct MenuBarView: View {
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Last transcription: \(truncatePreview(preview))")
 
                 Divider()
             }
@@ -87,6 +103,7 @@ struct MenuBarView: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.orange)
+                            .accessibilityHidden(true)
                         Text("Error")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -96,6 +113,8 @@ struct MenuBarView: View {
                         .foregroundStyle(.orange)
                         .lineLimit(2)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Error: \(error)")
 
                 Divider()
             }
@@ -113,6 +132,8 @@ struct MenuBarView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("History")
+                .accessibilityHint("Opens the dictation history window")
 
                 SettingsLink {
                     HStack {
@@ -124,6 +145,8 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(SettingsButtonStyle())
                 .foregroundStyle(.primary)
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Opens the HushType settings window")
 
                 Button {
                     quitApp()
@@ -137,6 +160,8 @@ struct MenuBarView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.red)
+                .accessibilityLabel("Quit HushType")
+                .accessibilityHint("Exits the application")
             }
         }
         .padding(12)

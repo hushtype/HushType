@@ -174,6 +174,7 @@ final class DictationController: @unchecked Sendable {
         appState.activeMode = mode ?? activeMode
 
         updateState(.recording)
+        appState.announceRecordingStarted()
         soundService.play(.recordingStart)
 
         do {
@@ -197,6 +198,7 @@ final class DictationController: @unchecked Sendable {
         }
 
         soundService.play(.recordingStop)
+        appState.announceRecordingCompleted()
 
         // Stop capture and get samples
         let rawSamples = await audioService.stopCapture()
@@ -278,6 +280,7 @@ final class DictationController: @unchecked Sendable {
             let activeMode = self.appState.activeMode
             if activeMode.requiresLLM, let router = processingRouter {
                 updateState(.processing)
+                appState.announceProcessing()
                 Logger.general.info("LLM input [\(activeMode.rawValue)]: \(rawText)")
 
                 // Fetch appropriate PromptTemplate for prompt/custom modes
@@ -313,6 +316,7 @@ final class DictationController: @unchecked Sendable {
                         template: template,
                         detectedLanguage: result.language
                     )
+                    appState.announceProcessingComplete()
                     Logger.general.info("LLM output [\(activeMode.rawValue)]: \(outputText)")
                 } catch {
                     Logger.general.warning("LLM processing failed, using raw text: \(error.localizedDescription)")
@@ -374,6 +378,7 @@ final class DictationController: @unchecked Sendable {
         } catch {
             Logger.general.error("Pipeline error: \(error.localizedDescription)")
             appState.currentError = error.localizedDescription
+            appState.announceError(error.localizedDescription)
         }
 
         updateState(.idle)

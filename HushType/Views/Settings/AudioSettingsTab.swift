@@ -26,11 +26,14 @@ struct AudioSettingsTab: View {
                     Logger.ui.info("Audio device changed to: \(newValue)")
                 }
                 .help("Audio input device for recording")
+                .accessibilityHint("Choose which microphone HushType uses to capture your voice")
 
                 Button("Refresh Devices") {
                     loadDevices()
                 }
                 .font(.caption)
+                .accessibilityLabel("Refresh microphone list")
+                .accessibilityHint("Scans for newly connected audio input devices")
             }
 
             Section("Voice Activity Detection") {
@@ -54,6 +57,9 @@ struct AudioSettingsTab: View {
                         in: 0.0...1.0,
                         step: 0.05
                     )
+                    .accessibilityLabel("VAD Sensitivity")
+                    .accessibilityValue(String(format: "%.0f%%", (settings?.vadSensitivity ?? 0.5) * 100))
+                    .accessibilityHint("Lower values detect quieter speech but may trigger on background noise")
 
                     Text("Lower values detect quieter speech but may trigger on background noise")
                         .font(.caption)
@@ -107,6 +113,8 @@ struct AudioSettingsTab: View {
                             toggleAudioPreview()
                         }
                         .font(.caption)
+                        .accessibilityLabel(audioService.isCapturing ? "Stop audio preview" : "Start audio preview")
+                        .accessibilityHint(audioService.isCapturing ? "Stops the live microphone level display" : "Shows a live microphone level meter to test your audio input")
 
                         Spacer()
 
@@ -164,6 +172,9 @@ struct AudioSettingsTab: View {
                         step: 0.05
                     )
                     .disabled(!(settings?.playSoundEffects ?? true))
+                    .accessibilityLabel("Sound effects volume")
+                    .accessibilityValue(String(format: "%.0f%%", (settings?.soundVolume ?? 0.5) * 100))
+                    .accessibilityHint("Adjusts the volume of recording and command feedback sounds")
                 }
 
                 Button("Preview Sound") {
@@ -177,6 +188,8 @@ struct AudioSettingsTab: View {
                 }
                 .disabled(!(settings?.playSoundEffects ?? true))
                 .help("Play a preview of the current sound theme")
+                .accessibilityLabel("Preview sound")
+                .accessibilityHint("Plays a sample of the currently selected sound theme")
             }
 
             Section("Advanced") {

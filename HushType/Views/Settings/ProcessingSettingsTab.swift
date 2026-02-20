@@ -35,6 +35,8 @@ struct ProcessingSettingsTab: View {
                     }
                 }
                 .help("Default processing mode applied when no app-specific override exists")
+                .accessibilityLabel("Default processing mode: \((settings?.defaultMode ?? .clean).displayName)")
+                .accessibilityHint("Choose how transcriptions are post-processed when no app-specific profile overrides the mode")
 
                 if let mode = settings?.defaultMode, mode.requiresLLM {
                     Text("This mode requires an LLM to be configured")

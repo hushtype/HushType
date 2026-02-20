@@ -34,6 +34,8 @@ struct ModelManagementView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .accessibilityLabel("Model type: \(selectedModelType.displayName)")
+                .accessibilityHint("Switch between Whisper speech-to-text models and LLM text-processing models")
             }
 
             // Model info guide (type-specific)
@@ -79,11 +81,14 @@ struct ModelManagementView: View {
                     if registryService.isRefreshing {
                         ProgressView()
                             .controlSize(.small)
+                            .accessibilityLabel("Checking for model updates")
                     } else {
                         Label("Check for Updates", systemImage: "arrow.triangle.2.circlepath")
                     }
                 }
                 .disabled(registryService.isRefreshing)
+                .accessibilityLabel(registryService.isRefreshing ? "Checking for updates" : "Check for model updates")
+                .accessibilityHint("Refreshes the list of available models from the registry")
             }
 
             if let error = registryService.lastRefreshError {
@@ -396,6 +401,8 @@ struct UnifiedModelRow: View {
                             .labelStyle(.iconOnly)
                     }
                     .help("Cancel download")
+                    .accessibilityLabel("Cancel download of \(model.name)")
+                    .accessibilityHint("Stops the current download")
                 } else if model.isDownloaded {
                     Button {
                         showDeleteConfirmation = true
@@ -405,6 +412,8 @@ struct UnifiedModelRow: View {
                     }
                     .help(isActiveModel ? "Cannot delete the active model" : "Delete this model from disk")
                     .disabled(isActiveModel)
+                    .accessibilityLabel(isActiveModel ? "Cannot delete active model \(model.name)" : "Delete \(model.name)")
+                    .accessibilityHint(isActiveModel ? "This model is currently active and cannot be deleted" : "Removes \(model.name) from disk. You can re-download it later.")
                 } else if model.lastDownloadError != nil {
                     Button {
                         model.lastDownloadError = nil
@@ -414,6 +423,8 @@ struct UnifiedModelRow: View {
                             .labelStyle(.iconOnly)
                     }
                     .help("Retry download")
+                    .accessibilityLabel("Retry download of \(model.name)")
+                    .accessibilityHint("Attempts to download the model again after a previous failure")
                 } else {
                     Button {
                         downloader.download(model)
@@ -422,6 +433,8 @@ struct UnifiedModelRow: View {
                             .labelStyle(.iconOnly)
                     }
                     .help("Download this model")
+                    .accessibilityLabel("Download \(model.name)")
+                    .accessibilityHint("Downloads \(model.formattedFileSize) model file for offline use")
                 }
             }
         }

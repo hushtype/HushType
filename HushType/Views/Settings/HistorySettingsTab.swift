@@ -26,6 +26,8 @@ struct HistorySettingsTab: View {
                             settings?.maxHistoryEntries = newValue
                             saveSettings()
                         }
+                        .accessibilityLabel("Maximum history entries: \(maxEntries)")
+                        .accessibilityHint("Set to 0 for unlimited. Oldest entries beyond this limit are automatically removed.")
                 }
 
                 HStack {
@@ -39,6 +41,8 @@ struct HistorySettingsTab: View {
                             settings?.historyRetentionDays = newValue
                             saveSettings()
                         }
+                        .accessibilityLabel("Retention days: \(retentionDays)")
+                        .accessibilityHint("Entries older than this many days are automatically deleted. Set to 0 for unlimited.")
                 }
 
                 Text("Set to 0 for unlimited. Favorites are never auto-deleted.")
@@ -52,6 +56,7 @@ struct HistorySettingsTab: View {
                         settings?.storeTranscriptionText = newValue
                         saveSettings()
                     }
+                    .accessibilityHint("When off, only metadata such as duration, word count, and timestamp is saved — no transcription text")
 
                 Text("When off, only metadata (duration, word count, timestamp) is stored.")
                     .font(.caption)
@@ -60,16 +65,21 @@ struct HistorySettingsTab: View {
 
             Section("Storage") {
                 LabeledContent("Total entries", value: "\(entryCount)")
+                    .accessibilityLabel("Total history entries: \(entryCount)")
 
                 Button("Clear All History") {
                     showClearConfirmation = true
                 }
                 .foregroundStyle(.red)
+                .accessibilityLabel("Clear all history")
+                .accessibilityHint("Permanently deletes all dictation history entries, including favorites")
 
                 Button("Factory Reset") {
                     showResetConfirmation = true
                 }
                 .foregroundStyle(.red)
+                .accessibilityLabel("Factory reset")
+                .accessibilityHint("Deletes all data including history, app profiles, vocabulary, and resets all settings to defaults")
             }
         }
         .formStyle(.grouped)

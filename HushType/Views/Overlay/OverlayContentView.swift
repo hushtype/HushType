@@ -115,6 +115,8 @@ struct OverlayContentView: View {
             .frame(maxHeight: 200)
             .padding(6)
             .scrollContentBackground(.hidden)
+            .accessibilityLabel("Edit transcription text")
+            .accessibilityHint("Modify the transcription before injecting")
             .onAppear {
                 textFieldFocused = true
             }
@@ -154,6 +156,8 @@ struct OverlayContentView: View {
                     isEditing = false
                 }
                 .keyboardShortcut(.escape, modifiers: [])
+                .accessibilityLabel("Cancel edit")
+                .accessibilityHint("Discards your edits and cancels injection")
 
                 Spacer()
 
@@ -165,6 +169,8 @@ struct OverlayContentView: View {
                 .keyboardShortcut(.return, modifiers: [])
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .accessibilityLabel("Inject edited text")
+                .accessibilityHint("Types your edited text at the cursor position")
             } else {
                 Button {
                     isEditing = true
@@ -173,6 +179,8 @@ struct OverlayContentView: View {
                 }
                 .controlSize(.small)
                 .disabled(appState.overlayText == nil)
+                .accessibilityLabel("Edit transcription")
+                .accessibilityHint("Opens the text editor to modify the transcription before injecting")
 
                 Spacer()
 
@@ -181,6 +189,8 @@ struct OverlayContentView: View {
                 }
                 .keyboardShortcut(.escape, modifiers: [])
                 .controlSize(.small)
+                .accessibilityLabel("Dismiss overlay")
+                .accessibilityHint("Closes this panel without injecting text")
 
                 Button("Inject") {
                     appState.overlayEditConfirmed = true
@@ -189,6 +199,8 @@ struct OverlayContentView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
                 .disabled(appState.overlayText == nil)
+                .accessibilityLabel("Inject transcription")
+                .accessibilityHint("Types the transcribed text at the cursor position")
             }
         }
         .padding(.horizontal, 14)

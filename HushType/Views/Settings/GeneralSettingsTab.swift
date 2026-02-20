@@ -18,10 +18,13 @@ struct GeneralSettingsTab: View {
                         applyHotkey(newValue)
                     }
                 }
+                .accessibilityLabel("Global Hotkey: \(hotkeyString)")
+                .accessibilityHint("Press to record a new keyboard shortcut for starting dictation")
                 if let error = hotkeyError {
                     Text(error)
                         .font(.caption)
                         .foregroundStyle(.red)
+                        .accessibilityLabel("Hotkey error: \(error)")
                 }
 
                 Toggle("Push-to-Talk Mode", isOn: Binding(
@@ -32,6 +35,7 @@ struct GeneralSettingsTab: View {
                     }
                 ))
                 .help("Hold hotkey to record, release to stop. When disabled, press to start, press again to stop.")
+                .accessibilityHint("When on, hold the hotkey to record and release to stop. When off, press once to start and again to stop.")
             }
 
             Section("Startup & Appearance") {
@@ -41,6 +45,7 @@ struct GeneralSettingsTab: View {
                         settings?.launchAtLogin = newValue
                         saveSettings()
                     }
+                    .accessibilityHint("Automatically starts HushType when you log in to your Mac")
 
                 Toggle("Show Overlay After Dictation", isOn: Binding(
                     get: { settings?.showOverlayAfterDictation ?? true },
@@ -50,6 +55,7 @@ struct GeneralSettingsTab: View {
                     }
                 ))
                 .help("Show a floating panel to review and edit text before injection")
+                .accessibilityHint("Displays a floating panel showing the transcription so you can edit it before it is typed")
 
                 Toggle("Play Sound Effects", isOn: Binding(
                     get: { settings?.playSoundEffects ?? true },
@@ -59,6 +65,7 @@ struct GeneralSettingsTab: View {
                     }
                 ))
                 .help("Audio feedback when recording starts/stops")
+                .accessibilityHint("Plays audio cues when recording starts and stops")
             }
 
             Section("Text Injection") {
@@ -74,6 +81,7 @@ struct GeneralSettingsTab: View {
                     }
                 }
                 .help("How transcribed text is typed into the active app")
+                .accessibilityHint("Choose how HushType inserts transcribed text into applications")
 
                 Text(injectionMethodHelp)
                     .font(.caption)
@@ -94,6 +102,8 @@ struct GeneralSettingsTab: View {
                         Text("\(settings?.keystrokeDelay ?? 5) ms")
                             .monospacedDigit()
                     }
+                    .accessibilityLabel("Keystroke delay: \(settings?.keystrokeDelay ?? 5) milliseconds")
+                    .accessibilityHint("Adjusts the pause between simulated keystrokes in CGEvent mode")
                 }
                 .help("Delay between simulated keystrokes (CGEvent mode)")
             }

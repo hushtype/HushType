@@ -190,4 +190,38 @@ final class AppState {
 
     /// Shared command registry used by both the pipeline and settings UI.
     var commandRegistry: CommandRegistry?
+
+    // MARK: - Accessibility Announcements
+
+    /// Post an NSAccessibility announcement so VoiceOver reads the message aloud.
+    func announceStateChange(_ message: String) {
+        NSAccessibility.post(
+            element: NSApp as Any,
+            notification: .announcementRequested,
+            userInfo: [
+                .announcement: message,
+                .priority: NSAccessibilityPriorityLevel.high
+            ]
+        )
+    }
+
+    func announceRecordingStarted() {
+        announceStateChange("Recording started")
+    }
+
+    func announceRecordingCompleted() {
+        announceStateChange("Recording stopped")
+    }
+
+    func announceProcessing() {
+        announceStateChange("Processing transcription")
+    }
+
+    func announceProcessingComplete() {
+        announceStateChange("Processing complete")
+    }
+
+    func announceError(_ message: String) {
+        announceStateChange(message)
+    }
 }
