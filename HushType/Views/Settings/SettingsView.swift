@@ -1,3 +1,4 @@
+import Sparkle
 import SwiftUI
 import SwiftData
 import os
@@ -6,10 +7,11 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(AppState.self) private var appState
     @State private var selectedTab: Int = 0
+    let updater: SPUUpdater
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            GeneralSettingsTab()
+            GeneralSettingsTab(updater: updater)
                 .tabItem {
                     Label("General", systemImage: "gear.circle")
                 }
@@ -78,7 +80,7 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    SettingsView(updater: SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil).updater)
         .environment(AppState())
         .modelContainer(for: [
             UserSettings.self, ModelInfo.self, PromptTemplate.self,

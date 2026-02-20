@@ -5,6 +5,7 @@
 //  Created by Harun Güngörer on 13.02.2026.
 //
 
+import Sparkle
 import SwiftData
 import SwiftUI
 import os
@@ -80,7 +81,7 @@ struct HushTypeApp: App {
         .modelContainer(modelContainer)
 
         Settings {
-            SettingsView()
+            SettingsView(updater: appDelegate.updaterController.updater)
                 .environment(appDelegate.appState)
                 .onAppear {
                     NSApp.activate(ignoringOtherApps: true)

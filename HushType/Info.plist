@@ -6,5 +6,11 @@
 	<string>HushType needs microphone access to capture speech for transcription. All audio is processed locally on your device.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 HushType. All rights reserved.</string>
+	<key>SUFeedURL</key>
+	<string>https://harungungorer.github.io/HushType/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>SPARKLE_ED_PUBLIC_KEY_PLACEHOLDER</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 </dict>
 </plist>

@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Sparkle
 import SwiftData
 import os
 
@@ -15,6 +16,7 @@ private let startupSignpostID = OSSignpostID(log: startupLog)
 class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
     var modelContainer: ModelContainer?
+    let updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
     private var dictationController: DictationController?
     private var appContextService: AppContextService?
     private var modelDownloader: ModelDownloader?

@@ -1,3 +1,4 @@
+import Sparkle
 import SwiftUI
 import SwiftData
 import ServiceManagement
@@ -9,6 +10,11 @@ struct GeneralSettingsTab: View {
     @State private var launchAtLogin = false
     @State private var hotkeyString = ""
     @State private var hotkeyError: String?
+    private let updater: SPUUpdater
+
+    init(updater: SPUUpdater) {
+        self.updater = updater
+    }
 
     var body: some View {
         Form {
@@ -66,6 +72,13 @@ struct GeneralSettingsTab: View {
                 ))
                 .help("Audio feedback when recording starts/stops")
                 .accessibilityHint("Plays audio cues when recording starts and stops")
+            }
+
+            Section("Updates") {
+                Button("Check for Updates…") {
+                    updater.checkForUpdates()
+                }
+                .accessibilityHint("Checks if a newer version of HushType is available")
             }
 
             Section("Text Injection") {
@@ -180,7 +193,7 @@ struct GeneralSettingsTab: View {
 }
 
 #Preview {
-    GeneralSettingsTab()
+    GeneralSettingsTab(updater: SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: nil, userDriverDelegate: nil).updater)
         .modelContainer(for: [UserSettings.self], inMemory: true)
         .frame(width: 500, height: 400)
 }

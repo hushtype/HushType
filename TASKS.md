@@ -285,19 +285,19 @@
 ## Phase 6: Stable Release (v1.0.0)
 
 ### 6.1 Code Signing & Notarization
-- [ ] Configure Developer ID certificate — set up code signing identity for distribution outside the Mac App Store
-- [ ] Add notarization — integrate `notarytool` into build pipeline, submit app for Apple notarization, staple ticket to DMG
+- [x] Configure Developer ID certificate — set up code signing identity for distribution outside the Mac App Store
+- [x] Add notarization — integrate `notarytool` into build pipeline, submit app for Apple notarization, staple ticket to DMG
 
 ### 6.2 Distribution
-- [ ] Create DMG packaging — build `.dmg` installer with drag-to-Applications layout, background image, volume icon
-- [ ] Integrate Sparkle 2.x — auto-update framework with EdDSA signatures, appcast XML, delta updates
+- [x] Create DMG packaging — build `.dmg` installer with drag-to-Applications layout, background image, volume icon
+- [x] Integrate Sparkle 2.x — auto-update framework with EdDSA signatures, appcast XML, delta updates
 - [ ] Submit Homebrew cask — create and submit `homebrew-cask` formula for `brew install --cask hushtype`
 
 ### 6.3 CI/CD Pipeline
-- [ ] Create GitHub Actions build workflow — build on macOS runners, cache Swift/CMake dependencies, matrix for Debug/Release
-- [ ] Create GitHub Actions test workflow — run unit + integration tests, upload test results, fail PR on test failure
+- [x] Create GitHub Actions build workflow — build on macOS runners, cache Swift/CMake dependencies, matrix for Debug/Release
+- [x] Create GitHub Actions test workflow — run unit + integration tests, upload test results, fail PR on test failure
 - [ ] Create GitHub Actions release workflow — build signed app, notarize, create DMG, create GitHub Release with artifacts, update Sparkle appcast
-- [ ] Add linting to CI — run SwiftLint and SwiftFormat checks on every PR
+- [x] Add linting to CI — run SwiftLint and SwiftFormat checks on every PR
 
 ### 6.4 Final QA
 - [ ] Full regression testing — verify all Phase 1–5 features work together end-to-end

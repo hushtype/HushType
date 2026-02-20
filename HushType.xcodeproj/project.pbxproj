@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A0B1C2D3E4F5A6B7C8D9E0F3 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A0B1C2D3E4F5A6B7C8D9E0F2 /* Sparkle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		680B190C2F3FA6A8007650D7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0B1C2D3E4F5A6B7C8D9E0F3 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -127,6 +132,7 @@
 			);
 			name = HushType;
 			packageProductDependencies = (
+				A0B1C2D3E4F5A6B7C8D9E0F2 /* Sparkle */,
 			);
 			productName = HushType;
 			productReference = 680B18FC2F3FA6A7007650D7 /* HushType.app */;
@@ -212,6 +218,9 @@
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 680B18FD2F3FA6A7007650D7 /* Products */;
+			packageReferences = (
+				A0B1C2D3E4F5A6B7C8D9E0F1 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -685,6 +694,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A0B1C2D3E4F5A6B7C8D9E0F1 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A0B1C2D3E4F5A6B7C8D9E0F2 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A0B1C2D3E4F5A6B7C8D9E0F1 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 680B18F42F3FA6A7007650D7 /* Project object */;
 }
