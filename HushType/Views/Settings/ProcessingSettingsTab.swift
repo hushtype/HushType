@@ -6,6 +6,7 @@ struct ProcessingSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allTemplates: [PromptTemplate]
     @State private var settings: UserSettings?
+    @State private var showTemplateEditor = false
     private var templatesForMode: [PromptTemplate] {
         let mode = settings?.defaultMode ?? .clean
         return allTemplates.filter { $0.mode == mode }
@@ -110,6 +111,10 @@ struct ProcessingSettingsTab: View {
                         .frame(height: 150)
                     }
 
+                    Button("Manage Templates...") {
+                        showTemplateEditor = true
+                    }
+                    .accessibilityHint("Open the full template editor to create, edit, and delete prompt templates")
                 }
             }
 
@@ -133,6 +138,10 @@ struct ProcessingSettingsTab: View {
             }
         }
         .formStyle(.grouped)
+        .sheet(isPresented: $showTemplateEditor) {
+            TemplateEditorView()
+                .frame(width: 800, height: 600)
+        }
         .onAppear {
             loadSettings()
         }

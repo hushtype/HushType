@@ -296,6 +296,9 @@ private struct AddAliasSheet: View {
                         .textFieldStyle(.roundedBorder)
                     TextField("Shortcut (e.g., cmd+r)", text: $shortcut)
                         .textFieldStyle(.roundedBorder)
+                    Text("Format: modifiers+key — e.g. cmd+c, cmd+shift+z, ctrl+option+t")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .formStyle(.grouped)

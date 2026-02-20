@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @State private var pollingTimer: Timer?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Query private var allModels: [ModelInfo]
 
@@ -51,7 +52,7 @@ struct OnboardingView: View {
             HStack {
                 if currentStep > 0 && currentStep < totalSteps - 1 {
                     Button("Back") {
-                        withAnimation { currentStep -= 1 }
+                        if reduceMotion { currentStep -= 1 } else { withAnimation { currentStep -= 1 } }
                     }
                     .accessibilityLabel("Back")
                     .accessibilityHint("Goes to the previous setup step")
@@ -61,7 +62,7 @@ struct OnboardingView: View {
 
                 if currentStep < totalSteps - 1 {
                     Button("Continue") {
-                        withAnimation { currentStep += 1 }
+                        if reduceMotion { currentStep += 1 } else { withAnimation { currentStep += 1 } }
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityLabel("Continue")

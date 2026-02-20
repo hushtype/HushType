@@ -3,7 +3,7 @@ import Foundation
 // MARK: - LLM Provider Protocol
 
 /// Protocol abstracting LLM backends for swappable text generation.
-/// Conforming types: `LlamaCppProvider` (local), `OllamaProvider` (HTTP).
+/// Conforming types: `LlamaCppProvider` (local llama.cpp).
 protocol LLMProvider: Sendable {
     /// Load a model for inference.
     /// - Parameter path: Path to the model file (local) or model name (remote).

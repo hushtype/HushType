@@ -196,6 +196,13 @@ final class AppState {
     /// Shared plugin manager used by both the pipeline and settings UI.
     var pluginManager: PluginManager = PluginManager()
 
+    // MARK: - Onboarding State
+
+    /// Whether onboarding has been completed. Reads from UserDefaults.
+    var onboardingCompleted: Bool {
+        UserDefaults.standard.bool(forKey: "com.hushtype.onboardingCompleted")
+    }
+
     // MARK: - System Accessibility Preferences
 
     /// True when the user has enabled Reduce Motion in System Settings > Accessibility.

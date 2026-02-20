@@ -24,10 +24,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var overlayWindow: OverlayWindow?
     private var powerManagementService: PowerManagementService?
 
-    // Track currently loaded models to detect selection changes
+    // Track currently loaded models and hotkey to detect selection changes
     private var currentWhisperModel: String?
     private var currentLLMModel: String?
     private var currentLLMContextLength: Int = 2048
+    private var currentHotkey: String = ""
+    private var currentWhisperThreadCount: Int = 0
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Kill any other running instances of HushType (skip during unit tests)
@@ -69,6 +71,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let context = modelContainer.mainContext
         do {
             let settings = try UserSettings.shared(in: context)
+            // Track user's thread count setting for battery-aware mode
+            currentWhisperThreadCount = settings.whisperThreadCount
+
             controller.updateConfiguration(
                 vadSensitivity: Float(settings.vadSensitivity),
                 injectionMethod: settings.defaultInjectionMethod,
@@ -78,7 +83,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 soundTheme: settings.soundTheme,
                 soundVolume: settings.soundVolume,
                 audioInputDeviceID: settings.audioInputDeviceID,
-                useGPUAcceleration: settings.useGPUAcceleration,
                 whisperThreadCount: settings.whisperThreadCount,
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
@@ -95,7 +99,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Sync power management settings
             powerManagementService?.batteryAwareModeEnabled = settings.batteryAwareModeEnabled
 
-            try controller.reloadHotkey(settings.globalHotkey)
+            // Reload hotkey only if it changed
+            if settings.globalHotkey != currentHotkey {
+                currentHotkey = settings.globalHotkey
+                try controller.reloadHotkey(settings.globalHotkey)
+            }
 
             // Reload whisper model if selection changed
             let newWhisperModel = settings.selectedWhisperModel
@@ -232,7 +240,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 soundTheme: settings.soundTheme,
                 soundVolume: settings.soundVolume,
                 audioInputDeviceID: settings.audioInputDeviceID,
-                useGPUAcceleration: settings.useGPUAcceleration,
                 whisperThreadCount: settings.whisperThreadCount,
                 defaultMode: settings.defaultMode,
                 autoDetectLanguage: settings.autoDetectLanguage,
@@ -260,6 +267,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             )
             appState.commandRegistry = commandRegistry
 
+            // Wire plugin manager for pipeline integration
+            appState.pluginManager.discoverPlugins()
+            controller.setPluginManager(appState.pluginManager)
+
             // Configure LLM service (lightweight — no model loading yet)
             let service = LLMService()
             let provider = LlamaCppProvider(contextSize: UInt32(settings.llmContextLength))
@@ -267,55 +278,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             controller.setLLMService(service)
             self.llmService = service
 
-            // Register hotkey — menu bar is now responsive
-            try controller.start(hotkey: settings.globalHotkey)
-            appState.currentError = nil
-            Logger.general.info("Dictation pipeline started (hotkey active)")
-        } catch {
-            Logger.general.error("Pipeline startup failed: \(error.localizedDescription)")
-            appState.currentError = "Startup error: \(error.localizedDescription)"
-        }
-
-        dictationController = controller
-
-        // Create overlay window (lightweight NSPanel)
-        let overlay = OverlayWindow()
-        overlay.setContent(appState: appState)
-        self.overlayWindow = overlay
-        startOverlayObservation()
-
-        os_signpost(.end, log: startupLog, name: "pipelineCore", signpostID: startupSignpostID)
-        Logger.performance.info("Pipeline core ready — menu bar active")
-
-        // --- Phase 2: Deferred — model loading and background services ---
-        // Defer heavy work so the menu bar icon and hotkey are responsive immediately.
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            os_signpost(.begin, log: startupLog, name: "deferredSetup", signpostID: startupSignpostID)
-
-            // Load whisper model in background
-            if let whisperFileName = self.currentWhisperModel {
-                await controller.loadWhisperModel(fileName: whisperFileName)
-            }
-
-            // Auto-download default models if needed
-            self.autoDownloadDefaultModelIfNeeded(in: context)
-            self.autoDownloadDefaultLLMModelIfNeeded(in: context)
-
-            // Load LLM model if configured
-            if let llmModelName = self.currentLLMModel {
-                await controller.loadLLMModel(fileName: llmModelName)
-            }
-
-            // Start power management monitoring
+            // Wire power management (lightweight — no I/O, just timers and observers)
+            currentWhisperThreadCount = settings.whisperThreadCount
             let powerService = PowerManagementService()
-            powerService.batteryAwareModeEnabled = (try? UserSettings.shared(in: context))?.batteryAwareModeEnabled ?? true
+            powerService.batteryAwareModeEnabled = settings.batteryAwareModeEnabled
 
-            powerService.onPowerStateChanged = { [weak controller] isOnBattery in
-                guard let controller else { return }
-                let threadCount = isOnBattery ? 2 : 0
+            powerService.onPowerStateChanged = { [weak self, weak controller] isOnBattery in
+                guard let self, let controller else { return }
+                let userThreadCount = self.currentWhisperThreadCount
+                // On battery: cap at 2 threads; on AC: restore user setting
+                let threadCount = isOnBattery
+                    ? (userThreadCount == 0 ? 2 : min(userThreadCount, 2))
+                    : userThreadCount
                 controller.setWhisperThreadCount(threadCount)
-                Logger.performance.info("Battery-aware: whisper threads set to \(threadCount)")
+                Logger.performance.info("Battery-aware: whisper threads set to \(threadCount) (user: \(userThreadCount))")
             }
 
             powerService.onThermalThrottleNeeded = { [weak self] state in
@@ -350,6 +326,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             powerService.start()
             self.powerManagementService = powerService
+            controller.setPowerManagementService(powerService)
+
+            // Track initial hotkey for change detection
+            currentHotkey = settings.globalHotkey
+
+            // Register hotkey — menu bar is now responsive
+            try controller.start(hotkey: settings.globalHotkey)
+            appState.currentError = nil
+            Logger.general.info("Dictation pipeline started (hotkey active)")
+        } catch {
+            Logger.general.error("Pipeline startup failed: \(error.localizedDescription)")
+            appState.currentError = "Startup error: \(error.localizedDescription)"
+        }
+
+        dictationController = controller
+
+        // Create overlay window (lightweight NSPanel)
+        let overlay = OverlayWindow()
+        overlay.setContent(appState: appState)
+        self.overlayWindow = overlay
+        startOverlayObservation()
+
+        os_signpost(.end, log: startupLog, name: "pipelineCore", signpostID: startupSignpostID)
+        Logger.performance.info("Pipeline core ready — menu bar active")
+
+        // --- Phase 2: Deferred — model loading and network I/O ---
+        // Defer heavy work so the menu bar icon and hotkey are responsive immediately.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            os_signpost(.begin, log: startupLog, name: "deferredSetup", signpostID: startupSignpostID)
+
+            // Load whisper model in background
+            if let whisperFileName = self.currentWhisperModel {
+                await controller.loadWhisperModel(fileName: whisperFileName)
+            }
+
+            // Auto-download default models if needed
+            self.autoDownloadDefaultModelIfNeeded(in: context)
+            self.autoDownloadDefaultLLMModelIfNeeded(in: context)
+
+            // Load LLM model if configured
+            if let llmModelName = self.currentLLMModel {
+                await controller.loadLLMModel(fileName: llmModelName)
+            }
 
             // Refresh model registry (network I/O)
             let registry = ModelRegistryService(modelContainer: modelContainer)

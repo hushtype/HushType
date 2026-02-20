@@ -39,6 +39,8 @@ final class DictationController: @unchecked Sendable {
     private var commandParser: CommandParser?
     private var commandExecutor: CommandExecutor?
     private var commandRegistry: CommandRegistry?
+    private var pluginManager: PluginManager?
+    private var powerManagementService: PowerManagementService?
 
     // MARK: - App State
 
@@ -257,7 +259,13 @@ final class DictationController: @unchecked Sendable {
                 let globalDescriptor = FetchDescriptor<VocabularyEntry>(
                     predicate: #Predicate { $0.isGlobal }
                 )
-                let globalEntries = (try? vocabContext.fetch(globalDescriptor)) ?? []
+                let globalEntries: [VocabularyEntry]
+                do {
+                    globalEntries = try vocabContext.fetch(globalDescriptor)
+                } catch {
+                    Logger.general.warning("Failed to fetch global vocabulary entries: \(error.localizedDescription)")
+                    globalEntries = []
+                }
                 if !appEntries.isEmpty || !globalEntries.isEmpty {
                     rawText = VocabularyService.apply(to: rawText, globalEntries: globalEntries, appEntries: appEntries)
                 }
@@ -279,7 +287,8 @@ final class DictationController: @unchecked Sendable {
             var outputText = rawText
 
             let activeMode = self.appState.activeMode
-            if activeMode.requiresLLM, let router = processingRouter {
+            let thermalSkip = powerManagementService?.shouldSkipLLMProcessing ?? false
+            if activeMode.requiresLLM, !thermalSkip, let router = processingRouter {
                 updateState(.processing)
                 appState.announceProcessing()
                 Logger.general.info("LLM input [\(activeMode.rawValue)]: \(rawText)")
@@ -323,8 +332,32 @@ final class DictationController: @unchecked Sendable {
                     Logger.general.warning("LLM processing failed, using raw text: \(error.localizedDescription)")
                     outputText = rawText
                 }
+            } else if thermalSkip && activeMode.requiresLLM {
+                updateState(.processing)
+                Logger.general.warning("Skipping LLM — thermal state critical")
+                appState.currentError = "System overheating — LLM processing skipped"
             } else {
                 Logger.general.info("Skipping LLM (mode: \(activeMode.rawValue))")
+            }
+
+            // Apply processing plugins (after LLM, before overlay)
+            if let pluginManager, !pluginManager.activeProcessingPlugins.isEmpty {
+                let pluginContext = ProcessingContext(
+                    mode: activeMode,
+                    detectedLanguage: result.language,
+                    sourceBundleIdentifier: recordingBundleIdentifier,
+                    sourceAppName: recordingAppName,
+                    recordingDuration: result.audioDuration
+                )
+                do {
+                    outputText = try await pluginManager.applyProcessingPlugins(
+                        text: outputText,
+                        context: pluginContext
+                    )
+                    Logger.general.info("Processing plugins applied: \(outputText.count) chars")
+                } catch {
+                    Logger.general.warning("Processing plugins failed: \(error.localizedDescription)")
+                }
             }
 
             // Determine final text — wait for overlay if enabled
@@ -360,6 +393,7 @@ final class DictationController: @unchecked Sendable {
             // Inject text (use snapshotted per-app injection method from recording start)
             updateState(.injecting)
             try await injectionService.inject(finalText, method: recordingInjectionMethod)
+            soundService.play(.injectionComplete)
 
             // Save history entry (use snapshotted app info from recording start)
             let processedText = (finalText != rawText) ? finalText : nil
@@ -378,8 +412,10 @@ final class DictationController: @unchecked Sendable {
 
         } catch {
             Logger.general.error("Pipeline error: \(error.localizedDescription)")
-            appState.currentError = error.localizedDescription
+            updateState(.error(error.localizedDescription))
             appState.announceError(error.localizedDescription)
+            // Keep error visible for 3 seconds before returning to idle
+            try? await Task.sleep(for: .seconds(3))
         }
 
         updateState(.idle)
@@ -387,22 +423,44 @@ final class DictationController: @unchecked Sendable {
 
     // MARK: - Overlay Helpers
 
-    /// Poll for overlay user decision (confirm or cancel).
+    /// Wait for overlay user decision (confirm or cancel) using observation.
     /// Returns true if confirmed, false if cancelled or timed out.
     @MainActor
     private func waitForOverlayDecision() async -> Bool {
-        let deadline = Date().addingTimeInterval(60)
-        while !appState.overlayEditConfirmed && !appState.overlayEditCancelled {
-            if Date() > deadline {
-                Logger.general.warning("Overlay decision timeout — auto-confirming")
-                return true
+        // Use a deadline task to enforce a 60-second timeout
+        let result = await withTaskGroup(of: Bool.self) { group in
+            group.addTask { @MainActor in
+                // Observe state changes via withObservationTracking loop
+                while !self.appState.overlayEditConfirmed && !self.appState.overlayEditCancelled {
+                    if !self.appState.showOverlay { return false }
+                    await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                        withObservationTracking {
+                            _ = self.appState.overlayEditConfirmed
+                            _ = self.appState.overlayEditCancelled
+                            _ = self.appState.showOverlay
+                        } onChange: {
+                            continuation.resume()
+                        }
+                    }
+                }
+                return self.appState.overlayEditConfirmed
             }
-            if !appState.showOverlay {
-                return false
+
+            group.addTask {
+                try? await Task.sleep(for: .seconds(60))
+                return false // timeout cancels (not auto-confirms)
             }
-            try? await Task.sleep(for: .milliseconds(100))
+
+            let first = await group.next() ?? false
+            group.cancelAll()
+            return first
         }
-        return appState.overlayEditConfirmed
+
+        if !appState.overlayEditConfirmed && !appState.overlayEditCancelled {
+            Logger.general.warning("Overlay decision timeout — auto-cancelling")
+        }
+
+        return result
     }
 
     /// Reset all overlay-related state after handling.
@@ -529,6 +587,18 @@ final class DictationController: @unchecked Sendable {
         Logger.general.info("LLM service configured for pipeline")
     }
 
+    /// Configure the plugin manager for processing and command plugins.
+    func setPluginManager(_ manager: PluginManager) {
+        self.pluginManager = manager
+        Logger.general.info("PluginManager configured for pipeline")
+    }
+
+    /// Configure the power management service for thermal throttling.
+    func setPowerManagementService(_ service: PowerManagementService) {
+        self.powerManagementService = service
+        Logger.general.info("PowerManagementService configured for pipeline")
+    }
+
     /// Load an LLM model by file name.
     func loadLLMModel(fileName: String) async {
         let modelRef = ModelInfoRef(fileName: fileName, type: "llm")
@@ -589,7 +659,6 @@ final class DictationController: @unchecked Sendable {
         soundTheme: String = "subtle",
         soundVolume: Double = 0.5,
         audioInputDeviceID: String? = nil,
-        useGPUAcceleration: Bool = true,
         whisperThreadCount: Int = 0,
         defaultMode: ProcessingMode = .raw,
         autoDetectLanguage: Bool = false,
@@ -608,7 +677,6 @@ final class DictationController: @unchecked Sendable {
         self.soundService.theme = SoundFeedbackService.SoundTheme(rawValue: soundTheme) ?? .subtle
         self.soundService.volume = Float(soundVolume)
         self.audioService.setInputDevice(id: audioInputDeviceID)
-        self.whisperService.useGPU = useGPUAcceleration
         self.whisperService.threadCount = whisperThreadCount
         self.defaultMode = defaultMode
         self.autoDetectLanguage = autoDetectLanguage
@@ -707,6 +775,28 @@ final class DictationController: @unchecked Sendable {
                 soundService.play(.commandError)
             }
             return
+        }
+
+        // Try command plugins before regex parsing
+        if let pluginManager, !pluginManager.activeCommandPlugins.isEmpty {
+            let lowered = commandText.lowercased()
+            for plugin in pluginManager.activeCommandPlugins {
+                for cmd in plugin.commands {
+                    if let matchedPattern = cmd.patterns.first(where: { lowered.contains($0.lowercased()) }) {
+                        Logger.commands.info("Plugin command matched: \(cmd.name) from \(plugin.identifier)")
+                        let entities: [String: String] = [
+                            "rawText": commandText,
+                            "matchedPattern": matchedPattern
+                        ]
+                        let pluginResult = await cmd.handler(entities)
+                        appState.lastCommandResult = pluginResult.message
+                        appState.lastTranscriptionPreview = pluginResult.success ? pluginResult.message : "Failed: \(pluginResult.message)"
+                        appState.isExecutingCommand = false
+                        soundService.play(pluginResult.success ? .commandSuccess : .commandError)
+                        return
+                    }
+                }
+            }
         }
 
         // Fall through to regex-based parsing for built-in commands

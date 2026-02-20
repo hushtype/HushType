@@ -4,6 +4,7 @@ import os
 
 struct AudioSettingsTab: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var settings: UserSettings?
     @State private var selectedDeviceID: String = "default"
     @State private var availableDevices: [(id: String, name: String)] = []
@@ -91,7 +92,7 @@ struct AudioSettingsTab: View {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(levelColor(threshold: vadThreshold))
                                 .frame(width: max(0, geometry.size.width * CGFloat(audioService.currentLevel)))
-                                .animation(.linear(duration: 0.05), value: audioService.currentLevel)
+                                .animation(reduceMotion ? nil : .linear(duration: 0.05), value: audioService.currentLevel)
 
                             // VAD threshold line
                             Rectangle()
@@ -193,14 +194,11 @@ struct AudioSettingsTab: View {
             }
 
             Section("Advanced") {
-                Toggle("Use GPU Acceleration", isOn: Binding(
-                    get: { settings?.useGPUAcceleration ?? true },
-                    set: { newValue in
-                        settings?.useGPUAcceleration = newValue
-                        saveSettings()
-                    }
-                ))
-                .help("Use Metal GPU for whisper.cpp inference (recommended)")
+                LabeledContent("GPU Acceleration") {
+                    Text("Always On (Metal)")
+                        .foregroundStyle(.secondary)
+                }
+                .help("Metal GPU acceleration is compiled in and always active on supported hardware")
 
                 Picker("Inference Threads", selection: Binding(
                     get: { settings?.whisperThreadCount ?? 0 },
@@ -216,6 +214,15 @@ struct AudioSettingsTab: View {
                     Text("8").tag(8)
                 }
                 .help("CPU threads for whisper inference. Auto uses all available cores for fastest transcription.")
+
+                Toggle("Battery-Aware Mode", isOn: Binding(
+                    get: { settings?.batteryAwareModeEnabled ?? true },
+                    set: { newValue in
+                        settings?.batteryAwareModeEnabled = newValue
+                        saveSettings()
+                    }
+                ))
+                .help("Automatically reduce model quality and thread count when running on battery power")
             }
         }
         .formStyle(.grouped)

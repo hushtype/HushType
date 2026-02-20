@@ -125,14 +125,22 @@ final class LlamaContext: @unchecked Sendable {
     }
 
     deinit {
-        if let smpl = sampler {
-            llama_sampler_free(smpl)
-        }
-        if let ctx = context {
-            llama_free(ctx)
-        }
-        if let mdl = model {
-            llama_model_free(mdl)
+        // Synchronize on the dedicated queue to avoid freeing C pointers
+        // while an in-flight generation closure is still using them.
+        queue.sync {
+            if let smpl = sampler {
+                llama_sampler_free(smpl)
+                sampler = nil
+            }
+            if let ctx = context {
+                llama_free(ctx)
+                context = nil
+            }
+            if let mdl = model {
+                llama_model_free(mdl)
+                model = nil
+            }
+            llama_backend_free()
         }
         Logger.llm.info("Llama context freed")
     }
@@ -156,9 +164,8 @@ final class LlamaContext: @unchecked Sendable {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
-            queue.async { [weak self] in
-                guard let self = self,
-                      let mdl = self.model,
+            queue.async { [self] in
+                guard let mdl = self.model,
                       let ctx = self.context,
                       let smpl = self.sampler else {
                     continuation.resume(throwing: LlamaContextError.contextNotInitialized)
@@ -344,7 +351,9 @@ final class LlamaContext: @unchecked Sendable {
         batch.token[idx] = token
         batch.pos[idx] = pos
         batch.n_seq_id[idx] = 1
-        batch.seq_id[idx]![0] = seqID
+        if let seqIdPtr = batch.seq_id?[idx] {
+            seqIdPtr[0] = seqID
+        }
         batch.logits[idx] = logits ? 1 : 0
         batch.n_tokens += 1
     }

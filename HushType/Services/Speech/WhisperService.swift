@@ -66,9 +66,6 @@ final class WhisperService: @unchecked Sendable {
     /// Number of threads for inference (0 = auto).
     var threadCount: Int = 0
 
-    /// Whether to use Metal GPU acceleration.
-    var useGPU: Bool = true
-
     // MARK: - Initialization
 
     init() {
@@ -132,8 +129,7 @@ final class WhisperService: @unchecked Sendable {
             let result = try await whisperContext.transcribe(
                 samples: samples,
                 language: language,
-                threadCount: threadCount,
-                useGPU: useGPU
+                threadCount: threadCount
             )
 
             return WhisperTranscriptionResult(

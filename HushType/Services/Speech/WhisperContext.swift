@@ -84,10 +84,15 @@ final class WhisperContext: @unchecked Sendable {
     }
 
     deinit {
-        if let ctx = context {
-            whisper_free(ctx)
-            Logger.whisper.info("Whisper context freed")
+        // Synchronize on the dedicated queue to avoid freeing the C pointer
+        // while an in-flight transcription closure is still using it.
+        queue.sync {
+            if let ctx = context {
+                whisper_free(ctx)
+                context = nil
+            }
         }
+        Logger.whisper.info("Whisper context freed")
     }
 
     // MARK: - Transcription
@@ -98,23 +103,21 @@ final class WhisperContext: @unchecked Sendable {
     ///   - language: Language code (e.g., "en") or "auto" for detection.
     ///   - translate: Whether to translate to English.
     ///   - threadCount: Number of threads (0 = auto).
-    ///   - useGPU: Whether to use Metal GPU acceleration.
     /// - Returns: Transcription result.
     /// - Throws: WhisperContextError if transcription fails.
     func transcribe(
         samples: [Float],
         language: String = "en",
         translate: Bool = false,
-        threadCount: Int = 0,
-        useGPU: Bool = true
+        threadCount: Int = 0
     ) async throws -> TranscriptionResult {
         guard !samples.isEmpty else {
             throw WhisperContextError.invalidAudioData
         }
 
         return try await withCheckedThrowingContinuation { continuation in
-            queue.async { [weak self] in
-                guard let self = self, let ctx = self.context else {
+            queue.async { [self] in
+                guard let ctx = self.context else {
                     continuation.resume(throwing: WhisperContextError.contextNotInitialized)
                     return
                 }
@@ -125,8 +128,7 @@ final class WhisperContext: @unchecked Sendable {
                         samples: samples,
                         language: language,
                         translate: translate,
-                        threadCount: threadCount,
-                        useGPU: useGPU
+                        threadCount: threadCount
                     )
                     continuation.resume(returning: result)
                 } catch {
@@ -142,8 +144,7 @@ final class WhisperContext: @unchecked Sendable {
         samples: [Float],
         language: String,
         translate: Bool,
-        threadCount: Int,
-        useGPU: Bool
+        threadCount: Int
     ) throws -> TranscriptionResult {
         let startTime = CFAbsoluteTimeGetCurrent()
         let audioDuration = Double(samples.count) / 16000.0
@@ -164,7 +165,10 @@ final class WhisperContext: @unchecked Sendable {
             params.language = langPtr
 
             return samples.withUnsafeBufferPointer { bufferPtr in
-                whisper_full(ctx, params, bufferPtr.baseAddress!, Int32(samples.count))
+                guard let baseAddress = bufferPtr.baseAddress else {
+                    return -1 // should never happen — samples.isEmpty guard above
+                }
+                return whisper_full(ctx, params, baseAddress, Int32(samples.count))
             }
         }
 

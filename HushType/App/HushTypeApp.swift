@@ -94,5 +94,6 @@ struct HushTypeApp: App {
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
         .defaultPosition(.center)
+        .modelContainer(modelContainer)
     }
 }

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import SwiftData
 import os
@@ -154,10 +155,16 @@ struct HistoryView: View {
     }
 
     private func injectText(_ text: String) {
+        let method: InjectionMethod
+        if let settings = try? UserSettings.shared(in: modelContext) {
+            method = settings.defaultInjectionMethod
+        } else {
+            method = .auto
+        }
         let injector = TextInjectionService(permissionsManager: PermissionsManager())
         Task {
             do {
-                try await injector.inject(text, method: .auto)
+                try await injector.inject(text, method: method)
                 Logger.ui.info("Re-injected text from history: \(text.count) chars")
             } catch {
                 Logger.ui.error("Re-inject failed: \(error.localizedDescription)")

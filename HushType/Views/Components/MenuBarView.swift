@@ -168,6 +168,11 @@ struct MenuBarView: View {
         }
         .padding(12)
         .frame(width: 280)
+        .onAppear {
+            if !appState.onboardingCompleted {
+                openWindow(id: "onboarding")
+            }
+        }
         .onDisappear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 let hasSettingsWindow = NSApp.windows.contains { $0.isVisible && $0.level == .normal }
