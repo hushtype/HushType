@@ -640,16 +640,14 @@ final class DictationController: @unchecked Sendable {
         // Fall through to regex-based parsing for built-in commands
         var commands = parser.parseChain(commandText)
 
-        // LLM fallback: translate non-English commands before re-parsing
-        if commands.isEmpty {
+        // LLM fallback: extract command via LLM when regex fails (any language)
+        if commands.isEmpty,
+           let llm = llmService,
+           llm.activeProvider?.isModelLoaded == true {
             let lang = appState.detectedLanguage ?? defaultLanguage
-            if lang != "en",
-               let llm = llmService,
-               llm.activeProvider?.isModelLoaded == true {
-                Logger.commands.info("No English match for '\(commandText)', attempting LLM translation from \(lang)")
-                if let translated = await translateCommand(commandText, from: lang) {
-                    commands = parser.parseChain(translated)
-                }
+            Logger.commands.info("No regex match for '\(commandText)', attempting LLM extraction (lang: \(lang))")
+            if let translated = await translateCommand(commandText, from: lang) {
+                commands = parser.parseChain(translated)
             }
         }
 
