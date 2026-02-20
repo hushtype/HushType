@@ -641,13 +641,15 @@ final class DictationController: @unchecked Sendable {
         var commands = parser.parseChain(commandText)
 
         // LLM fallback: extract command via LLM when regex fails (any language)
-        if commands.isEmpty,
-           let llm = llmService,
-           llm.activeProvider?.isModelLoaded == true {
-            let lang = appState.detectedLanguage ?? defaultLanguage
-            Logger.commands.info("No regex match for '\(commandText)', attempting LLM extraction (lang: \(lang))")
-            if let translated = await translateCommand(commandText, from: lang) {
-                commands = parser.parseChain(translated)
+        if commands.isEmpty {
+            if let llm = llmService, llm.activeProvider?.isModelLoaded == true {
+                let lang = appState.detectedLanguage ?? defaultLanguage
+                Logger.commands.info("No regex match for '\(commandText)', attempting LLM extraction (lang: \(lang))")
+                if let translated = await translateCommand(commandText, from: lang) {
+                    commands = parser.parseChain(translated)
+                }
+            } else {
+                Logger.commands.warning("No regex match and LLM not available — cannot translate command")
             }
         }
 
@@ -684,29 +686,69 @@ final class DictationController: @unchecked Sendable {
         guard let llm = llmService else { return nil }
 
         let systemPrompt = """
-            You are a voice command translator. Convert the voice command to English.
-            Supported commands: open/launch [app], close [app], quit [app], switch to [app], \
-            hide [app], show all windows, move window left/right, maximize/minimize/center window, \
-            full screen, next screen, volume up/down/mute, volume [0-100], brightness up/down, \
-            dark mode, lock screen, screenshot, run shortcut [name], do not disturb.
-            Respond with ONLY the English command. No explanation.
+            Extract the English voice command from the user's speech. \
+            Output ONLY the short English command, nothing else.
+
+            Examples:
+            Input: "lütfen safariyi açar mısın?" → open Safari
+            Input: "Safari'yi kapat" → close Safari
+            Input: "sesi aç" → volume up
+            Input: "ekranı kilitle" → lock screen
+            Input: "bitte Safari öffnen" → open Safari
+            Input: "Fenster maximieren" → maximize window
+            Input: "Bildschirm sperren" → lock screen
+            Input: "ouvrir Safari" → open Safari
+            Input: "fermer la fenêtre" → close Safari
+            Input: "baisser le volume" → volume down
+            Input: "abrir Safari" → open Safari
+            Input: "cerrar Safari" → close Safari
+            Input: "please shut down Safari" → quit Safari
+            Input: "can you make it louder" → volume up
+            Input: "pencereyi sola taşı" → move window left
+            Input: "ekran görüntüsü al" → screenshot
             """
 
         do {
             let result = try await llm.process(
                 text: text,
                 systemPrompt: systemPrompt,
-                userPrompt: "Language: \(language)\nCommand: \(text)",
-                maxTokens: 64
+                userPrompt: "Input: \"\(text)\" →",
+                maxTokens: 16
             )
-            let translated = result.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !translated.isEmpty else { return nil }
-            Logger.commands.info("Translated command: '\(text)' → '\(translated)'")
-            return translated
+            let cleaned = cleanLLMCommandOutput(result)
+            guard !cleaned.isEmpty else { return nil }
+            Logger.commands.info("Translated command: '\(text)' → '\(cleaned)'")
+            return cleaned
         } catch {
             Logger.commands.warning("Command translation failed: \(error.localizedDescription)")
             return nil
         }
+    }
+
+    /// Clean LLM output to extract just the English command.
+    /// Handles: "→ open Safari", chat tokens, multi-line output, quotes.
+    private func cleanLLMCommandOutput(_ raw: String) -> String {
+        var text = raw
+
+        // Strip chat template artifacts
+        if let endRange = text.range(of: "<|") {
+            text = String(text[text.startIndex..<endRange.lowerBound])
+        }
+
+        // Take first line only
+        if let newline = text.firstIndex(of: "\n") {
+            text = String(text[text.startIndex..<newline])
+        }
+
+        // If output contains "→", take the part after the last one
+        if let arrowRange = text.range(of: "→", options: .backwards) {
+            text = String(text[arrowRange.upperBound...])
+        }
+
+        // Strip quotes and whitespace
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Sound Effects
