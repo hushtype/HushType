@@ -262,19 +262,16 @@ struct ModelManagementView: View {
                         .font(.caption)
                 }
             } else {
-                List {
-                    ForEach(models) { model in
-                        UnifiedModelRow(
-                            model: model,
-                            downloader: downloader,
-                            modelManager: modelManager,
-                            selectedModelFileName: selectedModelType == .whisper
-                                ? (settings?.selectedWhisperModel ?? "ggml-base.en.bin")
-                                : (settings?.selectedLLMModel ?? "")
-                        )
-                    }
+                ForEach(models) { model in
+                    UnifiedModelRow(
+                        model: model,
+                        downloader: downloader,
+                        modelManager: modelManager,
+                        selectedModelFileName: selectedModelType == .whisper
+                            ? (settings?.selectedWhisperModel ?? "ggml-base.en.bin")
+                            : (settings?.selectedLLMModel ?? "")
+                    )
                 }
-                .frame(height: 250)
             }
         }
     }
