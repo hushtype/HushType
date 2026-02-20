@@ -171,22 +171,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handleLLMModelDownloaded(_ notification: Notification) {
         guard let fileName = notification.userInfo?["fileName"] as? String else { return }
 
-        guard let context = modelContainer?.mainContext else { return }
+        let container = modelContainer
+        let controller = dictationController
+        Task { @MainActor in
+            guard let context = container?.mainContext else { return }
 
-        // Persist isDownloaded = true
-        try? context.save()
-
-        // Auto-select if no LLM model is currently selected
-        if let settings = try? UserSettings.shared(in: context),
-           settings.selectedLLMModel == nil {
-            settings.selectedLLMModel = fileName
+            // Persist isDownloaded = true
             try? context.save()
-            Logger.general.info("Auto-selected LLM model: \(fileName)")
-        }
 
-        guard let controller = dictationController else { return }
-        Task {
-            await controller.loadLLMModel(fileName: fileName)
+            // Auto-select if no LLM model is currently selected
+            if let settings = try? UserSettings.shared(in: context),
+               settings.selectedLLMModel == nil {
+                settings.selectedLLMModel = fileName
+                try? context.save()
+                Logger.general.info("Auto-selected LLM model: \(fileName)")
+            }
+
+            await controller?.loadLLMModel(fileName: fileName)
         }
     }
 
