@@ -1,0 +1,316 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  WHISPER_TAG: "v1.7.4"
+  LLAMA_TAG: "b8059"
+  XCODE_VERSION: "16.2"
+  APP_NAME: "HushType"
+  SCHEME: "HushType"
+  TEAM_ID: "L6UMTZRQRM"
+
+jobs:
+  release:
+    name: Build, Sign & Release
+    runs-on: macos-15
+    permissions:
+      contents: write
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. Checkout & Environment
+      # ------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release version: $TAG"
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${XCODE_VERSION}.app
+
+      - name: Install CMake
+        run: |
+          if ! command -v cmake &>/dev/null; then
+            brew install cmake
+          fi
+
+      # ------------------------------------------------------------------
+      # 2. Vendor Libraries (cached)
+      # ------------------------------------------------------------------
+      - name: Cache vendor libraries
+        id: vendor-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vendor/whisper.cpp
+            vendor/llama.cpp
+            WhisperKit/Sources/CWhisper/include
+          key: vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-${{ runner.arch }}
+          restore-keys: |
+            vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-
+
+      - name: Build whisper.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-whisper.sh
+
+      - name: Build llama.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-llama.sh
+
+      - name: Restore whisper headers (cache hit)
+        if: steps.vendor-cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p WhisperKit/Sources/CWhisper/include
+          if [ ! -f WhisperKit/Sources/CWhisper/include/whisper.h ]; then
+            cp vendor/whisper.cpp/include/whisper.h WhisperKit/Sources/CWhisper/include/
+          fi
+
+      # ------------------------------------------------------------------
+      # 3. Code Signing Setup
+      # ------------------------------------------------------------------
+      - name: Install Developer ID certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Decode certificate
+          CERT_PATH="$RUNNER_TEMP/certificate.p12"
+          echo "$CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+
+          # Create and configure temporary keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          security import "$CERT_PATH" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -A \
+            -t cert \
+            -f pkcs12 \
+            -k "$KEYCHAIN_PATH"
+
+          # Allow codesign to access keychain
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Add to keychain search list
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
+
+          echo "keychain_path=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      # ------------------------------------------------------------------
+      # 4. Build & Archive
+      # ------------------------------------------------------------------
+      - name: Build Release archive
+        run: |
+          xcodebuild archive \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'platform=macOS,arch=arm64' \
+            -archivePath build/${APP_NAME}.xcarchive \
+            ONLY_ACTIVE_ARCH=YES \
+            2>&1 | tail -30
+
+      - name: Export signed app
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/${APP_NAME}.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/export \
+            2>&1 | tail -20
+
+      - name: Verify code signature
+        run: |
+          APP_PATH="build/export/${APP_NAME}.app"
+          echo "=== Code signature verification ==="
+          codesign --verify --deep --strict "$APP_PATH"
+          echo ""
+          echo "=== Signing identity ==="
+          codesign -dvv "$APP_PATH" 2>&1 | grep "Authority"
+          echo ""
+          echo "=== Hardened runtime ==="
+          codesign -dvv "$APP_PATH" 2>&1 | grep -i "runtime" || true
+
+      # ------------------------------------------------------------------
+      # 5. Notarize
+      # ------------------------------------------------------------------
+      - name: Notarize app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          APP_PATH="build/export/${APP_NAME}.app"
+
+          # Create a zip for notarization (notarytool requires zip or dmg)
+          ditto -c -k --keepParent "$APP_PATH" build/${APP_NAME}-notarize.zip
+
+          echo "Submitting for notarization..."
+          xcrun notarytool submit build/${APP_NAME}-notarize.zip \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait \
+            --timeout 30m
+
+          echo "Stapling notarization ticket..."
+          xcrun stapler staple "$APP_PATH"
+
+          echo "Verifying notarization..."
+          spctl --assess --type execute -v "$APP_PATH"
+
+      # ------------------------------------------------------------------
+      # 6. Create DMG
+      # ------------------------------------------------------------------
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Create DMG
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          APP_PATH="build/export/${APP_NAME}.app"
+          ./scripts/create-dmg.sh "$RELEASE_VERSION" "$APP_PATH"
+
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DMG_PATH="build/${APP_NAME}-${RELEASE_VERSION}.dmg"
+
+          echo "Submitting DMG for notarization..."
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_APP_PASSWORD" \
+            --wait \
+            --timeout 30m
+
+          echo "Stapling DMG..."
+          xcrun stapler staple "$DMG_PATH"
+
+      # ------------------------------------------------------------------
+      # 7. Compute Signatures
+      # ------------------------------------------------------------------
+      - name: Compute checksums and Sparkle signature
+        id: signatures
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          DMG_PATH="build/${APP_NAME}-${RELEASE_VERSION}.dmg"
+
+          # SHA256
+          SHA256=$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "SHA256: $SHA256"
+
+          # DMG file size
+          DMG_SIZE=$(stat -f%z "$DMG_PATH")
+          echo "dmg_size=$DMG_SIZE" >> "$GITHUB_OUTPUT"
+
+          # Sparkle EdDSA signature using sign_update from resolved SPM package
+          SPARKLE_BIN=$(find build/${APP_NAME}.xcarchive -name 'sign_update' -type f 2>/dev/null | head -1 || true)
+          if [ -z "$SPARKLE_BIN" ]; then
+            SPARKLE_BIN=$(find DerivedData -name 'sign_update' -type f 2>/dev/null | head -1 || true)
+          fi
+
+          if [ -n "$SPARKLE_BIN" ] && [ -n "$SPARKLE_ED_PRIVATE_KEY" ]; then
+            chmod +x "$SPARKLE_BIN"
+            ED_SIGNATURE=$("$SPARKLE_BIN" "$DMG_PATH" 2>/dev/null || true)
+            echo "ed_signature=$ED_SIGNATURE" >> "$GITHUB_OUTPUT"
+            echo "Sparkle EdDSA signature computed"
+          else
+            echo "ed_signature=" >> "$GITHUB_OUTPUT"
+            echo "Warning: Sparkle sign_update not found or key missing, EdDSA signature skipped"
+          fi
+
+      # ------------------------------------------------------------------
+      # 8. Create GitHub Release
+      # ------------------------------------------------------------------
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          SHA256: ${{ steps.signatures.outputs.sha256 }}
+        run: |
+          DMG_PATH="build/${APP_NAME}-${RELEASE_VERSION}.dmg"
+
+          gh release create "v${RELEASE_VERSION}" \
+            --title "HushType v${RELEASE_VERSION}" \
+            --generate-notes \
+            "$DMG_PATH#HushType-${RELEASE_VERSION}.dmg"
+
+          echo ""
+          echo "Release created: v${RELEASE_VERSION}"
+          echo "SHA256: ${SHA256}"
+
+      # ------------------------------------------------------------------
+      # 9. Update Appcast
+      # ------------------------------------------------------------------
+      - name: Update appcast.xml
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          ED_SIGNATURE: ${{ steps.signatures.outputs.ed_signature }}
+        run: |
+          DMG_PATH="build/${APP_NAME}-${RELEASE_VERSION}.dmg"
+
+          if [ -n "$ED_SIGNATURE" ]; then
+            ./scripts/update-appcast.sh "$RELEASE_VERSION" "$DMG_PATH" "$ED_SIGNATURE"
+          else
+            echo "Skipping appcast update — no EdDSA signature available"
+            echo "Run manually: ./scripts/update-appcast.sh $RELEASE_VERSION <dmg> <signature>"
+          fi
+
+      - name: Deploy appcast to GitHub Pages
+        if: steps.signatures.outputs.ed_signature != ''
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          publish_branch: gh-pages
+          keep_files: true
+          include_files: appcast.xml
+
+      # ------------------------------------------------------------------
+      # 10. Cleanup
+      # ------------------------------------------------------------------
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          if [ -n "${keychain_path:-}" ]; then
+            security delete-keychain "$keychain_path" 2>/dev/null || true
+          fi
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        with:
+          name: release-${{ steps.version.outputs.version }}
+          path: |
+            build/${APP_NAME}-${{ steps.version.outputs.version }}.dmg
+          if-no-files-found: warn
+          retention-days: 30

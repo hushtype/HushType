@@ -296,7 +296,7 @@
 ### 6.3 CI/CD Pipeline
 - [x] Create GitHub Actions build workflow — build on macOS runners, cache Swift/CMake dependencies, matrix for Debug/Release
 - [x] Create GitHub Actions test workflow — run unit + integration tests, upload test results, fail PR on test failure
-- [ ] Create GitHub Actions release workflow — build signed app, notarize, create DMG, create GitHub Release with artifacts, update Sparkle appcast
+- [x] Create GitHub Actions release workflow — build signed app, notarize, create DMG, create GitHub Release with artifacts, update Sparkle appcast
 - [x] Add linting to CI — run SwiftLint and SwiftFormat checks on every PR
 
 ### 6.4 Final QA
