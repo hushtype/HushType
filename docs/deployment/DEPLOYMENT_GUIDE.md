@@ -1,4 +1,4 @@
-Last Updated: 2026-02-13
+Last Updated: 2026-02-20
 
 # Deployment Guide
 
@@ -52,12 +52,11 @@ HushType is distributed as a native macOS application through multiple channels:
 
 ### Distribution Channels
 
-| Channel | Method | Audience |
-|---------|--------|----------|
-| GitHub Releases | DMG download | Primary distribution |
-| Homebrew Cask | `brew install --cask hushtype` | Developer-friendly |
-| Sparkle Auto-Update | In-app updater | Existing users |
-| Project Website | Direct download | General users |
+| Channel | Method | Status |
+|---------|--------|--------|
+| GitHub Releases | Signed, notarized DMG | Active (Phase 6) |
+| Sparkle Auto-Update | In-app updater with EdDSA signatures | Integrated (Sparkle 2.x) |
+| Homebrew Cask | `brew install --cask hushtype` | Planned |
 | Mac App Store | App Store submission | Future (requires sandbox adjustments) |
 
 ---
@@ -90,6 +89,15 @@ xcodebuild \
 | `STRIP_INSTALLED_PRODUCT` | `YES` | Strip debug symbols |
 | `COPY_PHASE_STRIP` | `YES` | Strip in copy phase |
 | `ENABLE_BITCODE` | `NO` | Not supported on macOS |
+
+### C Dependency Versions
+
+| Library | Version | Build Script |
+|---------|---------|--------------|
+| whisper.cpp | v1.7.4 | `scripts/setup-whisper.sh` |
+| llama.cpp | b8059 | `scripts/setup-llama.sh` |
+
+Both are built with Metal GPU acceleration (`GGML_METAL_EMBED_LIBRARY=ON`) and linked as static libraries.
 
 ### Entitlements
 
@@ -202,47 +210,30 @@ spctl --assess --type execute --verbose build/export/HushType.app
 
 Apple notarization ensures the app is scanned for malware and issues a notarization ticket that Gatekeeper trusts.
 
-### Using notarytool
+### Using notarize.sh
+
+The `scripts/notarize.sh` script is included in the repository and handles submission and stapling:
 
 ```bash
-# Submit for notarization
-xcrun notarytool submit build/HushType.dmg \
-    --apple-id "your@email.com" \
-    --team-id "TEAM_ID" \
-    --password "@keychain:AC_PASSWORD" \
-    --wait
-
-# Check notarization status
-xcrun notarytool info <submission-id> \
-    --apple-id "your@email.com" \
-    --team-id "TEAM_ID" \
-    --password "@keychain:AC_PASSWORD"
-
-# View notarization log (if issues)
-xcrun notarytool log <submission-id> \
-    --apple-id "your@email.com" \
-    --team-id "TEAM_ID" \
-    --password "@keychain:AC_PASSWORD"
+./scripts/notarize.sh <path-to-dmg>
+# Example: ./scripts/notarize.sh build/HushType-0.5.0-universal.dmg
 ```
 
-### Stapling the Ticket
-
-After successful notarization, staple the ticket to the app and DMG:
+It requires `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_PASSWORD` to be set (either as environment variables or in a local `.env` file — never committed). Internally it uses:
 
 ```bash
-# Staple to the app bundle
-xcrun stapler staple build/export/HushType.app
+xcrun notarytool submit "$DMG" \
+    --apple-id "$APPLE_ID" \
+    --team-id "$APPLE_TEAM_ID" \
+    --password "$APPLE_APP_PASSWORD" \
+    --wait --timeout 30m
 
-# Staple to the DMG
-xcrun stapler staple build/HushType.dmg
-
-# Verify stapling
-xcrun stapler validate build/HushType.dmg
+xcrun stapler staple "$DMG"
 ```
 
 ### Storing Credentials
 
-Store your App Store Connect password in the Keychain:
+Store your App Store Connect app-specific password in the Keychain:
 
 ```bash
 xcrun notarytool store-credentials "AC_PASSWORD" \
@@ -251,7 +242,7 @@ xcrun notarytool store-credentials "AC_PASSWORD" \
     --password "app-specific-password"
 ```
 
-> 💡 **Tip:** Use an app-specific password generated at [appleid.apple.com](https://appleid.apple.com). Never use your main Apple ID password.
+> Use an app-specific password generated at [appleid.apple.com](https://appleid.apple.com). Never use your main Apple ID password.
 
 ---
 
@@ -289,37 +280,17 @@ HushType-0.1.0-x86_64.dmg         # Intel only (future, if needed)
 
 ### Automated DMG Script
 
+The `scripts/create-dmg.sh` script is included in the repository. Run it with:
+
 ```bash
-#!/bin/bash
-# scripts/create-dmg.sh
+./scripts/create-dmg.sh <version>
+# Example: ./scripts/create-dmg.sh 0.5.0
+```
 
-set -euo pipefail
+The script uses `create-dmg` (install with `brew install create-dmg`) to produce:
 
-VERSION="${1:?Usage: create-dmg.sh <version>}"
-APP_PATH="build/export/HushType.app"
-DMG_PATH="build/HushType-${VERSION}-universal.dmg"
-
-echo "Creating DMG for HushType v${VERSION}..."
-
-# Remove old DMG if exists
-rm -f "$DMG_PATH"
-
-create-dmg \
-    --volname "HushType ${VERSION}" \
-    --volicon "assets/dmg-icon.icns" \
-    --window-pos 200 120 \
-    --window-size 600 400 \
-    --icon-size 100 \
-    --icon "HushType.app" 150 190 \
-    --hide-extension "HushType.app" \
-    --app-drop-link 450 190 \
-    --background "assets/dmg-background.png" \
-    --no-internet-enable \
-    "$DMG_PATH" \
-    "$APP_PATH"
-
-echo "DMG created: $DMG_PATH"
-echo "Size: $(du -h "$DMG_PATH" | cut -f1)"
+```
+build/HushType-<version>-universal.dmg
 ```
 
 ---
@@ -675,6 +646,5 @@ Use this checklist before every release:
 ## Next Steps
 
 - [CI/CD](CI_CD.md) — GitHub Actions pipeline configuration
-- [Scaling Guide](SCALING_GUIDE.md) — Performance and model scaling
 - [Security](../security/SECURITY.md) — Security practices and hardened runtime
 - [Monitoring & Logging](../operations/MONITORING_LOGGING.md) — Diagnostics in production

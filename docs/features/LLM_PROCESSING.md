@@ -1,9 +1,9 @@
 # LLM Processing Pipeline
 
-> **Last Updated: 2026-02-13**
+> **Last Updated: 2026-02-20**
 > **Component**: LLM Processing Engine
-> **Module**: `HushType/Sources/LLM/`
-> **Maintainer**: HushType Core Team
+> **Module**: `HushType/Services/LLM/`
+> **Status**: Complete (Phases 2-5)
 > **License**: GPL-3.0
 
 ---
@@ -67,12 +67,40 @@
 
 HushType's LLM Processing Pipeline transforms raw speech-to-text transcriptions into polished, context-aware text output. The entire pipeline runs locally on the user's machine, maintaining HushType's zero-network architecture: no cloud calls, no telemetry, no data exfiltration.
 
-The pipeline supports two local LLM backends:
+### Implementation Status
 
-- **llama.cpp** -- Compiled as a static library directly into HushType. This is the primary, recommended backend offering the tightest integration, lowest latency, and zero external dependencies.
-- **Ollama** -- An alternative backend that communicates with a locally-running Ollama server over `localhost:11434`. Useful for users who already manage models through Ollama or want to swap models without restarting HushType.
+- **llama.cpp** (version b8059) — compiled as a static library linked directly into HushType. This is the sole LLM backend. Metal GPU acceleration is enabled with `GGML_METAL_EMBED_LIBRARY=ON` (no separate `.metallib` needed).
+- **Ollama backend removed** — the OllamaProvider was removed during Phase 5 refactoring. llama.cpp is the only backend.
+- **LlamaContext.swift** lives in `HushType/Services/LLM/` and mirrors the WhisperContext pattern.
+- **llama.cpp shares ggml libs with whisper.cpp** — only `-lllama` added to avoid duplicate ggml linking.
 
-Both backends are abstracted behind a unified `LLMBackend` protocol, allowing seamless switching without affecting the rest of the application.
+### Processing Pipeline (Implemented)
+
+```
+AudioCaptureService (AVAudioEngine)
+  → WhisperService (whisper.cpp transcription)
+    → VoicePrefixDetector (strips mode prefix, detects mode switch)
+      → VocabularyService (applies spoken→replacement pairs)
+        → CommandDetector (command vs. dictation classification)
+          → CustomCommandExecutor
+            → AppAliasResolver (app-specific shortcut aliases)
+              → GlobalAliasResolver (user-defined global aliases)
+                → ProcessingModeRouter → PromptTemplateEngine → LLMService (llama.cpp)
+                  → OverlayWindow (optional edit-before-inject)
+                    → TextInjectionService (CGEvent/clipboard)
+                      → DictationHistory (SwiftData)
+```
+
+### Six Processing Modes
+
+| Mode | LLM Required | Description |
+|------|-------------|-------------|
+| **Raw** | No | Unprocessed whisper output |
+| **Clean** | Yes | Grammar, punctuation, remove filler words |
+| **Structure** | Yes | Paragraphs, bullet lists, headings |
+| **Prompt** | Yes | User-defined prompt template |
+| **Code** | Yes | Convert spoken instructions to source code |
+| **Custom** | Yes | Fully user-defined pipeline |
 
 ```
 +------------------------------------------------------------------+
@@ -120,7 +148,7 @@ Both backends are abstracted behind a unified `LLMBackend` protocol, allowing se
 +------------------------------------------------------------------+
 ```
 
-> :lock: **Security**: All LLM inference occurs on-device. The Ollama backend communicates exclusively over `localhost`. No model data, prompts, or outputs ever leave the machine.
+> **Security**: All LLM inference occurs on-device via llama.cpp. No model data, prompts, or outputs ever leave the machine. The Ollama backend was removed in Phase 5.
 
 ---
 
@@ -128,86 +156,31 @@ Both backends are abstracted behind a unified `LLMBackend` protocol, allowing se
 
 ### 2.1 Build and Compilation
 
-llama.cpp is compiled as a static library (`.a`) and linked directly into the HushType binary. This eliminates any runtime dependency on external executables or dynamic libraries.
+llama.cpp (version b8059) is compiled as a static library (`.a`) via CMake and linked directly into the HushType binary. This eliminates any runtime dependency on external executables or dynamic libraries.
 
-**Build configuration in `Package.swift`:**
-
-```swift
-// Package.swift (excerpt)
-let package = Package(
-    name: "HushType",
-    platforms: [.macOS(.v14)],
-    targets: [
-        // llama.cpp as a C/C++ static library target
-        .target(
-            name: "CLlama",
-            path: "Sources/CLlama",
-            sources: [
-                "llama.cpp/src/llama.cpp",
-                "llama.cpp/src/llama-vocab.cpp",
-                "llama.cpp/src/llama-grammar.cpp",
-                "llama.cpp/src/llama-sampling.cpp",
-                "llama.cpp/src/unicode.cpp",
-                "llama.cpp/ggml/src/ggml.c",
-                "llama.cpp/ggml/src/ggml-alloc.c",
-                "llama.cpp/ggml/src/ggml-backend.c",
-                "llama.cpp/ggml/src/ggml-metal.m",
-                "llama.cpp/ggml/src/ggml-quants.c"
-            ],
-            publicHeadersPath: "include",
-            cSettings: [
-                .define("GGML_USE_METAL"),
-                .define("GGML_METAL_EMBED_LIBRARY"),
-                .define("ACCELERATE_NEW_LAPACK"),
-                .unsafeFlags(["-O3", "-fno-objc-arc"]),
-                .headerSearchPath("llama.cpp/include"),
-                .headerSearchPath("llama.cpp/ggml/include")
-            ],
-            cxxSettings: [
-                .define("GGML_USE_METAL"),
-                .unsafeFlags(["-O3", "-std=c++17", "-fno-objc-arc"])
-            ],
-            linkerSettings: [
-                .linkedFramework("Metal"),
-                .linkedFramework("MetalKit"),
-                .linkedFramework("MetalPerformanceShaders"),
-                .linkedFramework("Accelerate"),
-                .linkedFramework("Foundation")
-            ]
-        ),
-
-        // Swift wrapper for llama.cpp
-        .target(
-            name: "LlamaSwift",
-            dependencies: ["CLlama"],
-            path: "Sources/LlamaSwift"
-        ),
-
-        // Main HushType app target
-        .target(
-            name: "HushType",
-            dependencies: ["LlamaSwift", /* ... */]
-        )
-    ]
-)
-```
-
-**Build steps (automated via Xcode or SPM):**
+**Build script:** `scripts/setup-llama.sh`
 
 ```bash
-# Clone llama.cpp into the vendor directory
-git submodule add https://github.com/ggerganov/llama.cpp Sources/CLlama/llama.cpp
-
-# Build the full project (llama.cpp compiles as part of the build)
-swift build -c release
-
-# For Xcode builds, the static library is compiled automatically
-# via the SPM target dependency graph
+# Run the setup script (also executed by Xcode build phase and CI)
+./scripts/setup-llama.sh
 ```
 
-> :information_source: **Info**: llama.cpp is pinned to a specific commit hash in `.gitmodules` to ensure reproducible builds. Updates to llama.cpp must be tested against all supported models before merging.
+The script clones llama.cpp b8059 into `vendor/llama.cpp/`, builds it with CMake, and installs the static libraries into `vendor/llama.cpp/build/lib/`.
 
-> :apple: **macOS-specific**: The `GGML_USE_METAL` flag enables Metal GPU acceleration. The `GGML_METAL_EMBED_LIBRARY` flag embeds the Metal shader library directly into the binary, eliminating the need to ship a separate `.metallib` file.
+**Key CMake flags:**
+
+| Flag | Purpose |
+|------|---------|
+| `GGML_METAL=ON` | Enable Metal GPU acceleration |
+| `GGML_METAL_EMBED_LIBRARY=ON` | Embed Metal shaders in binary (no separate `.metallib`) |
+| `LLAMA_BUILD_EXAMPLES=OFF` | Skip building example executables |
+| `CMAKE_BUILD_TYPE=Release` | Optimized build |
+
+**Linking in Xcode:** The Xcode project links against `vendor/llama.cpp/build/lib/libllama.a` and the shared ggml libraries. llama.cpp shares ggml with whisper.cpp — only `-lllama` is added; ggml is not duplicated.
+
+> llama.cpp is pinned to tag b8059 to ensure reproducible builds. Updates must be tested against all supported GGUF models before merging.
+
+> `GGML_METAL_EMBED_LIBRARY=ON` embeds the Metal shader library directly into the binary, eliminating the need to ship a separate `.metallib` file. Metal GPU acceleration works on Apple Silicon and Intel Macs with AMD GPUs.
 
 ### 2.2 Bridging Headers and Swift-C Interop
 
@@ -623,7 +596,9 @@ public struct GenerationOptions: Sendable {
 
 ---
 
-## 3. Ollama Integration as Alternative Backend
+## 3. Ollama Integration (Removed)
+
+> **Note**: The Ollama backend was removed during Phase 5 refactoring. HushType uses llama.cpp exclusively. The sections below are retained for historical reference only.
 
 ### 3.1 When to Use Ollama vs llama.cpp
 
@@ -2790,7 +2765,40 @@ final class MemoryPressureMonitor {
 
 ## 11. LLM Processing Pipeline Architecture
 
-This section provides the complete end-to-end view of the LLM processing pipeline.
+This section provides the complete end-to-end view of the LLM processing pipeline as implemented in Phases 1-5.
+
+### Implemented Pipeline (Phase 5 Final)
+
+```
+AudioCaptureService (AVAudioEngine tap, 16kHz mono Float32)
+  → WhisperService (whisper.cpp v1.7.4 transcription, Metal GPU)
+    → VoicePrefixDetector (detects "code mode:", "clean this up:", etc.; strips prefix)
+      → VocabularyService (spoken→replacement pairs, per-app then global)
+        → CommandDetector (wake phrase prefix match → command vs dictation)
+          → CustomCommandExecutor (SwiftData CustomCommand evaluation)
+            → AppAliasResolver (AppProfile.shortcutAliases)
+              → GlobalAliasResolver (UserSettings.globalShortcutAliases)
+                → ProcessingModeRouter
+                    ├── Raw → direct output (no LLM)
+                    └── Clean / Structure / Prompt / Code / Custom
+                          → PromptTemplateEngine (variable substitution)
+                            → LLMService (llama.cpp b8059, Metal GPU)
+                              → OverlayWindow (optional edit-before-inject)
+                                → TextInjectionService (CGEvent or clipboard paste)
+                                  → DictationHistory (SwiftData DictationEntry)
+```
+
+### DictationController
+
+`DictationController` is the pipeline orchestrator. It owns and wires all pipeline components:
+
+- Receives hotkey events from `HotkeyManager`
+- Starts/stops `AudioCaptureService`
+- Passes audio to `WhisperService` after VAD silence trim
+- Feeds transcript through the full pipeline above
+- Posts status updates to `AppState` for the menu bar and overlay UI
+
+This section also provides a simplified view of the LLM-specific portion of the pipeline:
 
 ```
 +====================================================================+

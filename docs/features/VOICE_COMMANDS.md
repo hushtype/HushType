@@ -1,8 +1,25 @@
 # Voice Commands
 
-**Last Updated: 2026-02-13**
+**Last Updated: 2026-02-20**
 
-> HushType's voice command system enables hands-free control of macOS applications, windows, and system settings through natural language spoken commands. All processing happens locally using whisper.cpp for recognition and an optional llama.cpp-powered NLU parser for complex intent classification.
+> HushType's voice command system enables hands-free control of macOS applications, windows, and system settings through natural language spoken commands. All processing happens locally using whisper.cpp for recognition and a regex-based command parser for fast intent matching. Phase 4 (v0.4.0) is complete.
+
+## Implementation Status
+
+All Phase 4 voice command features are implemented:
+
+- **CommandDetector** — static struct, wake phrase prefix match, returns command text remainder
+- **CommandParser** — regex-based, 25+ patterns, `parse()` + `parseChain()` (splits on "and"/"then")
+- **CommandExecutor** — `@Observable`, dispatches by intent category, `executeChain()` stops on first failure
+- **CommandRegistry** — `@Observable`, 22 built-in `CommandEntry` items, per-intent enable/disable
+- **CustomCommand** — SwiftData `@Model` with `CommandActionStep` array (Codable)
+- **Shortcut aliases** — app-specific (`AppProfile.shortcutAliases`) and global (`UserSettings.globalShortcutAliases`)
+- **Command chaining** — multiple commands in sequence via "and"/"then" conjunctions
+- **Apple Shortcuts integration** — trigger Shortcuts workflows by name
+- **Volume/brightness** — via AppleScript osascript
+- **Window tiling** — via `AXUIElement` Accessibility API
+- **UI** — `CommandSettingsTab.swift`, `CustomCommandEditorView.swift`
+- **Tests** — `CommandDetectorTests`, `CommandParserTests`, `CommandExecutorTests`, `CommandRegistryTests`
 
 ---
 
