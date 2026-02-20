@@ -19,6 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var llmService: LLMService?
     private var registryService: ModelRegistryService?
     private var overlayWindow: OverlayWindow?
+    private var powerManagementService: PowerManagementService?
 
     // Track currently loaded models to detect selection changes
     private var currentWhisperModel: String?
@@ -84,6 +85,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // Sync disabled command intents to the pipeline registry
             appState.commandRegistry?.loadDisabledIntents(settings.disabledCommandIntents)
+
+            // Sync power management settings
+            powerManagementService?.batteryAwareModeEnabled = settings.batteryAwareModeEnabled
 
             try controller.reloadHotkey(settings.globalHotkey)
 
@@ -263,6 +267,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     await controller.loadLLMModel(fileName: llmModelName)
                 }
             }
+
+            // Wire power management service
+            let powerService = PowerManagementService()
+            powerService.batteryAwareModeEnabled = settings.batteryAwareModeEnabled
+
+            powerService.onPowerStateChanged = { [weak controller] isOnBattery in
+                guard let controller else { return }
+                let threadCount = isOnBattery ? 2 : 0
+                controller.setWhisperThreadCount(threadCount)
+                Logger.performance.info("Battery-aware: whisper threads set to \(threadCount)")
+            }
+
+            powerService.onThermalThrottleNeeded = { [weak self] state in
+                self?.appState.currentError = state == .critical
+                    ? "System overheating — inference paused"
+                    : "System warm — performance reduced"
+                Logger.performance.warning("Thermal throttle: \(state.rawValue)")
+            }
+
+            powerService.onMemoryPressure = { [weak self] level in
+                guard let self else { return }
+                Task {
+                    switch level {
+                    case .warning:
+                        await self.dictationController?.unloadLLMModel()
+                        Logger.performance.warning("Memory pressure: LLM model unloaded")
+                    case .critical:
+                        await self.dictationController?.unloadLLMModel()
+                        self.dictationController?.unloadWhisperModel()
+                        Logger.performance.warning("Memory pressure: all models unloaded")
+                    case .normal:
+                        // Reload whisper first (higher priority), then LLM
+                        if let whisperModel = self.currentWhisperModel {
+                            await self.dictationController?.loadWhisperModel(fileName: whisperModel)
+                        }
+                        if let llmModel = self.currentLLMModel {
+                            await self.dictationController?.loadLLMModel(fileName: llmModel)
+                        }
+                        Logger.performance.info("Memory pressure subsided: models reloading")
+                    }
+                }
+            }
+
+            powerService.start()
+            self.powerManagementService = powerService
 
             try controller.start(hotkey: settings.globalHotkey)
             appState.currentError = nil

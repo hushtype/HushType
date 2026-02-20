@@ -29,4 +29,7 @@ extension Logger {
 
     /// Logger for voice command detection and execution.
     static let commands = Logger(subsystem: Constants.logSubsystem, category: "commands")
+
+    /// Logger for performance, power management, and resource monitoring.
+    static let performance = Logger(subsystem: Constants.logSubsystem, category: "performance")
 }

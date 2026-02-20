@@ -91,6 +91,11 @@ final class UserSettings {
     /// Delay in milliseconds between simulated keystrokes (CGEvent mode).
     var keystrokeDelay: Int
 
+    // MARK: - Power Management
+
+    /// Whether battery-aware mode automatically reduces model quality on battery power.
+    var batteryAwareModeEnabled: Bool
+
     // MARK: - Voice Commands
 
     /// Whether voice commands are enabled (wake phrase detection active).
@@ -126,6 +131,7 @@ final class UserSettings {
         llmContextLength: Int = 2048,
         defaultInjectionMethod: InjectionMethod = .cgEvent,
         keystrokeDelay: Int = 5,
+        batteryAwareModeEnabled: Bool = true,
         commandsEnabled: Bool = true,
         commandWakePhrase: String = "Hey Type",
         disabledCommandIntents: [String] = []
@@ -151,6 +157,7 @@ final class UserSettings {
         self.llmContextLength = llmContextLength
         self.defaultInjectionMethod = defaultInjectionMethod
         self.keystrokeDelay = keystrokeDelay
+        self.batteryAwareModeEnabled = batteryAwareModeEnabled
         self.commandsEnabled = commandsEnabled
         self.commandWakePhrase = commandWakePhrase
         self.disabledCommandIntents = disabledCommandIntents
