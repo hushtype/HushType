@@ -87,5 +87,12 @@ struct HushTypeApp: App {
                 }
         }
         .modelContainer(modelContainer)
+
+        Window("Welcome to HushType", id: "onboarding") {
+            OnboardingView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
 }
