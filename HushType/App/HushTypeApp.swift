@@ -90,6 +90,15 @@ struct HushTypeApp: App {
 
         Window("Welcome to HushType", id: "onboarding") {
             OnboardingView()
+                .onAppear {
+                    NSApp.activate(ignoringOtherApps: true)
+                    DispatchQueue.main.async {
+                        for window in NSApp.windows where window.title == "Welcome to HushType" {
+                            window.level = .floating
+                            window.orderFrontRegardless()
+                        }
+                    }
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)

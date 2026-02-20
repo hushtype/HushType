@@ -39,14 +39,16 @@ struct OnboardingView: View {
             .accessibilityLabel("Setup progress: step \(currentStep + 1) of \(totalSteps)")
 
             // Step content
-            TabView(selection: $currentStep) {
-                welcomeStep.tag(0)
-                microphoneStep.tag(1)
-                accessibilityStep.tag(2)
-                modelDownloadStep.tag(3)
-                completionStep.tag(4)
+            Group {
+                switch currentStep {
+                case 0: welcomeStep
+                case 1: microphoneStep
+                case 2: accessibilityStep
+                case 3: modelDownloadStep
+                default: completionStep
+                }
             }
-            .tabViewStyle(.automatic)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Navigation buttons
             HStack {
