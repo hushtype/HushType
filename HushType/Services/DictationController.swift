@@ -46,18 +46,18 @@ final class DictationController: @unchecked Sendable {
     // MARK: - Configuration
 
     private var vadSensitivity: Float = 0.5
-    private var injectionMethod: InjectionMethod = .auto
-    private var pushToTalkEnabled: Bool = false
+    private var injectionMethod: InjectionMethod = .cgEvent
+    private var pushToTalkEnabled: Bool = true
     private var defaultMode: ProcessingMode = .raw
     private var playSoundEffects: Bool = true
     private var autoDetectLanguage: Bool = false
     private var defaultLanguage: String = "en"
-    private var showOverlayEnabled: Bool = true
+    private var showOverlayEnabled: Bool = false
     private var commandsEnabled: Bool = true
     private var commandWakePhrase: String = "Hey Type"
 
     // Per-recording snapshots (captured at startRecording to avoid mid-recording app-switch race)
-    private var recordingInjectionMethod: InjectionMethod = .auto
+    private var recordingInjectionMethod: InjectionMethod = .cgEvent
     private var recordingBundleIdentifier: String?
     private var recordingAppName: String?
 
