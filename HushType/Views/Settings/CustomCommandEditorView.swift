@@ -71,29 +71,33 @@ private struct CommandListView: View {
     @State private var commandToDelete: CustomCommand?
 
     var body: some View {
-        List(selection: $selectedCommand) {
-            ForEach(commands) { command in
-                CommandListRow(command: command)
-                    .tag(command)
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            commandToDelete = command
-                            showDeleteConfirmation = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+        VStack(spacing: 0) {
+            List(selection: $selectedCommand) {
+                ForEach(commands) { command in
+                    CommandListRow(command: command)
+                        .tag(command)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                commandToDelete = command
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
-                    }
-            }
-        }
-        .navigationTitle("Voice Commands")
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    onNew()
-                } label: {
-                    Label("New Command", systemImage: "plus")
                 }
             }
+            .navigationTitle("Voice Commands")
+
+            Divider()
+
+            Button {
+                onNew()
+            } label: {
+                Label("New Command", systemImage: "plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderless)
+            .padding(8)
         }
         .alert("Delete Command", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
