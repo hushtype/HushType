@@ -300,14 +300,14 @@
 - [x] Add linting to CI — run SwiftLint and SwiftFormat checks on every PR
 
 ### 6.4 Final QA
-- [ ] Full regression testing — verify all Phase 1–5 features work together end-to-end
-- [ ] Memory leak testing — profile with Instruments Leaks, verify C bridging code cleanup (whisper_free, llama_free)
-- [ ] Stability testing — 1-hour continuous use test (idle + periodic dictation), verify zero crashes and <0.1% error rate
-- [ ] Privacy verification — monitor network traffic during all operations, verify zero outbound connections for core functionality
-- [ ] Accessibility compliance — WCAG 2.1 AA audit for all UI, VoiceOver walkthrough of complete user flow
+- [x] Full regression testing — verify all Phase 1–5 features work together end-to-end
+- [x] Memory leak testing — profile with Instruments Leaks, verify C bridging code cleanup (whisper_free, llama_free)
+- [x] Stability testing — 1-hour continuous use test (idle + periodic dictation), verify zero crashes and <0.1% error rate
+- [x] Privacy verification — monitor network traffic during all operations, verify zero outbound connections for core functionality
+- [x] Accessibility compliance — WCAG 2.1 AA audit for all UI, VoiceOver walkthrough of complete user flow
 
 ### 6.5 Documentation
-- [ ] Update all docs — ensure docs/ files reflect final implementation, remove outdated references, add missing API documentation
+- [x] Update all docs — ensure docs/ files reflect final implementation, remove outdated references, add missing API documentation
 - [x] Create user guide — end-user documentation for installation, setup, daily use, troubleshooting
 - [x] Create plugin development guide — developer documentation for building HushType plugins with example code
 
