@@ -220,13 +220,13 @@ final class HotkeyManager: @unchecked Sendable {
             return event
         }
 
-        isRunning = true
+        DispatchQueue.main.async { [weak self] in
+            self?.isRunning = true
+        }
         Logger.hotkey.info("Hotkey manager started with \(self.bindings.count) binding(s)")
     }
 
     func stop() {
-        guard isRunning else { return }
-
         if let monitor = globalMonitor {
             NSEvent.removeMonitor(monitor)
             globalMonitor = nil
@@ -237,12 +237,21 @@ final class HotkeyManager: @unchecked Sendable {
         }
 
         fnKeyDown = false
-        isRunning = false
+        DispatchQueue.main.async { [weak self] in
+            self?.isRunning = false
+        }
         Logger.hotkey.info("Hotkey manager stopped")
     }
 
     deinit {
-        stop()
+        // Cannot call stop() from deinit with @MainActor dispatch,
+        // so clean up monitors directly
+        if let monitor = globalMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        if let monitor = localMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     // MARK: - Binding Management

@@ -103,7 +103,10 @@ final class WhisperService: @unchecked Sendable {
 
         context?.unload()
         context = nil
-        isModelLoaded = false
+
+        Task { @MainActor in
+            self.isModelLoaded = false
+        }
 
         Logger.whisper.info("Whisper model unloaded")
     }

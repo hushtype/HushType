@@ -13,6 +13,7 @@ import os
 private let startupLog = OSLog(subsystem: Constants.logSubsystem, category: "startup")
 private let startupSignpostID = OSSignpostID(log: startupLog)
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
     var modelContainer: ModelContainer?

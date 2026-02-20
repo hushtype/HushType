@@ -192,7 +192,9 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
         // Start engine
         try engine.start()
 
-        isCapturing = true
+        DispatchQueue.main.async { [weak self] in
+            self?.isCapturing = true
+        }
         Logger.audio.info("Audio capture started")
     }
 
@@ -207,8 +209,8 @@ final class AudioCaptureService: AudioCapturing, @unchecked Sendable {
         engine.stop()
         engine.inputNode.removeTap(onBus: 0)
 
-        isCapturing = false
         DispatchQueue.main.async { [weak self] in
+            self?.isCapturing = false
             self?.currentLevel = 0
         }
 

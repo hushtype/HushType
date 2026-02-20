@@ -105,8 +105,8 @@ final class LLMService: @unchecked Sendable {
             throw LLMServiceError.modelNotLoaded
         }
 
-        isProcessing = true
-        defer { isProcessing = false }
+        await MainActor.run { isProcessing = true }
+        defer { Task { @MainActor in self.isProcessing = false } }
 
         Logger.llm.info("Processing text (\(text.count) chars) with LLM")
 
