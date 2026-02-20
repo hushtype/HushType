@@ -1,0 +1,103 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WHISPER_TAG: "v1.7.4"
+  LLAMA_TAG: "b8059"
+  XCODE_VERSION: "16.2"
+
+jobs:
+  build:
+    name: Build (${{ matrix.configuration }})
+    runs-on: macos-15
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${XCODE_VERSION}.app
+
+      - name: Install CMake
+        run: |
+          if ! command -v cmake &>/dev/null; then
+            brew install cmake
+          fi
+
+      - name: Cache vendor libraries
+        id: vendor-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vendor/whisper.cpp
+            vendor/llama.cpp
+            WhisperKit/Sources/CWhisper/include
+          key: vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-${{ runner.arch }}
+          restore-keys: |
+            vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-
+
+      - name: Build whisper.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-whisper.sh
+
+      - name: Build llama.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-llama.sh
+
+      - name: Restore whisper headers (cache hit)
+        if: steps.vendor-cache.outputs.cache-hit == 'true'
+        run: |
+          # setup-whisper.sh step 4 copies headers unconditionally
+          # On cache hit we skip the script, so copy headers manually
+          mkdir -p WhisperKit/Sources/CWhisper/include
+          if [ ! -f WhisperKit/Sources/CWhisper/include/whisper.h ]; then
+            cp vendor/whisper.cpp/include/whisper.h WhisperKit/Sources/CWhisper/include/
+          fi
+
+      - name: Verify vendor libraries
+        run: |
+          echo "=== whisper.cpp libraries ==="
+          ls -la vendor/whisper.cpp/build/lib/*.a
+          echo ""
+          echo "=== llama.cpp libraries ==="
+          ls -la vendor/llama.cpp/build/lib/*.a
+          echo ""
+          echo "=== WhisperKit headers ==="
+          ls -la WhisperKit/Sources/CWhisper/include/
+          echo ""
+          echo "=== LlamaKit headers ==="
+          ls -la LlamaKit/Sources/CLlama/include/ | head -5
+
+      - name: Build
+        run: |
+          xcodebuild build \
+            -scheme HushType \
+            -configuration ${{ matrix.configuration }} \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath DerivedData \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            2>&1 | tail -30
+
+      - name: Upload build artifacts
+        if: matrix.configuration == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: HushType-${{ matrix.configuration }}
+          path: DerivedData/Build/Products/${{ matrix.configuration }}/HushType.app
+          if-no-files-found: warn
+          retention-days: 7
