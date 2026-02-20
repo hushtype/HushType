@@ -314,6 +314,6 @@ jobs:
         with:
           name: release-${{ steps.version.outputs.version }}
           path: |
-            build/${APP_NAME}-${{ steps.version.outputs.version }}.dmg
+            build/${{ env.APP_NAME }}-${{ steps.version.outputs.version }}.dmg
           if-no-files-found: warn
           retention-days: 30
