@@ -243,8 +243,8 @@
 
 ### 5.1 Keyboard Shortcut Chaining
 - [x] Implement shortcut dictation — say "Command Shift N" or "New folder" and inject the keystroke combination via CGEvent
-- [ ] Add app-aware shortcut aliases — know that "Build and run" = Cmd+R in Xcode, "Save all" = Cmd+Option+S, store aliases in AppProfile
-- [ ] Add user-defined shortcut aliases — custom name-to-keystroke mappings managed in settings
+- [x] Add app-aware shortcut aliases — know that "Build and run" = Cmd+R in Xcode, "Save all" = Cmd+Option+S, store aliases in AppProfile
+- [x] Add user-defined shortcut aliases — custom name-to-keystroke mappings managed in settings
 
 ### 5.2 Audio Feedback
 - [x] Add recording start/stop sounds — distinct tones using `NSSound` or `AudioServicesPlaySystemSound`
@@ -273,7 +273,7 @@
 - [x] Define `ProcessingPlugin` protocol — transform text in the pipeline with custom logic
 - [x] Define `CommandPlugin` protocol — add new voice commands via plugin
 - [x] Implement plugin discovery — load plugins from `~/Library/Application Support/HushType/Plugins/`, sandboxed execution with restricted system access
-- [ ] Create `PluginManagerView.swift` — settings UI to install, enable/disable, and remove plugins
+- [x] Create `PluginManagerView.swift` — settings UI to install, enable/disable, and remove plugins
 
 ### 5.7 Phase 5 Tests
 - [x] Create accessibility audit tests — verify VoiceOver labels, keyboard navigation paths, state announcements
