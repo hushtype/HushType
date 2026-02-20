@@ -242,7 +242,7 @@
 ## Phase 5: Power User & Polish (v0.5.0)
 
 ### 5.1 Keyboard Shortcut Chaining
-- [ ] Implement shortcut dictation — say "Command Shift N" or "New folder" and inject the keystroke combination via CGEvent
+- [x] Implement shortcut dictation — say "Command Shift N" or "New folder" and inject the keystroke combination via CGEvent
 - [ ] Add app-aware shortcut aliases — know that "Build and run" = Cmd+R in Xcode, "Save all" = Cmd+Option+S, store aliases in AppProfile
 - [ ] Add user-defined shortcut aliases — custom name-to-keystroke mappings managed in settings
 
@@ -272,12 +272,12 @@
 - [x] Define `HushTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
 - [x] Define `ProcessingPlugin` protocol — transform text in the pipeline with custom logic
 - [x] Define `CommandPlugin` protocol — add new voice commands via plugin
-- [ ] Implement plugin discovery — load plugins from `~/Library/Application Support/HushType/Plugins/`, sandboxed execution with restricted system access
+- [x] Implement plugin discovery — load plugins from `~/Library/Application Support/HushType/Plugins/`, sandboxed execution with restricted system access
 - [ ] Create `PluginManagerView.swift` — settings UI to install, enable/disable, and remove plugins
 
 ### 5.7 Phase 5 Tests
-- [ ] Create accessibility audit tests — verify VoiceOver labels, keyboard navigation paths, state announcements
-- [ ] Create performance benchmark tests — measure end-to-end latency, startup time, idle CPU/RAM, battery impact
+- [x] Create accessibility audit tests — verify VoiceOver labels, keyboard navigation paths, state announcements
+- [x] Create performance benchmark tests — measure end-to-end latency, startup time, idle CPU/RAM, battery impact
 - [x] Create `OnboardingViewTests.swift` — UI tests for onboarding flow, permission request sequences
 
 ---
