@@ -476,6 +476,7 @@ final class DictationController: @unchecked Sendable {
     // MARK: - Per-App Profile Resolution
 
     /// The effective processing mode — per-app override if available, else global default.
+    @MainActor
     private var activeMode: ProcessingMode {
         if let profile = appContextService?.currentProfile,
            profile.isEnabled,
@@ -486,6 +487,7 @@ final class DictationController: @unchecked Sendable {
     }
 
     /// The effective injection method — per-app override if available, else global default.
+    @MainActor
     private var activeInjectionMethod: InjectionMethod {
         if let profile = appContextService?.currentProfile,
            profile.isEnabled {
