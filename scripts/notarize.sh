@@ -117,7 +117,20 @@ echo "[3/4] Submitting to Apple Notary Service (timeout: $TIMEOUT)..."
 echo "      This may take several minutes..."
 echo ""
 
-SUBMISSION_OUTPUT=$(xcrun notarytool submit "$TARGET" \
+# notarytool requires .zip, .pkg, or .dmg — zip .app bundles automatically
+SUBMIT_TARGET="$TARGET"
+TEMP_ZIP=""
+
+if [[ "$TARGET" == *.app ]]; then
+    TEMP_ZIP="${TARGET%.app}.zip"
+    echo "      Zipping .app bundle for submission..."
+    ditto -c -k --keepParent "$TARGET" "$TEMP_ZIP"
+    SUBMIT_TARGET="$TEMP_ZIP"
+    echo "      Created: $TEMP_ZIP"
+    echo ""
+fi
+
+SUBMISSION_OUTPUT=$(xcrun notarytool submit "$SUBMIT_TARGET" \
     "${CREDENTIAL_FLAGS[@]}" \
     --wait \
     --timeout "$TIMEOUT" 2>&1) || NOTARIZE_EXIT=$?
@@ -143,11 +156,16 @@ if [[ "${NOTARIZE_EXIT:-0}" -ne 0 || "$NOTARIZE_STATUS" != "Accepted" ]]; then
         echo "(No submission ID found — cannot fetch log)"
     fi
 
+    # Clean up temp zip on failure
+    [[ -n "$TEMP_ZIP" && -f "$TEMP_ZIP" ]] && rm -f "$TEMP_ZIP"
     exit 1
 fi
 
+# Clean up temp zip after successful submission
+[[ -n "$TEMP_ZIP" && -f "$TEMP_ZIP" ]] && rm -f "$TEMP_ZIP" && echo "      Cleaned up temp zip."
+
 # ---------------------------------------------------------------------------
-# Staple the ticket
+# Staple the ticket (staple the original .app or .dmg, not the zip)
 # ---------------------------------------------------------------------------
 
 echo "[4/4] Stapling notarization ticket..."
