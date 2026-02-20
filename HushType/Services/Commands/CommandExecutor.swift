@@ -186,7 +186,10 @@ final class CommandExecutor {
         guard let app = findRunningApp(named: name) else {
             throw CommandError.appNotRunning(name)
         }
-        // Send Cmd+W to close frontmost window
+        // Activate the target app first so Cmd+W goes to the right window
+        app.activate(options: .activateAllWindows)
+        // Brief delay for activation to complete
+        Thread.sleep(forTimeInterval: 0.1)
         sendKeyEvent(keyCode: 13, flags: .maskCommand) // W key
         return "Closed window in \(app.localizedName ?? name)"
     }

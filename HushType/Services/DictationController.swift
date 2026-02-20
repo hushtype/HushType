@@ -606,6 +606,37 @@ final class DictationController: @unchecked Sendable {
 
         appState.isExecutingCommand = true
 
+        // Check custom commands first (SwiftData-stored user-defined commands)
+        if let registry = commandRegistry, let container = modelContainer {
+            let context = ModelContext(container)
+            let descriptor = FetchDescriptor<CustomCommand>()
+            if let customCommands = try? context.fetch(descriptor),
+               let actionSteps = registry.resolveCustomCommand(commandText, customCommands: customCommands) {
+                let parsedCommands = actionSteps.map { step in
+                    ParsedCommand(
+                        intent: step.intent,
+                        entities: step.parameters,
+                        rawText: commandText,
+                        displayName: step.intent.displayName
+                    )
+                }
+                let results = await executor.executeChain(parsedCommands)
+                let allSucceeded = results.allSatisfy { $0.success }
+                let summary = results.map { $0.message }.joined(separator: "; ")
+                appState.lastCommandResult = summary
+                appState.lastTranscriptionPreview = allSucceeded ? summary : "Failed: \(summary)"
+                appState.isExecutingCommand = false
+                if allSucceeded {
+                    playSound(.stop)
+                    Logger.commands.info("Custom command executed: \(summary)")
+                } else {
+                    Logger.commands.warning("Custom command failed: \(summary)")
+                }
+                return
+            }
+        }
+
+        // Fall through to regex-based parsing for built-in commands
         let commands = parser.parseChain(commandText)
         guard !commands.isEmpty else {
             Logger.commands.info("No parseable command in: \(commandText)")
