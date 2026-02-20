@@ -252,8 +252,8 @@
 - [x] Add sound configuration — enable/disable, independent volume control, multiple sound themes (subtle, mechanical, none)
 
 ### 5.3 Accessibility
-- [ ] Add VoiceOver support — full VoiceOver compatibility with meaningful accessibility labels on all interactive elements
-- [ ] Add state announcements — announce recording/processing/injection state changes to assistive technology via `NSAccessibility.post`
+- [x] Add VoiceOver support — full VoiceOver compatibility with meaningful accessibility labels on all interactive elements
+- [x] Add state announcements — announce recording/processing/injection state changes to assistive technology via `NSAccessibility.post`
 - [ ] Add keyboard navigation — full keyboard navigation for all UI (settings, history, overlay, menu bar popover)
 - [ ] Respect system preferences — high contrast support, reduce motion, dynamic type scaling
 
@@ -261,12 +261,12 @@
 - [x] Implement battery-aware mode — reduce model quality and thread count on battery power (downgrade whisper model tier, reduce GPU layers, cap threads)
 - [x] Implement thermal management — throttle inference when system is thermally constrained via `ProcessInfo.thermalState`
 - [x] Implement memory pressure response — unload LLM model under memory pressure (`DispatchSource.memoryPressure`), keep whisper loaded as priority
-- [ ] Optimize startup — target <0.5s launch to menu bar readiness, lazy model loading on first use, near-zero idle CPU (event-driven, no polling)
+- [x] Optimize startup — target <0.5s launch to menu bar readiness, lazy model loading on first use, near-zero idle CPU (event-driven, no polling)
 
 ### 5.5 Onboarding
 - [x] Create `OnboardingView.swift` — first-launch setup flow guiding through microphone permission, accessibility permission, model download selection
-- [ ] Add permission request flow — step-by-step permission granting with clear explanations and deep links to System Settings
-- [ ] Add initial model download — guided download of default whisper model (base English) during onboarding with progress
+- [x] Add permission request flow — step-by-step permission granting with clear explanations and deep links to System Settings
+- [x] Add initial model download — guided download of default whisper model (base English) during onboarding with progress
 
 ### 5.6 Plugin System
 - [ ] Define `HushTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
