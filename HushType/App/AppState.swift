@@ -191,6 +191,11 @@ final class AppState {
     /// Shared command registry used by both the pipeline and settings UI.
     var commandRegistry: CommandRegistry?
 
+    // MARK: - Plugin State
+
+    /// Shared plugin manager used by both the pipeline and settings UI.
+    var pluginManager: PluginManager = PluginManager()
+
     // MARK: - System Accessibility Preferences
 
     /// True when the user has enabled Reduce Motion in System Settings > Accessibility.

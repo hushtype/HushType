@@ -4,6 +4,7 @@ import os
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppState.self) private var appState
     @State private var selectedTab: Int = 0
 
     var body: some View {
@@ -61,6 +62,12 @@ struct SettingsView: View {
                     Label("Commands", systemImage: "command")
                 }
                 .tag(8)
+
+            PluginManagerView(pluginManager: appState.pluginManager)
+                .tabItem {
+                    Label("Plugins", systemImage: "puzzlepiece.extension")
+                }
+                .tag(9)
         }
         .frame(minWidth: 500, minHeight: 700)
         .onAppear {
@@ -72,6 +79,7 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .environment(AppState())
         .modelContainer(for: [
             UserSettings.self, ModelInfo.self, PromptTemplate.self,
             AppProfile.self, VocabularyEntry.self, DictationEntry.self,
