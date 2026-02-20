@@ -601,6 +601,7 @@ final class DictationController: @unchecked Sendable {
     private func handleVoiceCommand(_ commandText: String) async {
         guard let parser = commandParser, let executor = commandExecutor else {
             Logger.commands.warning("Command services not configured — ignoring command")
+            appState.isExecutingCommand = false
             return
         }
 

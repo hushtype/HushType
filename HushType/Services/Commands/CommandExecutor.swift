@@ -102,18 +102,18 @@ final class CommandExecutor {
 
         // System Control
         case .volumeUp:
-            return handleMediaKey(.volumeUp)
+            return try handleMediaKey(.volumeUp)
         case .volumeDown:
-            return handleMediaKey(.volumeDown)
+            return try handleMediaKey(.volumeDown)
         case .volumeMute:
-            return handleMediaKey(.mute)
+            return try handleMediaKey(.mute)
         case .volumeSet:
             let level = command.entities["level"] ?? "50"
             return try handleSetVolume(level)
         case .brightnessUp:
-            return handleMediaKey(.brightnessUp)
+            return try handleMediaKey(.brightnessUp)
         case .brightnessDown:
-            return handleMediaKey(.brightnessDown)
+            return try handleMediaKey(.brightnessDown)
         case .doNotDisturbToggle:
             return try await handleDNDToggle()
         case .darkModeToggle:
@@ -243,6 +243,7 @@ final class CommandExecutor {
             throw CommandError.executionFailed("No focused window")
         }
 
+        // AXUIElement is a CFTypeRef — cast always succeeds for AnyObject
         let windowRef = window as! AXUIElement
 
         guard let screen = NSScreen.main else {
@@ -273,18 +274,22 @@ final class CommandExecutor {
             newSize = CGSize(width: windowWidth, height: windowHeight)
         }
 
-        var position = newOrigin
-        var size = newSize
-        let positionValue = AXValueCreate(.cgPoint, &position)!
-        let sizeValue = AXValueCreate(.cgSize, &size)!
+        var posPoint = newOrigin
+        var sizeVal = newSize
+        guard let positionValue = AXValueCreate(.cgPoint, &posPoint),
+              let sizeValue = AXValueCreate(.cgSize, &sizeVal) else {
+            throw CommandError.executionFailed("Failed to create accessibility values")
+        }
 
         AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
         AXUIElementSetAttributeValue(windowRef, kAXSizeAttribute as CFString, sizeValue)
 
         let posName: String
         switch position {
-        case _ where newSize.width == frame.width: posName = "maximized"
-        default: posName = "tiled"
+        case .maximize: posName = "maximized"
+        case .center: posName = "centered"
+        case .left: posName = "tiled left"
+        case .right: posName = "tiled right"
         }
         return "Window \(posName)"
     }
@@ -301,7 +306,8 @@ final class CommandExecutor {
             throw CommandError.executionFailed("No focused window")
         }
 
-        AXUIElementSetAttributeValue(window as! AXUIElement, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
+        let windowRef = window as! AXUIElement
+        AXUIElementSetAttributeValue(windowRef, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
         return "Window minimized"
     }
 
@@ -335,6 +341,7 @@ final class CommandExecutor {
         AXUIElementCopyAttributeValue(windowRef, kAXPositionAttribute as CFString, &posValue)
         var currentPos = CGPoint.zero
         if let val = posValue {
+            // AXValue is a CFTypeRef — cast always succeeds for AnyObject
             AXValueGetValue(val as! AXValue, .cgPoint, &currentPos)
         }
 
@@ -352,7 +359,9 @@ final class CommandExecutor {
             x: visibleFrame.origin.x + 50,
             y: nextScreen.frame.height - visibleFrame.maxY + 50
         )
-        let positionValue = AXValueCreate(.cgPoint, &newPos)!
+        guard let positionValue = AXValueCreate(.cgPoint, &newPos) else {
+            throw CommandError.executionFailed("Failed to create accessibility value")
+        }
         AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
 
         return "Moved window to next screen"
@@ -364,7 +373,7 @@ final class CommandExecutor {
         case volumeUp, volumeDown, mute, brightnessUp, brightnessDown
     }
 
-    private func handleMediaKey(_ action: MediaAction) -> String {
+    private func handleMediaKey(_ action: MediaAction) throws -> String {
         let script: String
         let description: String
 
@@ -379,11 +388,9 @@ final class CommandExecutor {
             script = "set volume output muted (not (output muted of (get volume settings)))"
             description = "Toggled mute"
         case .brightnessUp:
-            // Use brightness key via CGEvent — key code 144
             sendKeyEvent(keyCode: 144)
             return "Brightness increased"
         case .brightnessDown:
-            // Use brightness key via CGEvent — key code 145
             sendKeyEvent(keyCode: 145)
             return "Brightness decreased"
         }
@@ -391,8 +398,11 @@ final class CommandExecutor {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
         process.arguments = ["-e", script]
-        try? process.run()
+        try process.run()
         process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw CommandError.executionFailed("\(description) failed")
+        }
 
         return description
     }
@@ -406,6 +416,9 @@ final class CommandExecutor {
         process.arguments = ["-e", "set volume output volume \(level)"]
         try process.run()
         process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw CommandError.executionFailed("Failed to set volume")
+        }
         return "Volume set to \(level)%"
     }
 
@@ -425,9 +438,8 @@ final class CommandExecutor {
             // Fall through to manual approach
         }
 
-        // Fallback: Ctrl+Cmd+D (not standard, but some users set this)
-        Logger.commands.info("DND toggle via shortcuts failed, using notification center")
-        return "Do Not Disturb toggled (may require manual Shortcut setup)"
+        Logger.commands.warning("DND toggle failed — no 'Toggle Focus' Shortcut found")
+        throw CommandError.executionFailed("Do Not Disturb toggle requires a 'Toggle Focus' Shortcut")
     }
 
     private func handleDarkModeToggle() async throws -> String {
@@ -448,6 +460,9 @@ final class CommandExecutor {
         process.arguments = ["displaysleepnow"]
         try process.run()
         process.waitUntilExit()
+        guard process.terminationStatus == 0 else {
+            throw CommandError.executionFailed("Failed to lock screen")
+        }
         return "Screen locked"
     }
 

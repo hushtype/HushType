@@ -132,24 +132,22 @@ final class CommandParser: Sendable {
             "run shortcut"
         ]
 
-        let lowered = text.lowercased()
         var segments: [String] = []
         var remaining = text
 
         for conjunction in conjunctions {
             var parts: [String] = []
-            let lowerRemaining = remaining.lowercased()
 
-            var searchStart = lowerRemaining.startIndex
-            while let range = lowerRemaining.range(of: conjunction, range: searchStart..<lowerRemaining.endIndex) {
-                let afterConjunction = String(lowerRemaining[range.upperBound...])
+            var searchStart = remaining.startIndex
+            while let range = remaining.range(of: conjunction, options: .caseInsensitive, range: searchStart..<remaining.endIndex) {
+                let afterConjunction = String(remaining[range.upperBound...]).lowercased()
                 let startsWithVerb = commandVerbs.contains { afterConjunction.hasPrefix($0) }
 
                 if startsWithVerb {
                     let beforePart = String(remaining[remaining.startIndex..<range.lowerBound])
                     parts.append(beforePart)
                     remaining = String(remaining[range.upperBound...])
-                    searchStart = lowerRemaining.startIndex // Reset since remaining changed
+                    searchStart = remaining.startIndex
                     break
                 } else {
                     searchStart = range.upperBound
