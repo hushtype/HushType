@@ -59,9 +59,28 @@ sed -i '' "s/version \".*\"/version \"${VERSION}\"/" "$CASK_FILE"
 # Update sha256 line
 sed -i '' "s/sha256 \".*\"/sha256 \"${SHA256}\"/" "$CASK_FILE"
 
-echo "[done] Casks/hushtype.rb updated"
+echo "[done] Casks/hushtype.rb updated (local copy)"
+
+# Also update the tap repo if available
+TAP_DIR="$(brew --repository hushtype/hushtype 2>/dev/null || true)"
+if [[ -n "$TAP_DIR" && -d "$TAP_DIR" ]]; then
+    echo ""
+    echo "Updating tap repo: $TAP_DIR"
+    cp "$CASK_FILE" "$TAP_DIR/Casks/hushtype.rb"
+    cd "$TAP_DIR"
+    git add Casks/hushtype.rb
+    git commit -m "Update HushType to ${VERSION}"
+    git push
+    echo "[done] Tap repo updated and pushed"
+else
+    echo ""
+    echo "Tap not installed locally. To update the tap repo manually:"
+    echo "  1. Clone: git clone https://github.com/hushtype/homebrew-hushtype"
+    echo "  2. Copy Casks/hushtype.rb into the clone"
+    echo "  3. Commit and push"
+fi
+
 echo ""
-echo "Next steps:"
-echo "  1. Test locally: brew install --cask ./Casks/hushtype.rb"
-echo "  2. Submit PR to homebrew/homebrew-cask"
-echo "     or publish via your own tap: harungungorer/homebrew-hushtype"
+echo "Users can install with:"
+echo "  brew tap hushtype/hushtype"
+echo "  brew install --cask hushtype"
