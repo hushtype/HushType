@@ -291,7 +291,7 @@
 ### 6.2 Distribution
 - [x] Create DMG packaging — build `.dmg` installer with drag-to-Applications layout, background image, volume icon
 - [x] Integrate Sparkle 2.x — auto-update framework with EdDSA signatures, appcast XML, delta updates
-- [ ] Submit Homebrew cask — create and submit `homebrew-cask` formula for `brew install --cask hushtype`
+- [x] Submit Homebrew cask — create and submit `homebrew-cask` formula for `brew install --cask hushtype`
 
 ### 6.3 CI/CD Pipeline
 - [x] Create GitHub Actions build workflow — build on macOS runners, cache Swift/CMake dependencies, matrix for Debug/Release
