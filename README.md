@@ -6,11 +6,11 @@
 
 <p align="center">
   <!-- Badges -->
+  <a href="https://github.com/hushtype/HushType/releases/latest"><img alt="Download" src="https://img.shields.io/github/v/release/hushtype/HushType?label=Download&logo=apple&color=7B61FF"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2014%2B-blue?logo=apple">
   <img alt="Swift" src="https://img.shields.io/badge/Swift-5.9%2B-orange?logo=swift">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-green">
-  <!-- <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/hushtype/hushtype/build.yml?branch=main"> -->
-  <!-- <img alt="Release" src="https://img.shields.io/github/v/release/hushtype/hushtype"> -->
+  <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/hushtype/HushType/build.yml?branch=main">
 </p>
 
 ---
