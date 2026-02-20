@@ -26,4 +26,7 @@ extension Logger {
 
     /// General-purpose logger for uncategorized events.
     static let general = Logger(subsystem: Constants.logSubsystem, category: "general")
+
+    /// Logger for voice command detection and execution.
+    static let commands = Logger(subsystem: Constants.logSubsystem, category: "commands")
 }

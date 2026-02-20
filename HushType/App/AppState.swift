@@ -179,4 +179,12 @@ final class AppState {
 
     /// Set to true when user cancels injection from overlay.
     var overlayEditCancelled: Bool = false
+
+    // MARK: - Command State
+
+    /// Whether a voice command is currently being executed.
+    var isExecutingCommand: Bool = false
+
+    /// Human-readable result of the last voice command execution.
+    var lastCommandResult: String?
 }

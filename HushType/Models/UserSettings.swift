@@ -91,6 +91,14 @@ final class UserSettings {
     /// Delay in milliseconds between simulated keystrokes (CGEvent mode).
     var keystrokeDelay: Int
 
+    // MARK: - Voice Commands
+
+    /// Whether voice commands are enabled (wake phrase detection active).
+    var commandsEnabled: Bool
+
+    /// Wake phrase prefix that triggers command mode (e.g., "Hey Type", "Computer").
+    var commandWakePhrase: String
+
     // MARK: - Initializer
 
     init(
@@ -114,7 +122,9 @@ final class UserSettings {
         useGPUAcceleration: Bool = true,
         llmContextLength: Int = 2048,
         defaultInjectionMethod: InjectionMethod = .auto,
-        keystrokeDelay: Int = 5
+        keystrokeDelay: Int = 5,
+        commandsEnabled: Bool = true,
+        commandWakePhrase: String = "Hey Type"
     ) {
         self.id = id
         self.selectedWhisperModel = selectedWhisperModel
@@ -137,6 +147,8 @@ final class UserSettings {
         self.llmContextLength = llmContextLength
         self.defaultInjectionMethod = defaultInjectionMethod
         self.keystrokeDelay = keystrokeDelay
+        self.commandsEnabled = commandsEnabled
+        self.commandWakePhrase = commandWakePhrase
     }
 
     // MARK: - Singleton Access
