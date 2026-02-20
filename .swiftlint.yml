@@ -1,0 +1,37 @@
+# SwiftLint Configuration for HushType
+
+excluded:
+  - vendor
+  - DerivedData
+  - .build
+  - HushType.xcodeproj
+  - WhisperKit/Sources/CWhisper
+  - LlamaKit/Sources/CLlama
+
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - function_body_length
+  - type_body_length
+  - file_length
+  - cyclomatic_complexity
+
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_filter_count
+  - discouraged_optional_boolean
+  - empty_string
+  - fatal_error_message
+  - first_where
+  - modifier_order
+  - overridden_super_call
+  - private_action
+  - private_outlet
+  - redundant_nil_coalescing
+  - unowned_variable_capture
+
+analyzer_rules:
+  - unused_import
+
+reporter: "xcode"

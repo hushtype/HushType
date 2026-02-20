@@ -1,0 +1,10 @@
+# SwiftFormat Configuration for HushType
+
+--exclude vendor,DerivedData,.build,WhisperKit/Sources/CWhisper,LlamaKit/Sources/CLlama
+--swiftversion 5.9
+--indent 4
+--indentcase false
+--trimwhitespace always
+--voidtype void
+--wrapcollections before-first
+--maxwidth 120
