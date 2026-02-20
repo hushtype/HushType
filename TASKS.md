@@ -254,8 +254,8 @@
 ### 5.3 Accessibility
 - [x] Add VoiceOver support — full VoiceOver compatibility with meaningful accessibility labels on all interactive elements
 - [x] Add state announcements — announce recording/processing/injection state changes to assistive technology via `NSAccessibility.post`
-- [ ] Add keyboard navigation — full keyboard navigation for all UI (settings, history, overlay, menu bar popover)
-- [ ] Respect system preferences — high contrast support, reduce motion, dynamic type scaling
+- [x] Add keyboard navigation — full keyboard navigation for all UI (settings, history, overlay, menu bar popover)
+- [x] Respect system preferences — high contrast support, reduce motion, dynamic type scaling
 
 ### 5.4 Performance Optimization
 - [x] Implement battery-aware mode — reduce model quality and thread count on battery power (downgrade whisper model tier, reduce GPU layers, cap threads)
@@ -269,16 +269,16 @@
 - [x] Add initial model download — guided download of default whisper model (base English) during onboarding with progress
 
 ### 5.6 Plugin System
-- [ ] Define `HushTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
-- [ ] Define `ProcessingPlugin` protocol — transform text in the pipeline with custom logic
-- [ ] Define `CommandPlugin` protocol — add new voice commands via plugin
+- [x] Define `HushTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
+- [x] Define `ProcessingPlugin` protocol — transform text in the pipeline with custom logic
+- [x] Define `CommandPlugin` protocol — add new voice commands via plugin
 - [ ] Implement plugin discovery — load plugins from `~/Library/Application Support/HushType/Plugins/`, sandboxed execution with restricted system access
 - [ ] Create `PluginManagerView.swift` — settings UI to install, enable/disable, and remove plugins
 
 ### 5.7 Phase 5 Tests
 - [ ] Create accessibility audit tests — verify VoiceOver labels, keyboard navigation paths, state announcements
 - [ ] Create performance benchmark tests — measure end-to-end latency, startup time, idle CPU/RAM, battery impact
-- [ ] Create `OnboardingViewTests.swift` — UI tests for onboarding flow, permission request sequences
+- [x] Create `OnboardingViewTests.swift` — UI tests for onboarding flow, permission request sequences
 
 ---
 
