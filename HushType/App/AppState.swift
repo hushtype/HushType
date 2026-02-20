@@ -191,6 +191,23 @@ final class AppState {
     /// Shared command registry used by both the pipeline and settings UI.
     var commandRegistry: CommandRegistry?
 
+    // MARK: - System Accessibility Preferences
+
+    /// True when the user has enabled Reduce Motion in System Settings > Accessibility.
+    var prefersReducedMotion: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+    }
+
+    /// True when the user has enabled Reduce Transparency in System Settings > Accessibility.
+    var prefersReducedTransparency: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
+    }
+
+    /// True when the user has enabled Increase Contrast in System Settings > Accessibility.
+    var prefersHighContrast: Bool {
+        NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+    }
+
     // MARK: - Accessibility Announcements
 
     /// Post an NSAccessibility announcement so VoiceOver reads the message aloud.

@@ -63,6 +63,7 @@ final class OverlayWindow: NSPanel {
     /// Set the SwiftUI content view with app state binding.
     func setContent(appState: AppState) {
         self.appState = appState
+        applyTransparencyPreference(appState: appState)
         let contentView = OverlayContentView(appState: appState)
         let hosting = NSHostingView(rootView: contentView)
         hosting.frame = contentRect(forFrameRect: frame)
@@ -70,10 +71,25 @@ final class OverlayWindow: NSPanel {
         self.hostingView = hosting
     }
 
+    /// Adjust panel transparency to respect the system "Reduce Transparency" preference.
+    func applyTransparencyPreference(appState: AppState) {
+        if appState.prefersReducedTransparency {
+            isOpaque = true
+            backgroundColor = NSColor.windowBackgroundColor
+        } else {
+            isOpaque = false
+            backgroundColor = .clear
+        }
+    }
+
     // MARK: - Show / Hide
 
     /// Show the overlay at the configured position with optional opacity.
     func showOverlay(position: Position = .bottomCenter, opacity: Double = 0.95) {
+        // Re-evaluate transparency preference on each show in case settings changed.
+        if let appState {
+            applyTransparencyPreference(appState: appState)
+        }
         alphaValue = opacity
         positionWindow(position)
         orderFrontRegardless()
