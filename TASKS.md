@@ -247,9 +247,9 @@
 - [ ] Add user-defined shortcut aliases — custom name-to-keystroke mappings managed in settings
 
 ### 5.2 Audio Feedback
-- [ ] Add recording start/stop sounds — distinct tones using `NSSound` or `AudioServicesPlaySystemSound`
-- [ ] Add success/error sounds — audio confirmation for command execution results
-- [ ] Add sound configuration — enable/disable, independent volume control, multiple sound themes (subtle, mechanical, none)
+- [x] Add recording start/stop sounds — distinct tones using `NSSound` or `AudioServicesPlaySystemSound`
+- [x] Add success/error sounds — audio confirmation for command execution results
+- [x] Add sound configuration — enable/disable, independent volume control, multiple sound themes (subtle, mechanical, none)
 
 ### 5.3 Accessibility
 - [ ] Add VoiceOver support — full VoiceOver compatibility with meaningful accessibility labels on all interactive elements
@@ -258,13 +258,13 @@
 - [ ] Respect system preferences — high contrast support, reduce motion, dynamic type scaling
 
 ### 5.4 Performance Optimization
-- [ ] Implement battery-aware mode — reduce model quality and thread count on battery power (downgrade whisper model tier, reduce GPU layers, cap threads)
-- [ ] Implement thermal management — throttle inference when system is thermally constrained via `ProcessInfo.thermalState`
-- [ ] Implement memory pressure response — unload LLM model under memory pressure (`DispatchSource.memoryPressure`), keep whisper loaded as priority
+- [x] Implement battery-aware mode — reduce model quality and thread count on battery power (downgrade whisper model tier, reduce GPU layers, cap threads)
+- [x] Implement thermal management — throttle inference when system is thermally constrained via `ProcessInfo.thermalState`
+- [x] Implement memory pressure response — unload LLM model under memory pressure (`DispatchSource.memoryPressure`), keep whisper loaded as priority
 - [ ] Optimize startup — target <0.5s launch to menu bar readiness, lazy model loading on first use, near-zero idle CPU (event-driven, no polling)
 
 ### 5.5 Onboarding
-- [ ] Create `OnboardingView.swift` — first-launch setup flow guiding through microphone permission, accessibility permission, model download selection
+- [x] Create `OnboardingView.swift` — first-launch setup flow guiding through microphone permission, accessibility permission, model download selection
 - [ ] Add permission request flow — step-by-step permission granting with clear explanations and deep links to System Settings
 - [ ] Add initial model download — guided download of default whisper model (base English) during onboarding with progress
 
