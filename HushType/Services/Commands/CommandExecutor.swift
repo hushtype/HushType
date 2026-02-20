@@ -123,7 +123,12 @@ final class CommandExecutor {
         case .takeScreenshot:
             return try await handleScreenshot()
 
-        // Workflow
+        // Keyboard Shortcuts
+        case .injectShortcut:
+            return try handleInjectShortcut(
+                modifiers: command.entities["modifiers"] ?? "",
+                key: command.entities["key"] ?? ""
+            )
         case .runShortcut:
             return try await handleRunShortcut(command.entities["shortcutName"] ?? "")
         case .customAlias:
@@ -466,6 +471,51 @@ final class CommandExecutor {
 
         NSWorkspace.shared.open(url)
         return "Running shortcut: \(name)"
+    }
+
+    // MARK: - Keyboard Shortcut Handler
+
+    private func handleInjectShortcut(modifiers modifiersStr: String, key keyStr: String) throws -> String {
+        guard !keyStr.isEmpty else { throw CommandError.missingEntity("key") }
+
+        // Parse modifier words into CGEventFlags
+        var flags: CGEventFlags = []
+        let modWords = modifiersStr.lowercased()
+            .split(separator: " ")
+            .map(String.init)
+            .filter { !$0.isEmpty }
+
+        for word in modWords {
+            switch word {
+            case "command", "cmd": flags.insert(.maskCommand)
+            case "control", "ctrl": flags.insert(.maskControl)
+            case "option", "opt", "alt": flags.insert(.maskAlternate)
+            case "shift": flags.insert(.maskShift)
+            default: break
+            }
+        }
+
+        guard !flags.isEmpty else {
+            throw CommandError.invalidArgument("No modifier keys recognized in: \(modifiersStr)")
+        }
+
+        // Resolve key name to virtual key code
+        guard let keyCode = HotkeyBinding.keyCodeForName(keyStr.lowercased()) else {
+            throw CommandError.invalidArgument("Unknown key: \(keyStr)")
+        }
+
+        // Inject the keystroke via CGEvent
+        sendKeyEvent(keyCode: keyCode, flags: flags)
+
+        // Build human-readable description
+        var parts: [String] = []
+        if flags.contains(.maskControl) { parts.append("Ctrl") }
+        if flags.contains(.maskAlternate) { parts.append("Opt") }
+        if flags.contains(.maskShift) { parts.append("Shift") }
+        if flags.contains(.maskCommand) { parts.append("Cmd") }
+        parts.append(HotkeyBinding.keyCodeName(keyCode))
+
+        return "Pressed \(parts.joined(separator: "+"))"
     }
 
     // MARK: - Helpers

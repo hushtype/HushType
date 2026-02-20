@@ -97,7 +97,7 @@ struct HotkeyBinding: Equatable, Identifiable {
 
     // MARK: - Key Code Mapping
 
-    private static func keyCodeForName(_ name: String) -> CGKeyCode? {
+    static func keyCodeForName(_ name: String) -> CGKeyCode? {
         let mapping: [String: Int] = [
             "space": kVK_Space, "return": kVK_Return, "enter": kVK_Return,
             "tab": kVK_Tab, "escape": kVK_Escape, "esc": kVK_Escape,

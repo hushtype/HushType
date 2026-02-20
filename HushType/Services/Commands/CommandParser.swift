@@ -135,7 +135,8 @@ final class CommandParser: Sendable {
             "full screen", "toggle", "volume", "mute", "unmute",
             "brightness", "brighter", "dimmer", "dark mode", "light mode",
             "do not disturb", "lock", "take screenshot", "screenshot",
-            "run shortcut"
+            "run shortcut",
+            "press", "type", "command", "cmd", "control", "ctrl", "option", "alt"
         ]
 
         var segments = [text]
@@ -285,6 +286,12 @@ final class CommandParser: Sendable {
             priority: 15, display: "Lock Screen")
         add(.takeScreenshot, #"^(?:take (?:a )?screenshot|screenshot|screen capture|capture screen)$"#,
             priority: 15, display: "Take Screenshot")
+
+        // Keyboard Shortcuts
+        add(.injectShortcut,
+            #"^(?:press |type )?((?:(?:command|cmd|control|ctrl|option|opt|alt|shift)\s+)+)([\w\d]+)$"#,
+            keys: ["modifiers", "key"], priority: 20,
+            display: "Press {modifiers}{key}")
 
         // Workflow
         add(.runShortcut, #"^(?:run shortcut|shortcut)\s+(.+)$"#,

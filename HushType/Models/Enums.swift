@@ -127,6 +127,9 @@ enum CommandIntent: String, Codable, CaseIterable, Identifiable, Sendable {
     case lockScreen
     case takeScreenshot
 
+    // Keyboard shortcuts
+    case injectShortcut
+
     // Workflow
     case runShortcut
     case customAlias
@@ -158,6 +161,7 @@ enum CommandIntent: String, Codable, CaseIterable, Identifiable, Sendable {
         case .darkModeToggle: "Toggle Dark Mode"
         case .lockScreen: "Lock Screen"
         case .takeScreenshot: "Take Screenshot"
+        case .injectShortcut: "Inject Shortcut"
         case .runShortcut: "Run Shortcut"
         case .customAlias: "Custom Command"
         }
@@ -188,6 +192,7 @@ enum CommandIntent: String, Codable, CaseIterable, Identifiable, Sendable {
         case .darkModeToggle: "circle.lefthalf.filled"
         case .lockScreen: "lock"
         case .takeScreenshot: "camera.viewfinder"
+        case .injectShortcut: "command"
         case .runShortcut: "bolt"
         case .customAlias: "star"
         }
@@ -204,6 +209,8 @@ enum CommandIntent: String, Codable, CaseIterable, Identifiable, Sendable {
         case .volumeUp, .volumeDown, .volumeMute, .volumeSet,
              .brightnessUp, .brightnessDown, .doNotDisturbToggle,
              .darkModeToggle, .lockScreen, .takeScreenshot:
+            .systemControl
+        case .injectShortcut:
             .systemControl
         case .runShortcut, .customAlias:
             .workflow

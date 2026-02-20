@@ -179,7 +179,9 @@ final class CommandRegistry {
         case .takeScreenshot:
             return ["take screenshot", "screenshot"]
 
-        // Workflow
+        // Keyboard shortcuts
+        case .injectShortcut:
+            return ["command shift n", "press ctrl c", "cmd r"]
         case .runShortcut:
             return ["run shortcut Morning Routine"]
         case .customAlias:
