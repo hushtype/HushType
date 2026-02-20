@@ -24,7 +24,7 @@ enum LlamaCppProviderError: Error, LocalizedError {
 
 /// Local LLM provider using llama.cpp via `LlamaContext`.
 /// Uses actor isolation for thread-safe model lifecycle management.
-actor LlamaCppProvider: LLMProvider {
+actor LlamaCppProvider: @preconcurrency LLMProvider {
     private var context: LlamaContext?
     private var modelPath: String?
 

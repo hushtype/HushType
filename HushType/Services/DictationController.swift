@@ -130,6 +130,7 @@ final class DictationController: @unchecked Sendable {
     }
 
     /// Stop the controller — unregisters hotkeys and stops services.
+    @MainActor
     func stop() {
         hotkeyManager.stop()
 
