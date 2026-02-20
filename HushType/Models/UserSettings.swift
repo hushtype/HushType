@@ -113,6 +113,11 @@ final class UserSettings {
     /// Raw values of CommandIntent cases that are disabled by the user.
     var disabledCommandIntents: [String]
 
+    /// Global shortcut aliases mapping spoken phrases to keystroke strings.
+    /// e.g., ["copy": "cmd+c", "paste": "cmd+v", "undo": "cmd+z"]
+    /// App-specific aliases (per AppProfile) take precedence over these global aliases.
+    var globalShortcutAliases: [String: String]
+
     // MARK: - Initializer
 
     init(
@@ -142,7 +147,8 @@ final class UserSettings {
         batteryAwareModeEnabled: Bool = true,
         commandsEnabled: Bool = true,
         commandWakePhrase: String = "Hey Type",
-        disabledCommandIntents: [String] = []
+        disabledCommandIntents: [String] = [],
+        globalShortcutAliases: [String: String] = [:]
     ) {
         self.id = id
         self.selectedWhisperModel = selectedWhisperModel
@@ -171,6 +177,7 @@ final class UserSettings {
         self.commandsEnabled = commandsEnabled
         self.commandWakePhrase = commandWakePhrase
         self.disabledCommandIntents = disabledCommandIntents
+        self.globalShortcutAliases = globalShortcutAliases
     }
 
     // MARK: - Singleton Access

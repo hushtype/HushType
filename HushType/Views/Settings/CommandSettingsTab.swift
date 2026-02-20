@@ -11,6 +11,8 @@ struct CommandSettingsTab: View {
     @State private var commandWakePhrase = "Hey Type"
     @State private var showCustomCommandEditor = false
     @State private var wakePhraseDebounceTask: Task<Void, Never>?
+    @State private var globalAliases: [String: String] = [:]
+    @State private var showAddAliasSheet = false
 
     var body: some View {
         if let registry = appState.commandRegistry {
@@ -78,6 +80,53 @@ struct CommandSettingsTab: View {
                 }
             }
 
+            // MARK: - Global Shortcut Aliases section
+            Section {
+                let sortedAliases = globalAliases.sorted(by: { $0.key < $1.key })
+                if sortedAliases.isEmpty {
+                    Text("No global aliases yet.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 4)
+                } else {
+                    ForEach(sortedAliases, id: \.key) { phrase, shortcut in
+                        HStack {
+                            Text(phrase)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text(shortcut)
+                                .font(.system(.body, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                            Button(role: .destructive) {
+                                globalAliases.removeValue(forKey: phrase)
+                                saveAliases()
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(.red)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Delete alias \(phrase)")
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+
+                Button {
+                    showAddAliasSheet = true
+                } label: {
+                    Label("Add Alias", systemImage: "plus.circle")
+                }
+                .disabled(!commandsEnabled)
+                .accessibilityLabel("Add global shortcut alias")
+                .accessibilityHint("Define a spoken phrase that maps to a keyboard shortcut, available in all apps")
+            } header: {
+                Text("Global Shortcut Aliases")
+            } footer: {
+                Text("Say a phrase to trigger the mapped shortcut. Global aliases work in all apps. App-specific aliases override global ones.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             // MARK: - Custom Commands section
             Section {
                 if customCommands.isEmpty {
@@ -116,6 +165,12 @@ struct CommandSettingsTab: View {
             CustomCommandEditorView()
                 .frame(minWidth: 700, minHeight: 500)
         }
+        .sheet(isPresented: $showAddAliasSheet) {
+            AddAliasSheetView(existingAliases: globalAliases) { phrase, shortcut in
+                globalAliases[phrase] = shortcut
+                saveAliases()
+            }
+        }
     }
 
     // MARK: - Private helpers
@@ -125,10 +180,16 @@ struct CommandSettingsTab: View {
             settings = try UserSettings.shared(in: modelContext)
             commandsEnabled = settings?.commandsEnabled ?? true
             commandWakePhrase = settings?.commandWakePhrase ?? "Hey Type"
+            globalAliases = settings?.globalShortcutAliases ?? [:]
             Logger.ui.debug("Loaded user settings in Commands tab")
         } catch {
             Logger.ui.error("Failed to load UserSettings in Commands tab: \(error.localizedDescription)")
         }
+    }
+
+    private func saveAliases() {
+        settings?.globalShortcutAliases = globalAliases
+        saveSettings()
     }
 
     /// Persist the registry's disabled intents to UserSettings.
@@ -216,6 +277,122 @@ private struct CustomCommandRow: View {
                 .padding(.leading, 24)
         }
         .padding(.vertical, 2)
+    }
+}
+
+// MARK: - AddAliasSheetView
+
+private struct AddAliasSheetView: View {
+    @Environment(\.dismiss) private var dismiss
+    let existingAliases: [String: String]
+    let onSave: (String, String) -> Void
+
+    @State private var phrase = ""
+    @State private var shortcut = ""
+    @State private var showDuplicateWarning = false
+    @State private var showInvalidShortcutWarning = false
+
+    private var isDuplicatePhrase: Bool {
+        existingAliases.keys.contains(phrase.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private var isShortcutValid: Bool {
+        let trimmed = shortcut.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && HotkeyBinding.parse(trimmed) != nil
+    }
+
+    private var canSave: Bool {
+        !phrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && isShortcutValid
+            && !isDuplicatePhrase
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Add Global Shortcut Alias")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding()
+            .background(Color(NSColor.windowBackgroundColor))
+
+            Divider()
+
+            // Form
+            Form {
+                Section {
+                    LabeledContent("Spoken Phrase") {
+                        TextField("e.g. undo", text: $phrase)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 260)
+                            .onChange(of: phrase) { _, _ in
+                                showDuplicateWarning = false
+                            }
+                            .accessibilityLabel("Spoken phrase")
+                            .accessibilityHint("The phrase you will say after the wake phrase to trigger the shortcut")
+                    }
+
+                    LabeledContent("Shortcut") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("e.g. cmd+z", text: $shortcut)
+                                .textFieldStyle(.roundedBorder)
+                                .frame(maxWidth: 260)
+                                .onChange(of: shortcut) { _, _ in
+                                    showInvalidShortcutWarning = false
+                                }
+                                .accessibilityLabel("Keyboard shortcut")
+                                .accessibilityHint("Enter a shortcut like cmd+c, cmd+shift+z, or ctrl+option+t")
+
+                            Text("Format: modifiers+key — e.g. cmd+c, cmd+shift+z, ctrl+option+t")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        if isDuplicatePhrase {
+                            Label("A global alias with this phrase already exists.", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                        if showInvalidShortcutWarning {
+                            Label("Shortcut format is invalid. Use modifier+key (e.g. cmd+z).", systemImage: "exclamationmark.triangle")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+            }
+            .formStyle(.grouped)
+
+            Divider()
+
+            // Footer buttons
+            HStack {
+                Spacer()
+                Button("Save") {
+                    let normalizedPhrase = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    let normalizedShortcut = shortcut.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    guard !normalizedPhrase.isEmpty else { return }
+                    guard isShortcutValid else {
+                        showInvalidShortcutWarning = true
+                        return
+                    }
+                    onSave(normalizedPhrase, normalizedShortcut)
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(!canSave)
+                .accessibilityLabel("Save alias")
+            }
+            .padding()
+            .background(Color(NSColor.windowBackgroundColor))
+        }
+        .frame(minWidth: 420, minHeight: 280)
     }
 }
 

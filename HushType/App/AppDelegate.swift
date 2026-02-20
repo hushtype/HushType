@@ -85,7 +85,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultLanguage: settings.defaultLanguage,
                 showOverlayEnabled: settings.showOverlayAfterDictation,
                 commandsEnabled: settings.commandsEnabled,
-                commandWakePhrase: settings.commandWakePhrase
+                commandWakePhrase: settings.commandWakePhrase,
+                globalShortcutAliases: settings.globalShortcutAliases
             )
 
             // Sync disabled command intents to the pipeline registry
@@ -238,7 +239,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 defaultLanguage: settings.defaultLanguage,
                 showOverlayEnabled: settings.showOverlayAfterDictation,
                 commandsEnabled: settings.commandsEnabled,
-                commandWakePhrase: settings.commandWakePhrase
+                commandWakePhrase: settings.commandWakePhrase,
+                globalShortcutAliases: settings.globalShortcutAliases
             )
 
             // Track initial model selections for change detection
