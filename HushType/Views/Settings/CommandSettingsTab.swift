@@ -10,13 +10,22 @@ struct CommandSettingsTab: View {
     @State private var commandsEnabled = true
     @State private var commandWakePhrase = "Hey Type"
     @State private var showCustomCommandEditor = false
-
-    /// The shared registry from the pipeline (via AppState), or a local fallback.
-    private var registry: CommandRegistry {
-        appState.commandRegistry ?? CommandRegistry()
-    }
+    @State private var wakePhraseDebounceTask: Task<Void, Never>?
 
     var body: some View {
+        if let registry = appState.commandRegistry {
+            commandsForm(registry: registry)
+        } else {
+            ContentUnavailableView(
+                "Loading Commands",
+                systemImage: "hourglass",
+                description: Text("Voice command registry is initializing...")
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func commandsForm(registry: CommandRegistry) -> some View {
         Form {
             // MARK: - Voice Commands section
             Section("Voice Commands") {
@@ -32,9 +41,18 @@ struct CommandSettingsTab: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(maxWidth: 200)
                         .disabled(!commandsEnabled)
-                        .onChange(of: commandWakePhrase) { _, newValue in
-                            settings?.commandWakePhrase = newValue
+                        .onSubmit {
+                            settings?.commandWakePhrase = commandWakePhrase
                             saveSettings()
+                        }
+                        .onChange(of: commandWakePhrase) { _, newValue in
+                            wakePhraseDebounceTask?.cancel()
+                            wakePhraseDebounceTask = Task {
+                                try? await Task.sleep(for: .milliseconds(500))
+                                guard !Task.isCancelled else { return }
+                                settings?.commandWakePhrase = newValue
+                                saveSettings()
+                            }
                         }
                 }
 
@@ -110,7 +128,7 @@ struct CommandSettingsTab: View {
 
     /// Persist the registry's disabled intents to UserSettings.
     private func persistRegistryState() {
-        settings?.disabledCommandIntents = registry.disabledIntentRawValues()
+        settings?.disabledCommandIntents = appState.commandRegistry?.disabledIntentRawValues() ?? []
         saveSettings()
     }
 
@@ -141,28 +159,15 @@ private struct BuiltInCommandRow: View {
     let isParentEnabled: Bool
     let onToggle: (CommandIntent, Bool) -> Void
 
-    @State private var isEnabled: Bool
-
-    init(
-        entry: CommandRegistry.CommandEntry,
-        isParentEnabled: Bool,
-        onToggle: @escaping (CommandIntent, Bool) -> Void
-    ) {
-        self.entry = entry
-        self.isParentEnabled = isParentEnabled
-        self.onToggle = onToggle
-        _isEnabled = State(initialValue: entry.isEnabled)
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Toggle(isOn: $isEnabled) {
+            Toggle(isOn: Binding(
+                get: { entry.isEnabled },
+                set: { newValue in onToggle(entry.intent, newValue) }
+            )) {
                 Label(entry.intent.displayName, systemImage: entry.intent.iconName)
             }
             .disabled(!isParentEnabled)
-            .onChange(of: isEnabled) { _, newValue in
-                onToggle(entry.intent, newValue)
-            }
 
             if !entry.examplePhrases.isEmpty {
                 Text(entry.examplePhrases.joined(separator: " • "))

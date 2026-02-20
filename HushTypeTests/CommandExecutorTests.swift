@@ -63,7 +63,10 @@ final class CommandExecutorTests: XCTestCase {
         XCTAssertFalse(result.success, "Executing open for a non-existent app should fail")
         XCTAssertEqual(result.intent, .openApp)
         // The error should mention the app name or failure reason.
-        XCTAssertFalse(result.message.isEmpty, "Failure message should not be empty")
+        XCTAssertTrue(
+            result.message.lowercased().contains("not found"),
+            "Failure message should indicate app not found, got: \(result.message)"
+        )
     }
 
     // MARK: - testExecuteChainStopsOnFailure

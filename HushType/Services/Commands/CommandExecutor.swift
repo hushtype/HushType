@@ -76,7 +76,7 @@ final class CommandExecutor {
         case .switchToApp:
             return try handleSwitchToApp(command.entities["appName"] ?? "")
         case .closeApp:
-            return try handleCloseApp(command.entities["appName"] ?? "")
+            return try await handleCloseApp(command.entities["appName"] ?? "")
         case .quitApp:
             return try handleQuitApp(command.entities["appName"] ?? "")
         case .hideApp:
@@ -102,24 +102,24 @@ final class CommandExecutor {
 
         // System Control
         case .volumeUp:
-            return try handleMediaKey(.volumeUp)
+            return try await handleMediaKey(.volumeUp)
         case .volumeDown:
-            return try handleMediaKey(.volumeDown)
+            return try await handleMediaKey(.volumeDown)
         case .volumeMute:
-            return try handleMediaKey(.mute)
+            return try await handleMediaKey(.mute)
         case .volumeSet:
             let level = command.entities["level"] ?? "50"
-            return try handleSetVolume(level)
+            return try await handleSetVolume(level)
         case .brightnessUp:
-            return try handleMediaKey(.brightnessUp)
+            return try await handleMediaKey(.brightnessUp)
         case .brightnessDown:
-            return try handleMediaKey(.brightnessDown)
+            return try await handleMediaKey(.brightnessDown)
         case .doNotDisturbToggle:
             return try await handleDNDToggle()
         case .darkModeToggle:
             return try await handleDarkModeToggle()
         case .lockScreen:
-            return try handleLockScreen()
+            return try await handleLockScreen()
         case .takeScreenshot:
             return try await handleScreenshot()
 
@@ -127,7 +127,7 @@ final class CommandExecutor {
         case .runShortcut:
             return try await handleRunShortcut(command.entities["shortcutName"] ?? "")
         case .customAlias:
-            return "Custom command executed"
+            throw CommandError.executionFailed("Custom alias resolved at pipeline level")
         }
     }
 
@@ -181,7 +181,7 @@ final class CommandExecutor {
         return "Switched to \(app.localizedName ?? name)"
     }
 
-    private func handleCloseApp(_ name: String) throws -> String {
+    private func handleCloseApp(_ name: String) async throws -> String {
         guard !name.isEmpty else { throw CommandError.missingEntity("appName") }
         guard let app = findRunningApp(named: name) else {
             throw CommandError.appNotRunning(name)
@@ -189,7 +189,7 @@ final class CommandExecutor {
         // Activate the target app first so Cmd+W goes to the right window
         app.activate(options: .activateAllWindows)
         // Brief delay for activation to complete
-        Thread.sleep(forTimeInterval: 0.1)
+        try await Task.sleep(for: .milliseconds(100))
         sendKeyEvent(keyCode: 13, flags: .maskCommand) // W key
         return "Closed window in \(app.localizedName ?? name)"
     }
@@ -213,16 +213,9 @@ final class CommandExecutor {
     }
 
     private func handleShowAllWindows() throws -> String {
-        // Send F3 (Mission Control) via media key
-        // Key code 160 = Mission Control on modern macOS
-        let src = CGEventSource(stateID: .hidSystemState)
-        if let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 0xA0, keyDown: true),
-           let keyUp = CGEvent(keyboardEventSource: src, virtualKey: 0xA0, keyDown: false) {
-            keyDown.post(tap: .cghidEventTap)
-            keyUp.post(tap: .cghidEventTap)
-            return "Showing Mission Control"
-        }
-        throw CommandError.executionFailed("Failed to trigger Mission Control")
+        // Ctrl+Up Arrow is the default Mission Control shortcut (no accessibility required)
+        sendKeyEvent(keyCode: 126, flags: .maskControl) // Up Arrow key
+        return "Showing Mission Control"
     }
 
     // MARK: - Window Management Handlers
@@ -281,8 +274,14 @@ final class CommandExecutor {
             throw CommandError.executionFailed("Failed to create accessibility values")
         }
 
-        AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
-        AXUIElementSetAttributeValue(windowRef, kAXSizeAttribute as CFString, sizeValue)
+        let posResult = AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
+        let sizeResult = AXUIElementSetAttributeValue(windowRef, kAXSizeAttribute as CFString, sizeValue)
+        if posResult != .success {
+            Logger.commands.warning("Failed to set window position: \(posResult.rawValue)")
+        }
+        if sizeResult != .success {
+            Logger.commands.warning("Failed to set window size: \(sizeResult.rawValue)")
+        }
 
         let posName: String
         switch position {
@@ -307,7 +306,10 @@ final class CommandExecutor {
         }
 
         let windowRef = window as! AXUIElement
-        AXUIElementSetAttributeValue(windowRef, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
+        let result = AXUIElementSetAttributeValue(windowRef, kAXMinimizedAttribute as CFString, kCFBooleanTrue)
+        if result != .success {
+            Logger.commands.warning("Failed to minimize window: \(result.rawValue)")
+        }
         return "Window minimized"
     }
 
@@ -362,7 +364,10 @@ final class CommandExecutor {
         guard let positionValue = AXValueCreate(.cgPoint, &newPos) else {
             throw CommandError.executionFailed("Failed to create accessibility value")
         }
-        AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
+        let moveResult = AXUIElementSetAttributeValue(windowRef, kAXPositionAttribute as CFString, positionValue)
+        if moveResult != .success {
+            Logger.commands.warning("Failed to move window to next screen: \(moveResult.rawValue)")
+        }
 
         return "Moved window to next screen"
     }
@@ -373,7 +378,7 @@ final class CommandExecutor {
         case volumeUp, volumeDown, mute, brightnessUp, brightnessDown
     }
 
-    private func handleMediaKey(_ action: MediaAction) throws -> String {
+    private func handleMediaKey(_ action: MediaAction) async throws -> String {
         let script: String
         let description: String
 
@@ -388,58 +393,42 @@ final class CommandExecutor {
             script = "set volume output muted (not (output muted of (get volume settings)))"
             description = "Toggled mute"
         case .brightnessUp:
-            sendKeyEvent(keyCode: 144)
-            return "Brightness increased"
+            script = """
+                tell application "System Events"
+                    key code 144
+                end tell
+                """
+            description = "Brightness increased"
         case .brightnessDown:
-            sendKeyEvent(keyCode: 145)
-            return "Brightness decreased"
+            script = """
+                tell application "System Events"
+                    key code 145
+                end tell
+                """
+            description = "Brightness decreased"
         }
 
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw CommandError.executionFailed("\(description) failed")
-        }
-
+        try await runProcess("/usr/bin/osascript", arguments: ["-e", script])
         return description
     }
 
-    private func handleSetVolume(_ levelStr: String) throws -> String {
+    private func handleSetVolume(_ levelStr: String) async throws -> String {
         guard let level = Int(levelStr), level >= 0, level <= 100 else {
             throw CommandError.invalidArgument("Volume must be 0-100")
         }
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", "set volume output volume \(level)"]
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw CommandError.executionFailed("Failed to set volume")
-        }
+        try await runProcess("/usr/bin/osascript", arguments: ["-e", "set volume output volume \(level)"])
         return "Volume set to \(level)%"
     }
 
     private func handleDNDToggle() async throws -> String {
         // Try toggling via Shortcuts CLI (requires user to have "Toggle Focus" shortcut)
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
-        process.arguments = ["run", "Toggle Focus"]
-
         do {
-            try process.run()
-            process.waitUntilExit()
-            if process.terminationStatus == 0 {
-                return "Toggled Do Not Disturb"
-            }
+            try await runProcess("/usr/bin/shortcuts", arguments: ["run", "Toggle Focus"])
+            return "Toggled Do Not Disturb"
         } catch {
-            // Fall through to manual approach
+            Logger.commands.warning("DND toggle failed — no 'Toggle Focus' Shortcut found")
+            throw CommandError.executionFailed("Do Not Disturb toggle requires a 'Toggle Focus' Shortcut")
         }
-
-        Logger.commands.warning("DND toggle failed — no 'Toggle Focus' Shortcut found")
-        throw CommandError.executionFailed("Do Not Disturb toggle requires a 'Toggle Focus' Shortcut")
     }
 
     private func handleDarkModeToggle() async throws -> String {
@@ -454,15 +443,8 @@ final class CommandExecutor {
         return "Toggled dark mode"
     }
 
-    private func handleLockScreen() throws -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/pmset")
-        process.arguments = ["displaysleepnow"]
-        try process.run()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0 else {
-            throw CommandError.executionFailed("Failed to lock screen")
-        }
+    private func handleLockScreen() async throws -> String {
+        try await runProcess("/usr/bin/pmset", arguments: ["displaysleepnow"])
         return "Screen locked"
     }
 
@@ -490,10 +472,13 @@ final class CommandExecutor {
 
     private func findRunningApp(named name: String) -> NSRunningApplication? {
         let lowered = name.lowercased()
+        // Exact match first, then prefix match (avoids "mail" matching "Airmail")
         return NSWorkspace.shared.runningApplications.first { app in
             guard let appName = app.localizedName else { return false }
             return appName.lowercased() == lowered
-                || appName.lowercased().contains(lowered)
+        } ?? NSWorkspace.shared.runningApplications.first { app in
+            guard let appName = app.localizedName else { return false }
+            return appName.lowercased().hasPrefix(lowered)
         }
     }
 
@@ -535,24 +520,42 @@ final class CommandExecutor {
             keyUp.flags = flags
             keyDown.post(tap: .cghidEventTap)
             keyUp.post(tap: .cghidEventTap)
+        } else {
+            Logger.commands.warning("Failed to create CGEvent for keyCode \(keyCode)")
         }
     }
 
     private func runAppleScript(_ source: String) async throws {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", source]
+        try await runProcess("/usr/bin/osascript", arguments: ["-e", source])
+    }
 
-        let pipe = Pipe()
-        process.standardError = pipe
+    /// Runs an external process asynchronously using a continuation to avoid blocking
+    /// the cooperative thread pool.
+    private func runProcess(_ path: String, arguments: [String]) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: path)
+            process.arguments = arguments
 
-        try process.run()
-        process.waitUntilExit()
+            let pipe = Pipe()
+            process.standardError = pipe
 
-        if process.terminationStatus != 0 {
-            let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMsg = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-            throw CommandError.executionFailed("AppleScript failed: \(errorMsg)")
+            process.terminationHandler = { finished in
+                if finished.terminationStatus == 0 {
+                    continuation.resume()
+                } else {
+                    let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
+                    let stderr = String(data: errorData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    let errorMsg = stderr.isEmpty ? "Process exited with code \(finished.terminationStatus)" : stderr
+                    continuation.resume(throwing: CommandError.executionFailed(errorMsg.trimmingCharacters(in: .whitespacesAndNewlines)))
+                }
+            }
+
+            do {
+                try process.run()
+            } catch {
+                continuation.resume(throwing: error)
+            }
         }
     }
 }

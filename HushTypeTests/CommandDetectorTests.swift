@@ -86,4 +86,20 @@ final class CommandDetectorTests: XCTestCase {
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.commandText, "switch to dark mode")
     }
+
+    // MARK: - Separator Edge Cases
+
+    func testWakePhraseWithPeriod() {
+        let result = CommandDetector.detect(in: "Hey Type. open Safari")
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.commandText, "open Safari")
+    }
+
+    func testWakePhraseWithDash() {
+        let result = CommandDetector.detect(in: "Hey Type- open Safari")
+
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.commandText, "open Safari")
+    }
 }

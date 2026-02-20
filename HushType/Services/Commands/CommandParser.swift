@@ -45,6 +45,7 @@ final class CommandParser: Sendable {
     /// - Returns: Parsed command, or nil if no pattern matches.
     func parse(_ input: String) -> ParsedCommand? {
         let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"[.!?,;:]+$"#, with: "", options: .regularExpression)
         guard !trimmed.isEmpty else { return nil }
 
         var bestMatch: (command: ParsedCommand, priority: Int)?
@@ -121,10 +122,15 @@ final class CommandParser: Sendable {
 
     /// Split text on conjunction boundaries, only if the text after the conjunction
     /// starts with a recognized command verb.
+    ///
+    /// Processes each conjunction type iteratively across all segments so that
+    /// mixed-type chains like "open Safari and close Finder then volume up" split
+    /// correctly on both "and" and "then".
     private func splitOnConjunctions(_ text: String) -> [String] {
         let conjunctions = [" and then ", " and ", " then ", " also "]
         let commandVerbs = [
-            "open", "launch", "switch", "go to", "close", "quit", "hide",
+            "open", "launch", "start", "switch", "go to",
+            "close", "quit", "exit", "terminate", "kill", "hide",
             "show", "move", "maximize", "minimise", "minimize", "center",
             "full screen", "toggle", "volume", "mute", "unmute",
             "brightness", "brighter", "dimmer", "dark mode", "light mode",
@@ -132,44 +138,60 @@ final class CommandParser: Sendable {
             "run shortcut"
         ]
 
-        var segments: [String] = []
-        var remaining = text
+        var segments = [text]
 
         for conjunction in conjunctions {
-            var parts: [String] = []
-
-            var searchStart = remaining.startIndex
-            while let range = remaining.range(of: conjunction, options: .caseInsensitive, range: searchStart..<remaining.endIndex) {
-                let afterConjunction = String(remaining[range.upperBound...]).lowercased()
-                let startsWithVerb = commandVerbs.contains { afterConjunction.hasPrefix($0) }
-
-                if startsWithVerb {
-                    let beforePart = String(remaining[remaining.startIndex..<range.lowerBound])
-                    parts.append(beforePart)
-                    remaining = String(remaining[range.upperBound...])
-                    searchStart = remaining.startIndex
-                } else {
-                    searchStart = range.upperBound
-                }
+            var newSegments: [String] = []
+            for segment in segments {
+                newSegments.append(contentsOf: splitOnSingle(
+                    segment,
+                    conjunction: conjunction,
+                    commandVerbs: commandVerbs
+                ))
             }
+            segments = newSegments
+        }
 
-            if !parts.isEmpty {
-                segments.append(contentsOf: parts)
+        let result = segments
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+
+        return result.isEmpty ? [text] : result
+    }
+
+    /// Split a single text segment on one conjunction type.
+    private func splitOnSingle(
+        _ text: String,
+        conjunction: String,
+        commandVerbs: [String]
+    ) -> [String] {
+        var parts: [String] = []
+        var remaining = text
+        var searchStart = remaining.startIndex
+
+        while let range = remaining.range(
+            of: conjunction,
+            options: .caseInsensitive,
+            range: searchStart..<remaining.endIndex
+        ) {
+            let afterConjunction = String(remaining[range.upperBound...]).lowercased()
+            let startsWithVerb = commandVerbs.contains { afterConjunction.hasPrefix($0) }
+
+            if startsWithVerb {
+                let beforePart = String(remaining[remaining.startIndex..<range.lowerBound])
+                parts.append(beforePart)
+                remaining = String(remaining[range.upperBound...])
+                searchStart = remaining.startIndex
+            } else {
+                searchStart = range.upperBound
             }
         }
 
-        // Add the remaining text
-        if !remaining.isEmpty {
-            segments.append(remaining)
-        }
-
-        // If no splits occurred, return the original text
-        if segments.isEmpty {
+        if parts.isEmpty {
             return [text]
         }
-
-        return segments.map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+        parts.append(remaining)
+        return parts
     }
 
     private func buildDisplayName(template: String, entities: [String: String]) -> String {
@@ -195,7 +217,10 @@ final class CommandParser: Sendable {
             guard let compiled = try? NSRegularExpression(
                 pattern: regex,
                 options: [.caseInsensitive]
-            ) else { return }
+            ) else {
+                Logger.commands.error("Failed to compile regex for \(intent.rawValue): \(regex)")
+                return
+            }
             patterns.append(Pattern(
                 intent: intent,
                 regex: compiled,

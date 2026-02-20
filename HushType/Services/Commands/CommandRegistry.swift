@@ -34,7 +34,7 @@ final class CommandRegistry {
 
     init() {
         entries = CommandRegistry.defaultEntries()
-        Logger.commands.info("CommandRegistry initialised with \(CommandRegistry.defaultEntries().count) built-in entries")
+        Logger.commands.info("CommandRegistry initialised with \(self.entries.count) built-in entries")
     }
 
     // MARK: - Query

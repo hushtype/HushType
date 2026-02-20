@@ -145,4 +145,50 @@ final class CommandRegistryTests: XCTestCase {
 
         XCTAssertNil(result, "resolveCustomCommand should return nil for a disabled custom command")
     }
+
+    // MARK: - Persistence Round-Trip
+
+    func testDisabledIntentRawValues() {
+        registry.setEnabled(.openApp, enabled: false)
+        registry.setEnabled(.lockScreen, enabled: false)
+
+        let rawValues = registry.disabledIntentRawValues()
+
+        XCTAssertEqual(rawValues.count, 2, "Should have exactly 2 disabled intents")
+        XCTAssertTrue(rawValues.contains("openApp"), "Should contain openApp")
+        XCTAssertTrue(rawValues.contains("lockScreen"), "Should contain lockScreen")
+    }
+
+    func testLoadDisabledIntentsRoundTrip() {
+        // Disable some intents
+        registry.setEnabled(.volumeUp, enabled: false)
+        registry.setEnabled(.brightnessDown, enabled: false)
+
+        // Capture the raw values
+        let rawValues = registry.disabledIntentRawValues()
+
+        // Create a fresh registry and load the persisted state
+        let freshRegistry = CommandRegistry()
+        XCTAssertTrue(freshRegistry.isEnabled(.volumeUp), "Fresh registry should have all enabled")
+
+        freshRegistry.loadDisabledIntents(rawValues)
+
+        XCTAssertFalse(freshRegistry.isEnabled(.volumeUp), "volumeUp should be disabled after loading")
+        XCTAssertFalse(freshRegistry.isEnabled(.brightnessDown), "brightnessDown should be disabled after loading")
+        XCTAssertTrue(freshRegistry.isEnabled(.openApp), "openApp should remain enabled")
+        XCTAssertTrue(freshRegistry.isEnabled(.lockScreen), "lockScreen should remain enabled")
+    }
+
+    func testLoadDisabledIntentsResetsAccumulation() {
+        // Load disabled intents twice — second load should reset the first
+        registry.loadDisabledIntents(["openApp", "volumeUp"])
+        XCTAssertFalse(registry.isEnabled(.openApp))
+        XCTAssertFalse(registry.isEnabled(.volumeUp))
+
+        // Second load with different set — openApp should be re-enabled
+        registry.loadDisabledIntents(["lockScreen"])
+        XCTAssertTrue(registry.isEnabled(.openApp), "openApp should be re-enabled after second load")
+        XCTAssertTrue(registry.isEnabled(.volumeUp), "volumeUp should be re-enabled after second load")
+        XCTAssertFalse(registry.isEnabled(.lockScreen), "lockScreen should be disabled from second load")
+    }
 }

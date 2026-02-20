@@ -50,12 +50,14 @@ final class CommandParserTests: XCTestCase {
         let result = parser.parse("quit Xcode")
         XCTAssertNotNil(result, "Expected a parsed command for 'quit Xcode'")
         XCTAssertEqual(result?.intent, .quitApp)
+        XCTAssertEqual(result?.entities["appName"], "Xcode")
     }
 
     func testHideApp() {
         let result = parser.parse("hide Finder")
         XCTAssertNotNil(result, "Expected a parsed command for 'hide Finder'")
         XCTAssertEqual(result?.intent, .hideApp)
+        XCTAssertEqual(result?.entities["appName"], "Finder")
     }
 
     func testShowAllWindows() {
@@ -211,5 +213,102 @@ final class CommandParserTests: XCTestCase {
         let results = parser.parseChain("open Safari and cheese")
         XCTAssertEqual(results.count, 1, "Expected 1 command — 'cheese' is not a recognized verb so no split should occur")
         XCTAssertEqual(results.first?.intent, .openApp)
+    }
+
+    // MARK: - Missing Intent Coverage
+
+    func testMoveWindowRight() {
+        let result = parser.parse("move window right")
+        XCTAssertNotNil(result, "Expected a parsed command for 'move window right'")
+        XCTAssertEqual(result?.intent, .moveWindowRight)
+    }
+
+    func testMinimizeWindow() {
+        let result = parser.parse("minimize window")
+        XCTAssertNotNil(result, "Expected a parsed command for 'minimize window'")
+        XCTAssertEqual(result?.intent, .minimizeWindow)
+    }
+
+    func testCenterWindow() {
+        let result = parser.parse("center window")
+        XCTAssertNotNil(result, "Expected a parsed command for 'center window'")
+        XCTAssertEqual(result?.intent, .centerWindow)
+    }
+
+    func testFullScreenToggle() {
+        let result = parser.parse("full screen")
+        XCTAssertNotNil(result, "Expected a parsed command for 'full screen'")
+        XCTAssertEqual(result?.intent, .fullScreenToggle)
+    }
+
+    func testMoveToNextScreen() {
+        let result = parser.parse("next screen")
+        XCTAssertNotNil(result, "Expected a parsed command for 'next screen'")
+        XCTAssertEqual(result?.intent, .moveToNextScreen)
+    }
+
+    func testBrightnessDown() {
+        let result = parser.parse("brightness down")
+        XCTAssertNotNil(result, "Expected a parsed command for 'brightness down'")
+        XCTAssertEqual(result?.intent, .brightnessDown)
+    }
+
+    func testDoNotDisturbToggle() {
+        let result = parser.parse("do not disturb")
+        XCTAssertNotNil(result, "Expected a parsed command for 'do not disturb'")
+        XCTAssertEqual(result?.intent, .doNotDisturbToggle)
+    }
+
+    // MARK: - Trailing Punctuation Tests
+
+    func testTrailingPeriodStripped() {
+        let result = parser.parse("volume up.")
+        XCTAssertNotNil(result, "Expected trailing period to be stripped")
+        XCTAssertEqual(result?.intent, .volumeUp)
+    }
+
+    func testTrailingExclamationStripped() {
+        let result = parser.parse("lock screen!")
+        XCTAssertNotNil(result, "Expected trailing exclamation to be stripped")
+        XCTAssertEqual(result?.intent, .lockScreen)
+    }
+
+    func testTrailingCommaStripped() {
+        let result = parser.parse("mute,")
+        XCTAssertNotNil(result, "Expected trailing comma to be stripped")
+        XCTAssertEqual(result?.intent, .volumeMute)
+    }
+
+    func testTrailingQuestionMarkStripped() {
+        let result = parser.parse("dark mode?")
+        XCTAssertNotNil(result, "Expected trailing question mark to be stripped")
+        XCTAssertEqual(result?.intent, .darkModeToggle)
+    }
+
+    // MARK: - Chain Conjunction Tests
+
+    func testChainWithAndThen() {
+        let results = parser.parseChain("open Safari and then volume up")
+        XCTAssertEqual(results.count, 2, "Expected 2 parsed commands when chained with 'and then'")
+        XCTAssertEqual(results[0].intent, .openApp)
+        XCTAssertEqual(results[1].intent, .volumeUp)
+    }
+
+    func testChainWithAlso() {
+        let results = parser.parseChain("mute also dark mode")
+        XCTAssertEqual(results.count, 2, "Expected 2 parsed commands when chained with 'also'")
+        XCTAssertEqual(results[0].intent, .volumeMute)
+        XCTAssertEqual(results[1].intent, .darkModeToggle)
+    }
+
+    func testChainWithMixedConjunctionsNestedSplit() {
+        // Regression: earlier segments must be re-processed through remaining conjunction types.
+        // "and then" splits first, leaving "open Safari and close Finder" as one segment
+        // which must then be split on "and".
+        let results = parser.parseChain("open Safari and close Finder and then volume up")
+        XCTAssertEqual(results.count, 3, "Expected 3 commands — segment from first split must be re-split")
+        XCTAssertEqual(results[0].intent, .openApp)
+        XCTAssertEqual(results[1].intent, .closeApp)
+        XCTAssertEqual(results[2].intent, .volumeUp)
     }
 }
