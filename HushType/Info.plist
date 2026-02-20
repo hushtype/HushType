@@ -4,5 +4,7 @@
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>HushType needs microphone access to capture speech for transcription. All audio is processed locally on your device.</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 HushType. All rights reserved.</string>
 </dict>
 </plist>
