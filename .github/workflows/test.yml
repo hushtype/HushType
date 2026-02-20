@@ -1,0 +1,94 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WHISPER_TAG: "v1.7.4"
+  LLAMA_TAG: "b8059"
+  XCODE_VERSION: "16.2"
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_${XCODE_VERSION}.app
+
+      - name: Install CMake
+        run: |
+          if ! command -v cmake &>/dev/null; then
+            brew install cmake
+          fi
+
+      - name: Cache vendor libraries
+        id: vendor-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            vendor/whisper.cpp
+            vendor/llama.cpp
+            WhisperKit/Sources/CWhisper/include
+          key: vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-${{ runner.arch }}
+          restore-keys: |
+            vendor-${{ env.WHISPER_TAG }}-${{ env.LLAMA_TAG }}-
+
+      - name: Build whisper.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-whisper.sh
+
+      - name: Build llama.cpp
+        if: steps.vendor-cache.outputs.cache-hit != 'true'
+        run: ./scripts/setup-llama.sh
+
+      - name: Restore whisper headers (cache hit)
+        if: steps.vendor-cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p WhisperKit/Sources/CWhisper/include
+          if [ ! -f WhisperKit/Sources/CWhisper/include/whisper.h ]; then
+            cp vendor/whisper.cpp/include/whisper.h WhisperKit/Sources/CWhisper/include/
+          fi
+
+      - name: Run tests
+        env:
+          CI: "true"
+        run: |
+          xcodebuild test \
+            -scheme HushType \
+            -destination 'platform=macOS,arch=arm64' \
+            -derivedDataPath DerivedData \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
+            2>&1 | tee test-output.log | tail -50
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults.xcresult
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload test log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-log
+          path: test-output.log
+          retention-days: 7
