@@ -6,6 +6,7 @@ import os
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \DictationEntry.timestamp, order: .reverse)
     private var entries: [DictationEntry]
 
@@ -13,6 +14,7 @@ struct HistoryView: View {
     @State private var selectedEntry: DictationEntry?
     @State private var entryToDelete: DictationEntry?
     @State private var showDeleteConfirmation = false
+    @FocusState private var searchFieldFocused: Bool
 
     // Filters
     @State private var filterApp: String? = nil
@@ -87,6 +89,17 @@ struct HistoryView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 600, minHeight: 400)
+        .onKeyPress(.delete) {
+            guard let entry = selectedEntry else { return .ignored }
+            entryToDelete = entry
+            showDeleteConfirmation = true
+            return .handled
+        }
+        .background(
+            Button("") { searchFieldFocused = true }
+                .keyboardShortcut("f", modifiers: .command)
+                .hidden()
+        )
         .alert("Delete Entry", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
@@ -166,6 +179,7 @@ struct HistoryView: View {
                     TextField("Search history", text: $searchText)
                         .textFieldStyle(.plain)
                         .font(.callout)
+                        .focused($searchFieldFocused)
                         .accessibilityLabel("Search history")
                         .accessibilityHint("Filter entries by text, app name, or processing mode")
                 }
@@ -342,7 +356,7 @@ struct HistoryView: View {
 
     private func scrollToTop(proxy: ScrollViewProxy) {
         if let first = filteredEntries.first {
-            withAnimation {
+            withAnimation(reduceMotion ? nil : .default) {
                 proxy.scrollTo(first.id, anchor: .top)
             }
         }

@@ -37,11 +37,22 @@ struct OverlayContentView: View {
         }
         .frame(width: 420)
         .frame(minHeight: 120)
-        .background(.ultraThinMaterial)
+        .background {
+            if appState.prefersReducedTransparency {
+                Color(NSColor.windowBackgroundColor)
+            } else {
+                Rectangle().fill(.ultraThinMaterial)
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                .stroke(
+                    appState.prefersHighContrast
+                        ? Color.primary.opacity(0.5)
+                        : Color.primary.opacity(0.1),
+                    lineWidth: appState.prefersHighContrast ? 2 : 1
+                )
         )
         .onChange(of: appState.overlayText ?? "") { oldValue, newValue in
             if !newValue.isEmpty {
@@ -178,6 +189,7 @@ struct OverlayContentView: View {
                     Label("Edit", systemImage: "pencil")
                 }
                 .controlSize(.small)
+                .keyboardShortcut("e", modifiers: .command)
                 .disabled(appState.overlayText == nil)
                 .accessibilityLabel("Edit transcription")
                 .accessibilityHint("Opens the text editor to modify the transcription before injecting")

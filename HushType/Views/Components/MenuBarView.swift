@@ -132,6 +132,7 @@ struct MenuBarView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut("h", modifiers: .command)
                 .accessibilityLabel("History")
                 .accessibilityHint("Opens the dictation history window")
 
@@ -159,6 +160,7 @@ struct MenuBarView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut("q", modifiers: .command)
                 .foregroundStyle(.red)
                 .accessibilityLabel("Quit HushType")
                 .accessibilityHint("Exits the application")
