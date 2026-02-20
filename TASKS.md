@@ -308,8 +308,8 @@
 
 ### 6.5 Documentation
 - [ ] Update all docs — ensure docs/ files reflect final implementation, remove outdated references, add missing API documentation
-- [ ] Create user guide — end-user documentation for installation, setup, daily use, troubleshooting
-- [ ] Create plugin development guide — developer documentation for building HushType plugins with example code
+- [x] Create user guide — end-user documentation for installation, setup, daily use, troubleshooting
+- [x] Create plugin development guide — developer documentation for building HushType plugins with example code
 
 ---
 
