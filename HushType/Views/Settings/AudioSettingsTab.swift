@@ -8,6 +8,7 @@ struct AudioSettingsTab: View {
     @State private var selectedDeviceID: String = "default"
     @State private var availableDevices: [(id: String, name: String)] = []
     @State private var audioService = AudioCaptureService()
+    @State private var previewSoundService = SoundFeedbackService()
 
     var body: some View {
         Form {
@@ -114,6 +115,68 @@ struct AudioSettingsTab: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+            }
+
+            Section("Sound Feedback") {
+                Toggle("Enable Sound Effects", isOn: Binding(
+                    get: { settings?.playSoundEffects ?? true },
+                    set: { newValue in
+                        settings?.playSoundEffects = newValue
+                        saveSettings()
+                    }
+                ))
+                .help("Play audio feedback when recording starts, stops, and commands execute")
+
+                Picker("Sound Theme", selection: Binding(
+                    get: {
+                        SoundFeedbackService.SoundTheme(rawValue: settings?.soundTheme ?? "subtle") ?? .subtle
+                    },
+                    set: { newValue in
+                        settings?.soundTheme = newValue.rawValue
+                        saveSettings()
+                    }
+                )) {
+                    ForEach(SoundFeedbackService.SoundTheme.allCases) { theme in
+                        Text(theme.displayName).tag(theme)
+                    }
+                }
+                .disabled(!(settings?.playSoundEffects ?? true))
+                .help("Choose the style of sound effects")
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Volume")
+                        Spacer()
+                        Text(String(format: "%.0f%%", (settings?.soundVolume ?? 0.5) * 100))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+
+                    Slider(
+                        value: Binding(
+                            get: { settings?.soundVolume ?? 0.5 },
+                            set: { newValue in
+                                settings?.soundVolume = newValue
+                                saveSettings()
+                            }
+                        ),
+                        in: 0.0...1.0,
+                        step: 0.05
+                    )
+                    .disabled(!(settings?.playSoundEffects ?? true))
+                }
+
+                Button("Preview Sound") {
+                    let theme = SoundFeedbackService.SoundTheme(
+                        rawValue: settings?.soundTheme ?? "subtle"
+                    ) ?? .subtle
+                    previewSoundService.isEnabled = true
+                    previewSoundService.theme = theme
+                    previewSoundService.volume = Float(settings?.soundVolume ?? 0.5)
+                    previewSoundService.play(.recordingStart)
+                }
+                .disabled(!(settings?.playSoundEffects ?? true))
+                .help("Play a preview of the current sound theme")
             }
 
             Section("Advanced") {

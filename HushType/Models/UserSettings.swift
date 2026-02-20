@@ -57,6 +57,12 @@ final class UserSettings {
     /// Play audio feedback when recording starts/stops.
     var playSoundEffects: Bool
 
+    /// Sound theme name (subtle, mechanical, none).
+    var soundTheme: String
+
+    /// Sound effects volume (0.0 to 1.0).
+    var soundVolume: Double
+
     // MARK: - History & Privacy
 
     /// Maximum number of DictationEntry records to retain.
@@ -123,6 +129,8 @@ final class UserSettings {
         launchAtLogin: Bool = false,
         showOverlayAfterDictation: Bool = false,
         playSoundEffects: Bool = true,
+        soundTheme: String = "subtle",
+        soundVolume: Double = 0.5,
         maxHistoryEntries: Int = 5000,
         historyRetentionDays: Int = 90,
         storeTranscriptionText: Bool = true,
@@ -149,6 +157,8 @@ final class UserSettings {
         self.launchAtLogin = launchAtLogin
         self.showOverlayAfterDictation = showOverlayAfterDictation
         self.playSoundEffects = playSoundEffects
+        self.soundTheme = soundTheme
+        self.soundVolume = soundVolume
         self.maxHistoryEntries = maxHistoryEntries
         self.historyRetentionDays = historyRetentionDays
         self.storeTranscriptionText = storeTranscriptionText

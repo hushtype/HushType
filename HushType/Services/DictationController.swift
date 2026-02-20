@@ -580,6 +580,8 @@ final class DictationController: @unchecked Sendable {
         keystrokeDelayMs: Int = 5,
         pushToTalkEnabled: Bool = false,
         playSoundEffects: Bool = true,
+        soundTheme: String = "subtle",
+        soundVolume: Double = 0.5,
         audioInputDeviceID: String? = nil,
         useGPUAcceleration: Bool = true,
         whisperThreadCount: Int = 0,
@@ -596,6 +598,8 @@ final class DictationController: @unchecked Sendable {
         self.pushToTalkEnabled = pushToTalkEnabled
         self.playSoundEffects = playSoundEffects
         self.soundService.isEnabled = playSoundEffects
+        self.soundService.theme = SoundFeedbackService.SoundTheme(rawValue: soundTheme) ?? .subtle
+        self.soundService.volume = Float(soundVolume)
         self.audioService.setInputDevice(id: audioInputDeviceID)
         self.whisperService.useGPU = useGPUAcceleration
         self.whisperService.threadCount = whisperThreadCount
@@ -652,6 +656,7 @@ final class DictationController: @unchecked Sendable {
                     soundService.play(.commandSuccess)
                     Logger.commands.info("Custom command executed: \(summary)")
                 } else {
+                    soundService.play(.commandError)
                     Logger.commands.warning("Custom command failed: \(summary)")
                 }
                 return
@@ -695,6 +700,7 @@ final class DictationController: @unchecked Sendable {
             soundService.play(.commandSuccess)
             Logger.commands.info("Command executed: \(summary)")
         } else {
+            soundService.play(.commandError)
             Logger.commands.warning("Command failed: \(summary)")
         }
     }
