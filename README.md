@@ -62,6 +62,7 @@ The app lives in your macOS menu bar and provides global hotkey-activated dictat
 ### Install via Homebrew (recommended)
 
 ```bash
+brew tap hushtype/hushtype
 brew install --cask hushtype
 ```
 
