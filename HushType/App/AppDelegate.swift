@@ -7,7 +7,10 @@
 
 import AppKit
 import SwiftData
-import os.log
+import os
+
+private let startupLog = OSLog(subsystem: Constants.logSubsystem, category: "startup")
+private let startupSignpostID = OSSignpostID(log: startupLog)
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
@@ -191,6 +194,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @MainActor
     private func startPipeline() {
+        os_signpost(.begin, log: startupLog, name: "startPipeline", signpostID: startupSignpostID)
+
         // Skip pipeline when running inside XCTest host to prevent crashes
         // from audio hardware and model loading during unit tests
         if NSClassFromString("XCTestCase") != nil {
@@ -202,6 +207,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Logger.general.error("ModelContainer not set — pipeline not started")
             return
         }
+
+        // --- Phase 1: Immediate — get menu bar responsive ASAP ---
+        os_signpost(.begin, log: startupLog, name: "pipelineCore", signpostID: startupSignpostID)
 
         let controller = DictationController(appState: appState)
         controller.modelContainer = modelContainer
@@ -238,15 +246,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             currentLLMModel = settings.selectedLLMModel
             currentLLMContextLength = settings.llmContextLength
 
-            // Load whisper model — auto-download default if not on disk
-            let modelFileName = settings.selectedWhisperModel
-            Task {
-                await controller.loadWhisperModel(fileName: modelFileName)
-            }
-            autoDownloadDefaultModelIfNeeded(in: context)
-            autoDownloadDefaultLLMModelIfNeeded(in: context)
-
-            // Wire voice command services
+            // Wire voice command services (lightweight — no I/O)
             let commandRegistry = CommandRegistry()
             commandRegistry.loadDisabledIntents(settings.disabledCommandIntents)
             let commandParser = CommandParser()
@@ -258,23 +258,56 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             )
             appState.commandRegistry = commandRegistry
 
-            // Configure LLM service with user's context length
+            // Configure LLM service (lightweight — no model loading yet)
             let service = LLMService()
             let provider = LlamaCppProvider(contextSize: UInt32(settings.llmContextLength))
             service.setProvider(provider)
             controller.setLLMService(service)
             self.llmService = service
 
-            // Load LLM model if configured
-            if let llmModelName = settings.selectedLLMModel {
-                Task {
-                    await controller.loadLLMModel(fileName: llmModelName)
-                }
+            // Register hotkey — menu bar is now responsive
+            try controller.start(hotkey: settings.globalHotkey)
+            appState.currentError = nil
+            Logger.general.info("Dictation pipeline started (hotkey active)")
+        } catch {
+            Logger.general.error("Pipeline startup failed: \(error.localizedDescription)")
+            appState.currentError = "Startup error: \(error.localizedDescription)"
+        }
+
+        dictationController = controller
+
+        // Create overlay window (lightweight NSPanel)
+        let overlay = OverlayWindow()
+        overlay.setContent(appState: appState)
+        self.overlayWindow = overlay
+        startOverlayObservation()
+
+        os_signpost(.end, log: startupLog, name: "pipelineCore", signpostID: startupSignpostID)
+        Logger.performance.info("Pipeline core ready — menu bar active")
+
+        // --- Phase 2: Deferred — model loading and background services ---
+        // Defer heavy work so the menu bar icon and hotkey are responsive immediately.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            os_signpost(.begin, log: startupLog, name: "deferredSetup", signpostID: startupSignpostID)
+
+            // Load whisper model in background
+            if let whisperFileName = self.currentWhisperModel {
+                await controller.loadWhisperModel(fileName: whisperFileName)
             }
 
-            // Wire power management service
+            // Auto-download default models if needed
+            self.autoDownloadDefaultModelIfNeeded(in: context)
+            self.autoDownloadDefaultLLMModelIfNeeded(in: context)
+
+            // Load LLM model if configured
+            if let llmModelName = self.currentLLMModel {
+                await controller.loadLLMModel(fileName: llmModelName)
+            }
+
+            // Start power management monitoring
             let powerService = PowerManagementService()
-            powerService.batteryAwareModeEnabled = settings.batteryAwareModeEnabled
+            powerService.batteryAwareModeEnabled = (try? UserSettings.shared(in: context))?.batteryAwareModeEnabled ?? true
 
             powerService.onPowerStateChanged = { [weak controller] isOnBattery in
                 guard let controller else { return }
@@ -302,7 +335,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         self.dictationController?.unloadWhisperModel()
                         Logger.performance.warning("Memory pressure: all models unloaded")
                     case .normal:
-                        // Reload whisper first (higher priority), then LLM
                         if let whisperModel = self.currentWhisperModel {
                             await self.dictationController?.loadWhisperModel(fileName: whisperModel)
                         }
@@ -317,27 +349,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             powerService.start()
             self.powerManagementService = powerService
 
-            try controller.start(hotkey: settings.globalHotkey)
-            appState.currentError = nil
-            Logger.general.info("Dictation pipeline started")
-        } catch {
-            Logger.general.error("Pipeline startup failed: \(error.localizedDescription)")
-            appState.currentError = "Startup error: \(error.localizedDescription)"
+            // Refresh model registry (network I/O)
+            let registry = ModelRegistryService(modelContainer: modelContainer)
+            self.registryService = registry
+            await registry.refreshIfNeeded()
+
+            os_signpost(.end, log: startupLog, name: "deferredSetup", signpostID: startupSignpostID)
+            os_signpost(.end, log: startupLog, name: "startPipeline", signpostID: startupSignpostID)
+            Logger.performance.info("Deferred setup complete — all models loaded")
         }
-
-        dictationController = controller
-
-        // Create and wire overlay window for edit-before-inject
-        let overlay = OverlayWindow()
-        overlay.setContent(appState: appState)
-        self.overlayWindow = overlay
-        startOverlayObservation()
-
-        // Note: ModelManagementView creates its own instance for UI state.
-        // Both share lastRefreshDate via UserDefaults, preventing redundant fetches.
-        let registry = ModelRegistryService(modelContainer: modelContainer)
-        self.registryService = registry
-        Task { await registry.refreshIfNeeded() }
     }
 
     // MARK: - Overlay Observation
