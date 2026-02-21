@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Development Guide
 
-> Comprehensive guide for developing, extending, and maintaining HushType.
+> Comprehensive guide for developing, extending, and maintaining VaulType.
 
 ## Table of Contents
 
@@ -24,11 +24,11 @@ Last Updated: 2026-02-13
 ## Project Structure
 
 ```
-HushType/
-├── HushType.xcodeproj           # Xcode project file
-├── HushType/                    # Main app target
+VaulType/
+├── VaulType.xcodeproj           # Xcode project file
+├── VaulType/                    # Main app target
 │   ├── App/
-│   │   ├── HushTypeApp.swift    # @main entry point
+│   │   ├── VaulTypeApp.swift    # @main entry point
 │   │   ├── AppDelegate.swift    # NSApplicationDelegate (menu bar, lifecycle)
 │   │   └── MenuBarManager.swift # Menu bar icon and dropdown management
 │   ├── Views/
@@ -99,14 +99,14 @@ HushType/
 │   ├── Sources/
 │   │   └── LlamaWrapper.swift           # High-level Swift API
 │   └── Package.swift
-├── HushTypeTests/                       # Unit tests
+├── VaulTypeTests/                       # Unit tests
 │   ├── Services/
 │   │   ├── CommandParserTests.swift
 │   │   ├── PromptTemplateEngineTests.swift
 │   │   └── TextInjectionTests.swift
 │   └── Models/
 │       └── SwiftDataModelTests.swift
-├── HushTypeUITests/                     # UI tests
+├── VaulTypeUITests/                     # UI tests
 │   ├── SettingsUITests.swift
 │   └── OverlayUITests.swift
 ├── scripts/
@@ -119,7 +119,7 @@ HushType/
 
 ## Swift Package Organization
 
-HushType uses Swift Package Manager (SPM) for dependency management alongside the Xcode project.
+VaulType uses Swift Package Manager (SPM) for dependency management alongside the Xcode project.
 
 ### Local Packages
 
@@ -127,7 +127,7 @@ HushType uses Swift Package Manager (SPM) for dependency management alongside th
 Package.swift (root)
 ├── WhisperKit            # Local package wrapping whisper.cpp
 ├── LlamaKit              # Local package wrapping llama.cpp
-└── HushTypeCore          # Shared models and utilities (future)
+└── VaulTypeCore          # Shared models and utilities (future)
 ```
 
 ### External Dependencies
@@ -137,14 +137,14 @@ Add dependencies in `Package.swift` or via Xcode's package resolution:
 ```swift
 // Package.swift
 let package = Package(
-    name: "HushType",
+    name: "VaulType",
     platforms: [.macOS(.v14)],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0"),
     ],
     targets: [
         .target(
-            name: "HushType",
+            name: "VaulType",
             dependencies: ["Sparkle", "WhisperKit", "LlamaKit"]
         ),
     ]
@@ -162,7 +162,7 @@ let package = Package(
 
 ## C/C++ Bridging Conventions
 
-HushType bridges to whisper.cpp and llama.cpp via C interop. Follow these conventions:
+VaulType bridges to whisper.cpp and llama.cpp via C interop. Follow these conventions:
 
 ### Bridging Header Structure
 
@@ -256,7 +256,7 @@ final class WhisperContext: @unchecked Sendable {
 
 ## Naming Conventions
 
-HushType follows the [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/) with these project-specific rules:
+VaulType follows the [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/) with these project-specific rules:
 
 ### Files
 
@@ -307,12 +307,12 @@ var shouldAutoInject: Bool
 import os
 
 extension Logger {
-    static let audio = Logger(subsystem: "com.hushtype.app", category: "audio")
-    static let whisper = Logger(subsystem: "com.hushtype.app", category: "whisper")
-    static let llm = Logger(subsystem: "com.hushtype.app", category: "llm")
-    static let injection = Logger(subsystem: "com.hushtype.app", category: "injection")
-    static let commands = Logger(subsystem: "com.hushtype.app", category: "commands")
-    static let ui = Logger(subsystem: "com.hushtype.app", category: "ui")
+    static let audio = Logger(subsystem: "com.vaultype.app", category: "audio")
+    static let whisper = Logger(subsystem: "com.vaultype.app", category: "whisper")
+    static let llm = Logger(subsystem: "com.vaultype.app", category: "llm")
+    static let injection = Logger(subsystem: "com.vaultype.app", category: "injection")
+    static let commands = Logger(subsystem: "com.vaultype.app", category: "commands")
+    static let ui = Logger(subsystem: "com.vaultype.app", category: "ui")
 }
 ```
 
@@ -320,7 +320,7 @@ extension Logger {
 
 ## Git Workflow
 
-HushType uses **trunk-based development** with short-lived feature branches.
+VaulType uses **trunk-based development** with short-lived feature branches.
 
 ### Branch Naming
 
@@ -350,7 +350,7 @@ refactor: extract PromptTemplateEngine from LLMService
 
 1. Create a feature branch from `main`
 2. Make changes with focused, atomic commits
-3. Run tests locally: `xcodebuild test -scheme HushType`
+3. Run tests locally: `xcodebuild test -scheme VaulType`
 4. Push and create a pull request
 5. CI runs tests and linting
 6. Code review and approval
@@ -377,7 +377,7 @@ Processing modes transform raw Whisper output through the LLM pipeline. Here's h
 Add a new case to the `ProcessingMode` enum:
 
 ```swift
-// HushType/Models/ProcessingMode.swift
+// VaulType/Models/ProcessingMode.swift
 
 enum ProcessingMode: String, Codable, CaseIterable, Identifiable {
     case raw
@@ -418,7 +418,7 @@ enum ProcessingMode: String, Codable, CaseIterable, Identifiable {
 Create a JSON template file:
 
 ```json
-// HushType/Resources/PromptTemplates/email.json
+// VaulType/Resources/PromptTemplates/email.json
 {
     "name": "Email",
     "mode": "email",
@@ -431,7 +431,7 @@ Create a JSON template file:
 ### Step 3: Register in LLMService
 
 ```swift
-// HushType/Services/LLM/LLMService.swift
+// VaulType/Services/LLM/LLMService.swift
 
 func process(text: String, mode: ProcessingMode, context: AppContext) async throws -> String {
     switch mode {
@@ -448,7 +448,7 @@ func process(text: String, mode: ProcessingMode, context: AppContext) async thro
 ### Step 4: Add Tests
 
 ```swift
-// HushTypeTests/Services/LLMServiceTests.swift
+// VaulTypeTests/Services/LLMServiceTests.swift
 
 func testEmailModeFormatsAsEmail() async throws {
     let service = LLMService(model: mockModel)
@@ -472,7 +472,7 @@ The mode selector automatically picks up new `CaseIterable` cases. Verify it app
 ### Step 1: Define the Command
 
 ```swift
-// HushType/Services/Commands/CommandRegistry.swift
+// VaulType/Services/Commands/CommandRegistry.swift
 
 struct CommandDefinition {
     let name: String
@@ -503,7 +503,7 @@ extension CommandRegistry {
 ### Step 2: Implement the Handler
 
 ```swift
-// HushType/Services/Commands/Handlers/ScreenshotCommand.swift
+// VaulType/Services/Commands/Handlers/ScreenshotCommand.swift
 
 enum ScreenshotCommand {
     static func execute(context: CommandContext) async throws {
@@ -532,7 +532,7 @@ enum ScreenshotCommand {
 ### Step 3: Add Tests
 
 ```swift
-// HushTypeTests/Services/CommandParserTests.swift
+// VaulTypeTests/Services/CommandParserTests.swift
 
 func testScreenshotCommandParsing() throws {
     let parser = CommandParser()
@@ -559,7 +559,7 @@ To support a new model format beyond GGML (Whisper) and GGUF (LLM):
 ### Step 1: Add a Model Type
 
 ```swift
-// HushType/Models/ModelInfo.swift
+// VaulType/Models/ModelInfo.swift
 
 enum ModelFormat: String, Codable {
     case ggml    // Whisper models
@@ -571,7 +571,7 @@ enum ModelFormat: String, Codable {
 ### Step 2: Create an Inference Adapter
 
 ```swift
-// HushType/Services/Speech/CoreMLWhisperService.swift
+// VaulType/Services/Speech/CoreMLWhisperService.swift
 
 protocol TranscriptionService {
     func transcribe(audioData: [Float], language: String?) async throws -> String
@@ -595,7 +595,7 @@ final class CoreMLWhisperService: TranscriptionService {
 ### Step 3: Update ModelManager
 
 ```swift
-// HushType/Services/ModelManager.swift
+// VaulType/Services/ModelManager.swift
 
 func loadModel(info: ModelInfo) throws -> Any {
     switch info.format {
@@ -660,7 +660,7 @@ func testSettingsWindowOpens() {
     let app = XCUIApplication()
     app.launch()
     // Click menu bar icon, then Settings
-    app.menuBarItems["HushType"].click()
+    app.menuBarItems["VaulType"].click()
     app.menuItems["Settings..."].click()
     XCTAssertTrue(app.windows["Settings"].waitForExistence(timeout: 3))
 }
@@ -722,7 +722,7 @@ final class MockAudioCaptureService: AudioCapturing {
 ```swift
 import os
 
-let signpost = OSSignposter(subsystem: "com.hushtype.app", category: "whisper")
+let signpost = OSSignposter(subsystem: "com.vaultype.app", category: "whisper")
 
 func transcribe(audio: [Float]) async throws -> String {
     let state = signpost.beginInterval("transcription", id: signpost.makeSignpostID())
@@ -799,5 +799,5 @@ ASAN_OPTIONS = detect_leaks=1
 - [Setup Guide](SETUP_GUIDE.md) — Set up your development environment
 - [Testing Guide](../testing/TESTING.md) — Detailed testing practices
 - [Architecture](../architecture/ARCHITECTURE.md) — System architecture deep dive
-- [Contributing](../contributing/CONTRIBUTING.md) — How to contribute to HushType
+- [Contributing](../contributing/CONTRIBUTING.md) — How to contribute to VaulType
 - [API Documentation](../api/API_DOCUMENTATION.md) — Internal API reference

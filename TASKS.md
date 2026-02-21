@@ -1,4 +1,4 @@
-# TASKS.md — HushType Development Phases
+# TASKS.md — VaulType Development Phases
 
 > Phased task list driving DevTrack `/bootstrap`. Each `- [ ]` maps to a board task.
 > Nested sub-items are split into separate DevTrack tasks during bootstrap.
@@ -9,13 +9,13 @@
 ## Phase 0: Foundation & Project Setup
 
 ### 0.1 Project Structure
-- [x] Remove Xcode boilerplate — delete `Item.swift`, `ContentView.swift`, replace `HushTypeApp.swift` placeholder content
+- [x] Remove Xcode boilerplate — delete `Item.swift`, `ContentView.swift`, replace `VaulTypeApp.swift` placeholder content
 - [x] Create folder hierarchy — `App/`, `Views/Settings/`, `Views/Overlay/`, `Views/Components/`, `Services/Audio/`, `Services/Speech/`, `Services/LLM/`, `Services/Injection/`, `Services/Commands/`, `Models/`, `Utilities/`, `Resources/`
 - [x] Create `AppState.swift` — `@Observable` class holding global app state (recording status, active mode, menu bar icon state)
 
 ### 0.2 Utilities & Constants
-- [x] Create `Constants.swift` — app bundle ID (`com.hushtype.app`), subsystem for logging, model storage paths, default hotkey, UserDefaults key enum
-- [x] Create `Logger+Extensions.swift` — `os.Logger` factory with subsystem `com.hushtype.app` and per-module categories (audio, whisper, llm, injection, ui, hotkey, models)
+- [x] Create `Constants.swift` — app bundle ID (`com.vaultype.app`), subsystem for logging, model storage paths, default hotkey, UserDefaults key enum
+- [x] Create `Logger+Extensions.swift` — `os.Logger` factory with subsystem `com.vaultype.app` and per-module categories (audio, whisper, llm, injection, ui, hotkey, models)
 - [x] Create `UserDefaultsKey.swift` — typed enum for all UserDefaults keys (onboarding, feature flags, window state, cache timestamps, usage state, permissions, UI state)
 - [x] Create `KeychainManager.swift` — save/load/delete Keychain items with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`
 
@@ -29,12 +29,12 @@
 - [x] Create `ModelInfo.swift` — SwiftData model with name, type, fileName, fileSize, downloadURL, isDownloaded, downloadProgress, pre-seeded whisper model registry
 
 ### 0.4 SwiftData Container
-- [x] Configure `ModelContainer` in `HushTypeApp.swift` — register all 6 models (DictationEntry, PromptTemplate, AppProfile, VocabularyEntry, UserSettings, ModelInfo), attach to MenuBarExtra and Settings scenes
-- [x] Create `HushTypeMigrationPlan.swift` — initial SchemaV1, migration plan structure for future schema evolution
+- [x] Configure `ModelContainer` in `VaulTypeApp.swift` — register all 6 models (DictationEntry, PromptTemplate, AppProfile, VocabularyEntry, UserSettings, ModelInfo), attach to MenuBarExtra and Settings scenes
+- [x] Create `VaulTypeMigrationPlan.swift` — initial SchemaV1, migration plan structure for future schema evolution
 - [x] Seed built-in data on first launch — 4 built-in PromptTemplates (Clean, Structured Notes, Code, Email Draft) and default whisper model registry entries
 
 ### 0.5 Entitlements & Permissions
-- [x] Configure `HushType.entitlements` — add microphone usage description, accessibility API usage
+- [x] Configure `VaulType.entitlements` — add microphone usage description, accessibility API usage
 - [x] Create `PermissionsManager.swift` — check/request microphone permission (AVCaptureDevice), check accessibility permission (AXIsProcessTrusted), guide user to System Settings when denied
 
 ---
@@ -42,7 +42,7 @@
 ## Phase 1: MVP — Core Dictation (v0.1.0)
 
 ### 1.1 Menu Bar App Shell
-- [x] Implement `HushTypeApp.swift` — `@main` with `MenuBarExtra` using SF Symbols for mic state (idle/recording/processing), `.menuBarExtraStyle(.window)`
+- [x] Implement `VaulTypeApp.swift` — `@main` with `MenuBarExtra` using SF Symbols for mic state (idle/recording/processing), `.menuBarExtraStyle(.window)`
 - [x] Create `AppDelegate.swift` — `NSApplicationDelegate` for lifecycle management, `LSUIElement` dock icon hiding, `NSApplication.shared` configuration
 - [x] Create `MenuBarView.swift` — menu bar popover showing current status, last transcription preview, quick settings toggles, mode indicator
 - [x] Create `MenuBarManager.swift` — manages menu bar icon state transitions (idle → recording → processing → idle), animates icon during processing
@@ -269,10 +269,10 @@
 - [x] Add initial model download — guided download of default whisper model (base English) during onboarding with progress
 
 ### 5.6 Plugin System
-- [x] Define `HushTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
+- [x] Define `VaulTypePlugin` protocol — plugin interface with identifier, displayName, version, activate/deactivate lifecycle
 - [x] Define `ProcessingPlugin` protocol — transform text in the pipeline with custom logic
 - [x] Define `CommandPlugin` protocol — add new voice commands via plugin
-- [x] Implement plugin discovery — load plugins from `~/Library/Application Support/HushType/Plugins/`, sandboxed execution with restricted system access
+- [x] Implement plugin discovery — load plugins from `~/Library/Application Support/VaulType/Plugins/`, sandboxed execution with restricted system access
 - [x] Create `PluginManagerView.swift` — settings UI to install, enable/disable, and remove plugins
 
 ### 5.7 Phase 5 Tests
@@ -291,7 +291,7 @@
 ### 6.2 Distribution
 - [x] Create DMG packaging — build `.dmg` installer with drag-to-Applications layout, background image, volume icon
 - [x] Integrate Sparkle 2.x — auto-update framework with EdDSA signatures, appcast XML, delta updates
-- [x] Submit Homebrew cask — create and submit `homebrew-cask` formula for `brew install --cask hushtype`
+- [x] Submit Homebrew cask — create and submit `homebrew-cask` formula for `brew install --cask vaultype`
 
 ### 6.3 CI/CD Pipeline
 - [x] Create GitHub Actions build workflow — build on macOS runners, cache Swift/CMake dependencies, matrix for Debug/Release
@@ -309,7 +309,7 @@
 ### 6.5 Documentation
 - [x] Update all docs — ensure docs/ files reflect final implementation, remove outdated references, add missing API documentation
 - [x] Create user guide — end-user documentation for installation, setup, daily use, troubleshooting
-- [x] Create plugin development guide — developer documentation for building HushType plugins with example code
+- [x] Create plugin development guide — developer documentation for building VaulType plugins with example code
 
 ---
 

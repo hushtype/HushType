@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Maintenance
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
 > This document covers all ongoing maintenance processes: model updates, dependency management, macOS compatibility, Apple Silicon optimizations, performance monitoring, and user feedback triage.
 
 ---
@@ -85,7 +85,7 @@ All recurring maintenance tasks are organized by cadence. Every task has a clear
 
 ## Model Update Process
 
-HushType depends on two families of ML models: Whisper models for speech-to-text and GGUF-format LLMs for post-processing. Both ecosystems move quickly, so a structured update process is essential.
+VaulType depends on two families of ML models: Whisper models for speech-to-text and GGUF-format LLMs for post-processing. Both ecosystems move quickly, so a structured update process is essential.
 
 ### Monitoring New Releases
 
@@ -101,7 +101,7 @@ We track upstream model releases from multiple sources:
 
 When a new model is detected:
 
-1. **Assess relevance** — Does it improve quality, speed, or memory usage for HushType's use case?
+1. **Assess relevance** — Does it improve quality, speed, or memory usage for VaulType's use case?
 2. **Check format compatibility** — Is it available in the correct GGML/GGUF format version that our whisper.cpp/llama.cpp build supports?
 3. **Evaluate resource requirements** — Will it run on our minimum supported hardware (8 GB RAM, M1)?
 4. **Create a tracking issue** — Open a GitHub Issue tagged `model-update` with the assessment.
@@ -288,7 +288,7 @@ struct ModelRegistryEntry: Codable, Identifiable {
     let minimumRAMGB: Int
     let recommendedRAMGB: Int
     let supportedArchitectures: [String]    // ["arm64", "x86_64"]
-    let requiredAppVersion: String          // Minimum HushType version
+    let requiredAppVersion: String          // Minimum VaulType version
     let deprecated: Bool
     let deprecationMessage: String?
     let replacedBy: String?                 // ID of the replacement model
@@ -306,14 +306,14 @@ final class ModelRegistryManager {
     private let localRegistryPath: URL
 
     init(localRegistryPath: URL) {
-        self.registryURL = URL(string: "https://hushtype.app/models/registry.json")!
+        self.registryURL = URL(string: "https://vaultype.app/models/registry.json")!
         self.localRegistryPath = localRegistryPath
     }
 
     /// Check for registry updates and return any new or updated entries.
     func checkForUpdates() async throws -> [ModelRegistryEntry] {
         // In production this would fetch from a local cache or bundled manifest.
-        // HushType never makes network requests — the registry ships with app updates
+        // VaulType never makes network requests — the registry ships with app updates
         // and is updated via Sparkle alongside the binary.
         let bundledRegistryURL = Bundle.main.url(
             forResource: "model-registry",
@@ -357,11 +357,11 @@ final class ModelRegistryManager {
 
 When the app detects that a newer model is available (bundled with a new app version via Sparkle), it surfaces a non-intrusive notification:
 
-1. **Menu bar indicator** — A small badge appears on the HushType menu bar icon.
+1. **Menu bar indicator** — A small badge appears on the VaulType menu bar icon.
 2. **Settings panel** — The Models tab shows an "Update Available" badge next to the outdated model.
 3. **No forced updates** — Users are never forced to update models. Old models continue to work as long as they are compatible with the current whisper.cpp/llama.cpp runtime.
 
-> ℹ️ **Note**: Because HushType is zero-network, model updates are distributed as part of app updates via Sparkle, or users download model files manually. The registry only describes what is available.
+> ℹ️ **Note**: Because VaulType is zero-network, model updates are distributed as part of app updates via Sparkle, or users download model files manually. The registry only describes what is available.
 
 ### Migration from Old Model Files
 
@@ -508,7 +508,7 @@ struct ModelCompatibilityChecker {
 
 ## Dependency Updates
 
-HushType has three categories of dependencies: C/C++ libraries built from source (whisper.cpp, llama.cpp), Swift packages managed via SPM, and the Sparkle update framework.
+VaulType has three categories of dependencies: C/C++ libraries built from source (whisper.cpp, llama.cpp), Swift packages managed via SPM, and the Sparkle update framework.
 
 ### Dependency Tracking Table
 
@@ -536,7 +536,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "=== HushType C/C++ Dependency Version Check ==="
+echo "=== VaulType C/C++ Dependency Version Check ==="
 echo ""
 
 # Check whisper.cpp
@@ -899,7 +899,7 @@ struct DependencyAuditor {
         let maxNameLen = results.map(\.dependency.name.count).max() ?? 20
         let header = "Dependency".padding(toLength: maxNameLen + 2, withPad: " ", startingAt: 0)
 
-        print("=== HushType Dependency Audit Report ===")
+        print("=== VaulType Dependency Audit Report ===")
         print("\(header)  Version       Status       Notes")
         print(String(repeating: "-", count: 80))
 
@@ -933,7 +933,7 @@ struct DependencyAuditor {
 
 ## macOS Compatibility Maintenance
 
-HushType targets macOS 14 (Sonoma) and later. Each new macOS release can introduce breaking changes to the APIs we rely on heavily: Accessibility, TCC (Transparency, Consent, and Control), AVAudioEngine, CGEvent, and Metal.
+VaulType targets macOS 14 (Sonoma) and later. Each new macOS release can introduce breaking changes to the APIs we rely on heavily: Accessibility, TCC (Transparency, Consent, and Control), AVAudioEngine, CGEvent, and Metal.
 
 ### Testing on New macOS Releases
 
@@ -1032,7 +1032,7 @@ struct TextInjector {
 
 ### Privacy and Security Changes (TCC)
 
-HushType requires two TCC permissions: **Accessibility** and **Microphone**. Apple frequently tightens TCC in new macOS releases.
+VaulType requires two TCC permissions: **Accessibility** and **Microphone**. Apple frequently tightens TCC in new macOS releases.
 
 | Permission | TCC Service | Current Behavior | Risk in Future Releases |
 |---|---|---|---|
@@ -1050,7 +1050,7 @@ Maintenance actions:
 
 ### Accessibility API Changes
 
-The Accessibility API (`AXUIElement`) is central to HushType's text injection fallback path. Changes to monitor:
+The Accessibility API (`AXUIElement`) is central to VaulType's text injection fallback path. Changes to monitor:
 
 - **`AXUIElement` deprecation** — Watch for any signals that Apple is moving away from the Carbon-era Accessibility API toward a SwiftUI-native replacement.
 - **`AXTrustedCheckOptionPrompt`** — The mechanism for checking/requesting Accessibility trust may change.
@@ -1125,7 +1125,7 @@ struct AccessibilityMonitor {
 
 ### Entitlement Updates
 
-HushType's current entitlement set:
+VaulType's current entitlement set:
 
 | Entitlement | Value | Purpose |
 |---|---|---|
@@ -1142,11 +1142,11 @@ HushType's current entitlement set:
 
 ## Apple Silicon Optimization Updates
 
-HushType is optimized for Apple Silicon but also supports Intel Macs. As Apple releases new chip generations, we can unlock additional performance capabilities.
+VaulType is optimized for Apple Silicon but also supports Intel Macs. As Apple releases new chip generations, we can unlock additional performance capabilities.
 
 ### Taking Advantage of New Chip Features
 
-| Chip Generation | Key Features for HushType | Optimization Opportunities |
+| Chip Generation | Key Features for VaulType | Optimization Opportunities |
 |---|---|---|
 | **M1** (2020) | 8-core GPU, 16-core Neural Engine | Baseline Metal compute, ANE for small models |
 | **M2** (2022) | 10-core GPU, 15.8 TOPS Neural Engine | Improved Metal throughput |
@@ -1267,7 +1267,7 @@ Acceptable performance ranges:
 
 ## Performance Regression Monitoring
 
-Performance is a core feature of HushType. Users expect transcription to feel instantaneous. Any regression in inference speed, memory usage, or responsiveness is treated as a bug.
+Performance is a core feature of VaulType. Users expect transcription to feel instantaneous. Any regression in inference speed, memory usage, or responsiveness is treated as a bug.
 
 ### Benchmark Suite
 
@@ -1303,7 +1303,7 @@ RESULT_FILE="${RESULTS_DIR}/bench_${TIMESTAMP}.json"
 
 mkdir -p "$RESULTS_DIR"
 
-echo "=== HushType Performance Benchmark Suite ==="
+echo "=== VaulType Performance Benchmark Suite ==="
 echo "Date: $(date)"
 echo "Host: $(hostname)"
 echo "Chip: $(sysctl -n machdep.cpu.brand_string 2>/dev/null || echo 'Apple Silicon')"
@@ -1313,14 +1313,14 @@ echo ""
 
 # Build the benchmark target in Release mode
 echo "Building benchmark target..."
-xcodebuild -scheme HushTypeBenchmarks \
+xcodebuild -scheme VaulTypeBenchmarks \
     -configuration Release \
     -derivedDataPath "${REPO_ROOT}/.build/benchmarks" \
     -quiet \
     build 2>&1
 
 # Find the built binary
-BENCH_BINARY=$(find "${REPO_ROOT}/.build/benchmarks" -name "HushTypeBenchmarks" -type f | head -1)
+BENCH_BINARY=$(find "${REPO_ROOT}/.build/benchmarks" -name "VaulTypeBenchmarks" -type f | head -1)
 
 if [ -z "$BENCH_BINARY" ]; then
     echo "ERROR: Benchmark binary not found"
@@ -1606,7 +1606,7 @@ User reports issue
 ```markdown
 ---
 name: Bug Report
-about: Report a problem with HushType
+about: Report a problem with VaulType
 title: "[Bug] "
 labels: ["bug", "needs-triage"]
 assignees: []
@@ -1627,7 +1627,7 @@ assignees: []
 <!-- What actually happens? -->
 
 ## Environment
-- **HushType version**: <!-- e.g., 1.2.3 -->
+- **VaulType version**: <!-- e.g., 1.2.3 -->
 - **macOS version**: <!-- e.g., 15.1 -->
 - **Chip**: <!-- e.g., M1, M3 Pro, Intel i7 -->
 - **RAM**: <!-- e.g., 8 GB, 16 GB -->
@@ -1635,7 +1635,7 @@ assignees: []
 - **LLM model**: <!-- e.g., Llama 3.2 3B Q4_K_M -->
 
 ## Diagnostic Information
-<!-- Paste the output of HushType > Help > Copy Diagnostic Info -->
+<!-- Paste the output of VaulType > Help > Copy Diagnostic Info -->
 ```
 <details>
 <summary>Diagnostic output</summary>
@@ -1659,7 +1659,7 @@ Paste here
 ```markdown
 ---
 name: Feature Request
-about: Suggest a new feature for HushType
+about: Suggest a new feature for VaulType
 title: "[Feature] "
 labels: ["enhancement", "needs-triage"]
 assignees: []
@@ -1675,7 +1675,7 @@ assignees: []
 <!-- What other approaches did you consider? -->
 
 ## Privacy Impact
-<!-- Does this feature affect HushType's privacy guarantees? (e.g., would it require network access?) -->
+<!-- Does this feature affect VaulType's privacy guarantees? (e.g., would it require network access?) -->
 
 ## Scope
 - [ ] This feature works entirely offline
@@ -1803,7 +1803,7 @@ actor DiagnosticCollector {
     func formatAsText(_ report: DiagnosticReport) -> String {
         var lines: [String] = []
 
-        lines.append("=== HushType Diagnostic Report ===")
+        lines.append("=== VaulType Diagnostic Report ===")
         lines.append("")
         lines.append("App Version: \(report.appVersion) (\(report.buildNumber))")
         lines.append("macOS: \(report.macOSVersion)")
@@ -1900,7 +1900,7 @@ actor DiagnosticCollector {
         // Scan the models directory and return basic info
         let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent("HushType/Models")
+            .appendingPathComponent("VaulType/Models")
 
         guard let modelsDir = modelsDir,
               let files = try? FileManager.default.contentsOfDirectory(
@@ -1954,7 +1954,7 @@ actor DiagnosticCollector {
     private func getSwiftDataStoreSize() -> String {
         let storeURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent("HushType/HushType.store")
+            .appendingPathComponent("VaulType/VaulType.store")
 
         guard let storeURL = storeURL,
               let attrs = try? FileManager.default.attributesOfItem(atPath: storeURL.path),
@@ -1975,7 +1975,7 @@ actor DiagnosticCollector {
         // Read from the app's log file, redacting any potentially personal content
         let logURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent("HushType/Logs/hushtype.log")
+            .appendingPathComponent("VaulType/Logs/vaultype.log")
 
         guard let logURL = logURL,
               let content = try? String(contentsOf: logURL, encoding: .utf8) else {
@@ -2005,17 +2005,17 @@ actor DiagnosticCollector {
 }
 ```
 
-> 🔒 **Privacy**: The diagnostic collector deliberately excludes transcription history, typed text, personal file paths (redacted to `/Users/[REDACTED]`), and any content that could identify the user. This aligns with HushType's zero-data-collection principle.
+> 🔒 **Privacy**: The diagnostic collector deliberately excludes transcription history, typed text, personal file paths (redacted to `/Users/[REDACTED]`), and any content that could identify the user. This aligns with VaulType's zero-data-collection principle.
 
 ---
 
 ## SwiftData Migration Between App Versions
 
-As HushType evolves, the SwiftData schema may change between versions. Every schema change requires a migration plan to preserve user data (settings, transcription history, model preferences).
+As VaulType evolves, the SwiftData schema may change between versions. Every schema change requires a migration plan to preserve user data (settings, transcription history, model preferences).
 
 ### Migration Strategy
 
-HushType follows a **forward-only migration** strategy:
+VaulType follows a **forward-only migration** strategy:
 
 1. **Never delete data** — Old fields are deprecated, not removed.
 2. **Add with defaults** — New fields always have sensible defaults.
@@ -2041,7 +2041,7 @@ import os
 /// Manages SwiftData schema migrations between app versions.
 final class MigrationManager {
 
-    private let logger = Logger(subsystem: "app.hushtype", category: "Migration")
+    private let logger = Logger(subsystem: "app.vaultype", category: "Migration")
 
     // MARK: - Schema Versions
 
@@ -2178,12 +2178,12 @@ final class MigrationManager {
 
     /// The complete migration plan covering all schema versions.
     static var migrationPlan: SchemaMigrationPlan.Type {
-        HushTypeMigrationPlan.self
+        VaulTypeMigrationPlan.self
     }
 }
 
 /// The full migration plan that SwiftData uses at container initialization.
-enum HushTypeMigrationPlan: SchemaMigrationPlan {
+enum VaulTypeMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [
             MigrationManager.SchemaV1.self,
@@ -2204,10 +2204,10 @@ enum HushTypeMigrationPlan: SchemaMigrationPlan {
 
 extension ModelContainer {
     /// Create a ModelContainer with migration support.
-    static func hushTypeContainer() throws -> ModelContainer {
+    static func vaulTypeContainer() throws -> ModelContainer {
         let schema = Schema(MigrationManager.SchemaV3.models)
         let config = ModelConfiguration(
-            "HushType",
+            "VaulType",
             schema: schema,
             isStoredInMemoryOnly: false,
             groupContainer: .none
@@ -2215,7 +2215,7 @@ extension ModelContainer {
 
         return try ModelContainer(
             for: schema,
-            migrationPlan: HushTypeMigrationPlan.self,
+            migrationPlan: VaulTypeMigrationPlan.self,
             configurations: [config]
         )
     }
@@ -2231,7 +2231,7 @@ Every migration must be tested before release:
 
 import XCTest
 import SwiftData
-@testable import HushType
+@testable import VaulType
 
 final class MigrationTests: XCTestCase {
 
@@ -2274,7 +2274,7 @@ final class MigrationTests: XCTestCase {
         )
         let v3Container = try ModelContainer(
             for: v3Schema,
-            migrationPlan: HushTypeMigrationPlan.self,
+            migrationPlan: VaulTypeMigrationPlan.self,
             configurations: [v3Config]
         )
         let v3Context = ModelContext(v3Container)
@@ -2302,7 +2302,7 @@ final class MigrationTests: XCTestCase {
         }
 
         // Opening a fresh store with migration plan should not crash
-        let container = try ModelContainer.hushTypeContainer()
+        let container = try ModelContainer.vaulTypeContainer()
         XCTAssertNotNil(container)
     }
 
@@ -2317,11 +2317,11 @@ final class MigrationTests: XCTestCase {
         }
 
         // Write garbage to the store file
-        let storeURL = tempDir.appendingPathComponent("HushType.store")
+        let storeURL = tempDir.appendingPathComponent("VaulType.store")
         try "not a valid sqlite database".write(to: storeURL, atomically: true, encoding: .utf8)
 
         // Attempting to open should throw, not crash
-        XCTAssertThrowsError(try ModelContainer.hushTypeContainer()) { error in
+        XCTAssertThrowsError(try ModelContainer.vaulTypeContainer()) { error in
             // Verify we get a meaningful error, not a segfault
             XCTAssertNotNil(error.localizedDescription)
         }

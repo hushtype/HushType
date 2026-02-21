@@ -2,12 +2,12 @@
 # notarize.sh — Submit a macOS app or DMG for Apple notarization.
 #
 # Usage:
-#   Local:  ./scripts/notarize.sh path/to/HushType.app
-#   CI:     APPLE_ID=... APPLE_TEAM_ID=... APPLE_APP_PASSWORD=... CI=true ./scripts/notarize.sh path/to/HushType.dmg
+#   Local:  ./scripts/notarize.sh path/to/VaulType.app
+#   CI:     APPLE_ID=... APPLE_TEAM_ID=... APPLE_APP_PASSWORD=... CI=true ./scripts/notarize.sh path/to/VaulType.dmg
 #
 # Modes:
 #   Keychain profile (local dev): Credentials are stored via:
-#     xcrun notarytool store-credentials "HushType-Notarize" \
+#     xcrun notarytool store-credentials "VaulType-Notarize" \
 #       --apple-id "your@email.com" \
 #       --team-id "L6UMTZRQRM" \
 #       --password "app-specific-password"
@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-KEYCHAIN_PROFILE="HushType-Notarize"
+KEYCHAIN_PROFILE="VaulType-Notarize"
 TIMEOUT="30m"
 
 # ---------------------------------------------------------------------------
@@ -46,10 +46,10 @@ Modes:
       APPLE_APP_PASSWORD App-specific password (from appleid.apple.com)
 
 Examples:
-  ./scripts/notarize.sh build/HushType.app
-  ./scripts/notarize.sh build/HushType.dmg
+  ./scripts/notarize.sh build/VaulType.app
+  ./scripts/notarize.sh build/VaulType.dmg
   CI=true APPLE_ID=dev@example.com APPLE_TEAM_ID=L6UMTZRQRM APPLE_APP_PASSWORD=xxxx-xxxx \\
-    ./scripts/notarize.sh build/HushType.dmg
+    ./scripts/notarize.sh build/VaulType.dmg
 EOF
 }
 
@@ -73,7 +73,7 @@ TARGET="$1"
 # Validation
 # ---------------------------------------------------------------------------
 
-echo "=== HushType: Notarization ==="
+echo "=== VaulType: Notarization ==="
 echo ""
 
 echo "[1/4] Validating input..."

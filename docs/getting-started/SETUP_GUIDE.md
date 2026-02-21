@@ -2,8 +2,8 @@ Last Updated: 2026-02-13
 
 # Development Environment Setup Guide
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
-> This guide walks you through every step of setting up a local development environment for HushType, from installing prerequisites through building native C/C++ dependencies, configuring Xcode, and running the app in debug mode.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> This guide walks you through every step of setting up a local development environment for VaulType, from installing prerequisites through building native C/C++ dependencies, configuring Xcode, and running the app in debug mode.
 
 ---
 
@@ -19,7 +19,7 @@ Last Updated: 2026-02-13
   - [2.1 Hardware Requirements](#21-hardware-requirements)
   - [2.2 Software Requirements](#22-software-requirements)
   - [2.3 Disk Space Budget](#23-disk-space-budget)
-- [3. Clone the HushType Repository](#3-clone-the-hushtype-repository)
+- [3. Clone the VaulType Repository](#3-clone-the-vaultype-repository)
 - [4. Build whisper.cpp as a Static Library](#4-build-whispercpp-as-a-static-library)
   - [4.1 Clone whisper.cpp](#41-clone-whispercpp)
   - [4.2 Configure CMake with Metal Support](#42-configure-cmake-with-metal-support)
@@ -198,7 +198,7 @@ git version 2.43.0                # Git 2.39+
 | **Disk (app)** | 500 MB | 500 MB | Application bundle and build artifacts |
 | **Disk (models)** | 2 GB | 6 GB+ | Whisper + LLM model files (see Section 2.3) |
 
-> 🍎 **Apple Silicon Recommended**: HushType is designed for Apple Silicon. While Intel Macs are supported, inference performance on Apple Silicon is 3-10x faster thanks to unified memory architecture and Metal GPU acceleration. See `../architecture/TECH_STACK.md` for detailed performance comparisons.
+> 🍎 **Apple Silicon Recommended**: VaulType is designed for Apple Silicon. While Intel Macs are supported, inference performance on Apple Silicon is 3-10x faster thanks to unified memory architecture and Metal GPU acceleration. See `../architecture/TECH_STACK.md` for detailed performance comparisons.
 
 ### 2.2 Software Requirements
 
@@ -209,7 +209,7 @@ git version 2.43.0                # Git 2.39+
 | **CMake** | 3.21+ | Required for Metal shader compilation in C++ libraries |
 | **Python** (optional) | 3.9+ | Only needed if running whisper.cpp test scripts |
 
-> ⚠️ **Warning**: macOS 13 (Ventura) and earlier are **not supported**. HushType depends on SwiftData and SwiftUI 5.0 APIs introduced in macOS 14.
+> ⚠️ **Warning**: macOS 13 (Ventura) and earlier are **not supported**. VaulType depends on SwiftData and SwiftUI 5.0 APIs introduced in macOS 14.
 
 ### 2.3 Disk Space Budget
 
@@ -217,7 +217,7 @@ Plan for the following disk usage during development:
 
 | Component | Size | Notes |
 |---|---|---|
-| HushType source code | ~50 MB | Including git history |
+| VaulType source code | ~50 MB | Including git history |
 | whisper.cpp source + build | ~200 MB | Build artifacts are temporary |
 | llama.cpp source + build | ~300 MB | Build artifacts are temporary |
 | Vendor libraries (installed) | ~100 MB | Static libraries + headers |
@@ -229,16 +229,16 @@ Plan for the following disk usage during development:
 | **Total (minimum dev)** | **~1.5 GB** | With tiny Whisper + small LLM |
 | **Total (recommended dev)** | **~4-6 GB** | With base/small Whisper + capable LLM |
 
-> 💡 **Tip**: Model files are stored in `~/Library/Application Support/HushType/Models/`. You can symlink this directory to an external drive if disk space is limited.
+> 💡 **Tip**: Model files are stored in `~/Library/Application Support/VaulType/Models/`. You can symlink this directory to an external drive if disk space is limited.
 
 ---
 
-## 3. Clone the HushType Repository
+## 3. Clone the VaulType Repository
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/hushtype.git
-cd hushtype
+git clone https://github.com/your-org/vaultype.git
+cd vaultype
 
 # Verify the project structure
 ls -la
@@ -247,13 +247,13 @@ ls -la
 You should see a directory structure similar to:
 
 ```
-hushtype/
-├── HushType/                 # Main Xcode project source
+vaultype/
+├── VaulType/                 # Main Xcode project source
 │   ├── App/                  # Application entry point
 │   ├── Features/             # Feature modules
 │   ├── Infrastructure/       # C/C++ bridge, audio, injection
 │   └── Resources/            # Assets, entitlements, Info.plist
-├── HushType.xcodeproj/       # Xcode project file
+├── VaulType.xcodeproj/       # Xcode project file
 ├── vendor/                   # Third-party static libraries (created during setup)
 ├── scripts/                  # Build and utility scripts
 ├── docs/                     # Documentation
@@ -272,7 +272,7 @@ whisper.cpp provides the speech-to-text inference engine. We build it as a stati
 ### 4.1 Clone whisper.cpp
 
 ```bash
-# From outside the HushType project directory
+# From outside the VaulType project directory
 cd ~/dev
 
 # Clone the latest whisper.cpp
@@ -343,39 +343,39 @@ The build typically takes 2-5 minutes depending on your hardware. You should see
 
 ### 4.4 Install to the Vendor Directory
 
-Copy the built libraries and headers into the HushType vendor directory:
+Copy the built libraries and headers into the VaulType vendor directory:
 
 ```bash
-# Create the vendor directory structure in the HushType project
-HUSHTYPE_DIR=~/dev/hushtype
-mkdir -p "$HUSHTYPE_DIR/vendor/whisper/lib"
-mkdir -p "$HUSHTYPE_DIR/vendor/whisper/include"
+# Create the vendor directory structure in the VaulType project
+VAULTYPE_DIR=~/dev/vaultype
+mkdir -p "$VAULTYPE_DIR/vendor/whisper/lib"
+mkdir -p "$VAULTYPE_DIR/vendor/whisper/include"
 
 # Install the static library
 cmake --install . --config Release
 
 # Copy the static library (or libraries)
-cp install/lib/libwhisper.a "$HUSHTYPE_DIR/vendor/whisper/lib/"
+cp install/lib/libwhisper.a "$VAULTYPE_DIR/vendor/whisper/lib/"
 
 # If ggml is built as a separate static library, copy it too
 if [ -f install/lib/libggml.a ]; then
-  cp install/lib/libggml.a "$HUSHTYPE_DIR/vendor/whisper/lib/"
+  cp install/lib/libggml.a "$VAULTYPE_DIR/vendor/whisper/lib/"
 fi
 
 # Copy additional ggml libraries if present
 for lib in install/lib/libggml-*.a; do
-  [ -f "$lib" ] && cp "$lib" "$HUSHTYPE_DIR/vendor/whisper/lib/"
+  [ -f "$lib" ] && cp "$lib" "$VAULTYPE_DIR/vendor/whisper/lib/"
 done
 
 # Copy headers
-cp install/include/whisper.h "$HUSHTYPE_DIR/vendor/whisper/include/"
-cp -r install/include/ggml*.h "$HUSHTYPE_DIR/vendor/whisper/include/" 2>/dev/null || true
+cp install/include/whisper.h "$VAULTYPE_DIR/vendor/whisper/include/"
+cp -r install/include/ggml*.h "$VAULTYPE_DIR/vendor/whisper/include/" 2>/dev/null || true
 
 # Copy Metal shader resources
 if [ -f bin/ggml-metal.metal ]; then
-  mkdir -p "$HUSHTYPE_DIR/vendor/whisper/resources"
-  cp bin/ggml-metal.metal "$HUSHTYPE_DIR/vendor/whisper/resources/"
-  cp bin/default.metallib "$HUSHTYPE_DIR/vendor/whisper/resources/" 2>/dev/null || true
+  mkdir -p "$VAULTYPE_DIR/vendor/whisper/resources"
+  cp bin/ggml-metal.metal "$VAULTYPE_DIR/vendor/whisper/resources/"
+  cp bin/default.metallib "$VAULTYPE_DIR/vendor/whisper/resources/" 2>/dev/null || true
 fi
 ```
 
@@ -383,19 +383,19 @@ fi
 
 ```bash
 # Verify the static library exists and contains both architectures
-file "$HUSHTYPE_DIR/vendor/whisper/lib/libwhisper.a"
+file "$VAULTYPE_DIR/vendor/whisper/lib/libwhisper.a"
 # Expected: "current ar archive" or similar
 
-lipo -info "$HUSHTYPE_DIR/vendor/whisper/lib/libwhisper.a"
+lipo -info "$VAULTYPE_DIR/vendor/whisper/lib/libwhisper.a"
 # Expected for universal: "Architectures in the fat file: ... are: x86_64 arm64"
 # Expected for arm64 only: "Non-fat file: ... is architecture: arm64"
 
 # Verify headers are present
-ls "$HUSHTYPE_DIR/vendor/whisper/include/"
+ls "$VAULTYPE_DIR/vendor/whisper/include/"
 # Expected: whisper.h ggml.h (and possibly others)
 
 # Verify the library exports whisper symbols
-nm "$HUSHTYPE_DIR/vendor/whisper/lib/libwhisper.a" | grep "whisper_init" | head -5
+nm "$VAULTYPE_DIR/vendor/whisper/lib/libwhisper.a" | grep "whisper_init" | head -5
 # Should show symbol entries for whisper_init_from_file and related functions
 ```
 
@@ -410,7 +410,7 @@ llama.cpp provides the LLM inference engine for text post-processing (grammar co
 ### 5.1 Clone llama.cpp
 
 ```bash
-# From outside the HushType project directory
+# From outside the VaulType project directory
 cd ~/dev
 
 # Clone the latest llama.cpp
@@ -475,52 +475,52 @@ Build time is typically 3-8 minutes. The output includes Metal shader compilatio
 
 ```bash
 # Create the vendor directory structure
-HUSHTYPE_DIR=~/dev/hushtype
-mkdir -p "$HUSHTYPE_DIR/vendor/llama/lib"
-mkdir -p "$HUSHTYPE_DIR/vendor/llama/include"
+VAULTYPE_DIR=~/dev/vaultype
+mkdir -p "$VAULTYPE_DIR/vendor/llama/lib"
+mkdir -p "$VAULTYPE_DIR/vendor/llama/include"
 
 # Install
 cmake --install . --config Release
 
 # Copy the static libraries
-cp install/lib/libllama.a "$HUSHTYPE_DIR/vendor/llama/lib/"
-cp install/lib/libggml.a "$HUSHTYPE_DIR/vendor/llama/lib/" 2>/dev/null || true
+cp install/lib/libllama.a "$VAULTYPE_DIR/vendor/llama/lib/"
+cp install/lib/libggml.a "$VAULTYPE_DIR/vendor/llama/lib/" 2>/dev/null || true
 
 # Copy additional ggml libraries if present
 for lib in install/lib/libggml-*.a; do
-  [ -f "$lib" ] && cp "$lib" "$HUSHTYPE_DIR/vendor/llama/lib/"
+  [ -f "$lib" ] && cp "$lib" "$VAULTYPE_DIR/vendor/llama/lib/"
 done
 
 # Copy the common library if present
-cp install/lib/libcommon.a "$HUSHTYPE_DIR/vendor/llama/lib/" 2>/dev/null || true
+cp install/lib/libcommon.a "$VAULTYPE_DIR/vendor/llama/lib/" 2>/dev/null || true
 
 # Copy headers
-cp install/include/llama.h "$HUSHTYPE_DIR/vendor/llama/include/"
-cp install/include/ggml*.h "$HUSHTYPE_DIR/vendor/llama/include/" 2>/dev/null || true
+cp install/include/llama.h "$VAULTYPE_DIR/vendor/llama/include/"
+cp install/include/ggml*.h "$VAULTYPE_DIR/vendor/llama/include/" 2>/dev/null || true
 
 # Copy Metal shader resources
 if [ -f bin/ggml-metal.metal ]; then
-  mkdir -p "$HUSHTYPE_DIR/vendor/llama/resources"
-  cp bin/ggml-metal.metal "$HUSHTYPE_DIR/vendor/llama/resources/"
-  cp bin/default.metallib "$HUSHTYPE_DIR/vendor/llama/resources/" 2>/dev/null || true
+  mkdir -p "$VAULTYPE_DIR/vendor/llama/resources"
+  cp bin/ggml-metal.metal "$VAULTYPE_DIR/vendor/llama/resources/"
+  cp bin/default.metallib "$VAULTYPE_DIR/vendor/llama/resources/" 2>/dev/null || true
 fi
 ```
 
-> ℹ️ **Note**: Both whisper.cpp and llama.cpp depend on ggml. If llama.cpp's `libggml.a` conflicts with whisper.cpp's version, you may need to use only one copy. In practice, HushType's Xcode project is configured to handle this — see Section 6.4.
+> ℹ️ **Note**: Both whisper.cpp and llama.cpp depend on ggml. If llama.cpp's `libggml.a` conflicts with whisper.cpp's version, you may need to use only one copy. In practice, VaulType's Xcode project is configured to handle this — see Section 6.4.
 
 ### 5.5 Verify the llama.cpp Build
 
 ```bash
 # Verify the static library
-file "$HUSHTYPE_DIR/vendor/llama/lib/libllama.a"
-lipo -info "$HUSHTYPE_DIR/vendor/llama/lib/libllama.a"
+file "$VAULTYPE_DIR/vendor/llama/lib/libllama.a"
+lipo -info "$VAULTYPE_DIR/vendor/llama/lib/libllama.a"
 
 # Verify headers
-ls "$HUSHTYPE_DIR/vendor/llama/include/"
+ls "$VAULTYPE_DIR/vendor/llama/include/"
 # Expected: llama.h ggml.h (and possibly others)
 
 # Verify symbol exports
-nm "$HUSHTYPE_DIR/vendor/llama/lib/libllama.a" | grep "llama_init" | head -5
+nm "$VAULTYPE_DIR/vendor/llama/lib/libllama.a" | grep "llama_init" | head -5
 ```
 
 After completing both builds, your vendor directory should look like:
@@ -559,16 +559,16 @@ vendor/
 
 ```bash
 # Open the Xcode project
-open ~/dev/hushtype/HushType.xcodeproj
+open ~/dev/vaultype/VaulType.xcodeproj
 ```
 
-Alternatively, double-click `HushType.xcodeproj` in Finder. When prompted, allow Xcode to resolve Swift Package Manager dependencies (Sparkle, etc.).
+Alternatively, double-click `VaulType.xcodeproj` in Finder. When prompted, allow Xcode to resolve Swift Package Manager dependencies (Sparkle, etc.).
 
 > ℹ️ **Note**: The first time you open the project, SPM will fetch and resolve dependencies. This may take 1-2 minutes depending on your internet connection.
 
 ### 6.2 Configure Header Search Paths
 
-In Xcode, select the **HushType** target, navigate to **Build Settings**, and configure the following:
+In Xcode, select the **VaulType** target, navigate to **Build Settings**, and configure the following:
 
 1. Search for **"Header Search Paths"** (`HEADER_SEARCH_PATHS`).
 2. Add the following paths (set to **recursive** is not needed; use non-recursive):
@@ -588,7 +588,7 @@ In the Xcode build settings UI:
 > 💡 **Tip**: You can also set these in the `.xcconfig` file if the project uses one:
 
 ```
-// HushType.xcconfig
+// VaulType.xcconfig
 HEADER_SEARCH_PATHS = $(inherited) $(PROJECT_DIR)/vendor/whisper/include $(PROJECT_DIR)/vendor/llama/include
 ```
 
@@ -635,7 +635,7 @@ Navigate to the target's **Build Phases** tab and configure **Link Binary With L
 
 ### 6.5 Module Map Setup
 
-To use the C libraries from Swift, create module maps. HushType ships with pre-configured module maps in the project, but if you need to recreate them:
+To use the C libraries from Swift, create module maps. VaulType ships with pre-configured module maps in the project, but if you need to recreate them:
 
 **`vendor/whisper/include/module.modulemap`**:
 
@@ -679,19 +679,19 @@ import CLlama
 If the project uses a bridging header instead of (or in addition to) module maps, the bridging header is located at:
 
 ```
-HushType/Infrastructure/Bridge/HushType-Bridging-Header.h
+VaulType/Infrastructure/Bridge/VaulType-Bridging-Header.h
 ```
 
 Contents:
 
 ```c
 //
-//  HushType-Bridging-Header.h
-//  HushType
+//  VaulType-Bridging-Header.h
+//  VaulType
 //
 
-#ifndef HushType_Bridging_Header_h
-#define HushType_Bridging_Header_h
+#ifndef VaulType_Bridging_Header_h
+#define VaulType_Bridging_Header_h
 
 // whisper.cpp
 #include "whisper.h"
@@ -702,7 +702,7 @@ Contents:
 // ggml (shared)
 #include "ggml.h"
 
-#endif /* HushType_Bridging_Header_h */
+#endif /* VaulType_Bridging_Header_h */
 ```
 
 Verify the bridging header path in Build Settings:
@@ -711,7 +711,7 @@ Verify the bridging header path in Build Settings:
 2. Ensure it is set to:
 
 ```
-HushType/Infrastructure/Bridge/HushType-Bridging-Header.h
+VaulType/Infrastructure/Bridge/VaulType-Bridging-Header.h
 ```
 
 ### 6.7 Other Linker Flags
@@ -737,10 +737,10 @@ For local development, you can use either a free Apple ID or a paid Apple Develo
 
 1. Open Xcode **Settings** (⌘,) > **Accounts** tab.
 2. Click **+** and sign in with your Apple ID.
-3. In the project settings, select the **HushType** target.
+3. In the project settings, select the **VaulType** target.
 4. Under **Signing & Capabilities**:
    - Set **Team** to your Apple ID or Developer team.
-   - Set **Bundle Identifier** to `com.yourname.hushtype` (for local development).
+   - Set **Bundle Identifier** to `com.yourname.vaultype` (for local development).
 
 | Setting | Local Development | Distribution |
 |---|---|---|
@@ -765,7 +765,7 @@ For distribution with a paid developer account:
 
 ### 7.3 Hardened Runtime Settings
 
-HushType requires **Hardened Runtime** for notarization and certain entitlements. Under **Signing & Capabilities**:
+VaulType requires **Hardened Runtime** for notarization and certain entitlements. Under **Signing & Capabilities**:
 
 1. Click **+ Capability**.
 2. Add **Hardened Runtime**.
@@ -812,7 +812,7 @@ DEVELOPMENT_TEAM = YOUR_TEAM_ID
 
 ### 8.1 Required Entitlements File
 
-The entitlements file is located at `HushType/Resources/HushType.entitlements`. It must contain the following keys:
+The entitlements file is located at `VaulType/Resources/VaulType.entitlements`. It must contain the following keys:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -846,7 +846,7 @@ The entitlements file is located at `HushType/Resources/HushType.entitlements`. 
 | `disable-library-validation` | `true` | Loading Metal shader `.metallib` files |
 | `device.audio-input` | `true` | Microphone access for speech capture |
 
-> 🔒 **Security Note**: HushType runs **outside** the App Sandbox because macOS sandboxing blocks the CGEvent and Accessibility APIs that are essential for text injection. Privacy is enforced at the application level — all data stays local, no network calls for user data, no telemetry. See `../security/SECURITY.md` for the full security model.
+> 🔒 **Security Note**: VaulType runs **outside** the App Sandbox because macOS sandboxing blocks the CGEvent and Accessibility APIs that are essential for text injection. Privacy is enforced at the application level — all data stays local, no network calls for user data, no telemetry. See `../security/SECURITY.md` for the full security model.
 
 ### 8.2 Info.plist Privacy Keys
 
@@ -855,10 +855,10 @@ The `Info.plist` must include usage description strings for protected resources.
 ```xml
 <!-- Info.plist -->
 <key>NSMicrophoneUsageDescription</key>
-<string>HushType needs microphone access to capture your speech for local, on-device transcription. Audio is never sent to any server.</string>
+<string>VaulType needs microphone access to capture your speech for local, on-device transcription. Audio is never sent to any server.</string>
 
 <key>NSAccessibilityUsageDescription</key>
-<string>HushType needs Accessibility access to type transcribed text into your active application.</string>
+<string>VaulType needs Accessibility access to type transcribed text into your active application.</string>
 ```
 
 > ❌ **Critical**: If `NSMicrophoneUsageDescription` is missing from `Info.plist`, the app will **crash** immediately when attempting to access the microphone. macOS enforces this at the system level.
@@ -877,7 +877,7 @@ Verify the entitlements are correctly applied by building and checking the signe
 
 ```bash
 # After building in Xcode, check the entitlements of the built app
-codesign -d --entitlements - ~/Library/Developer/Xcode/DerivedData/HushType-*/Build/Products/Debug/HushType.app
+codesign -d --entitlements - ~/Library/Developer/Xcode/DerivedData/VaulType-*/Build/Products/Debug/VaulType.app
 ```
 
 You should see the entitlements listed in the output XML.
@@ -888,7 +888,7 @@ You should see the entitlements listed in the output XML.
 
 ### 9.1 Build and Run from Xcode
 
-1. Select the **HushType** scheme in the Xcode toolbar.
+1. Select the **VaulType** scheme in the Xcode toolbar.
 2. Ensure the destination is set to **My Mac**.
 3. Press **⌘R** (or click the Run button) to build and launch.
 
@@ -898,16 +898,16 @@ The first build may take 3-5 minutes as Xcode compiles all Swift sources and lin
 
 ### 9.2 Granting Permissions on First Launch
 
-On the first launch, HushType requests two critical permissions. You must grant both for full functionality:
+On the first launch, VaulType requests two critical permissions. You must grant both for full functionality:
 
 **Step 1: Microphone Permission**
 
 A system dialog appears:
 
 ```
-"HushType" would like to access the microphone.
+"VaulType" would like to access the microphone.
 
-HushType needs microphone access to capture your speech for local,
+VaulType needs microphone access to capture your speech for local,
 on-device transcription. Audio is never sent to any server.
 
 [Don't Allow]  [OK]
@@ -917,42 +917,42 @@ Click **OK** to grant microphone access.
 
 **Step 2: Accessibility Permission**
 
-HushType opens a guided dialog explaining why Accessibility access is needed, then directs you to System Settings:
+VaulType opens a guided dialog explaining why Accessibility access is needed, then directs you to System Settings:
 
 1. Open **System Settings > Privacy & Security > Accessibility**.
 2. Click the **lock icon** to allow changes.
-3. Toggle **HushType** to **ON** in the list.
-4. If HushType does not appear in the list, click **+** and navigate to the app in `/Applications` or `DerivedData`.
+3. Toggle **VaulType** to **ON** in the list.
+4. If VaulType does not appear in the list, click **+** and navigate to the app in `/Applications` or `DerivedData`.
 
 > ⚠️ **Warning**: During development, Accessibility permissions are tied to the **code signature**. Every time you rebuild with a different signing identity or the binary changes significantly, macOS may revoke the Accessibility permission. You will need to re-grant it. This is a known development friction point.
 
 **Resetting permissions during development**:
 
 ```bash
-# Reset Accessibility permission for HushType (requires admin password)
-sudo tccutil reset Accessibility com.yourname.hushtype
+# Reset Accessibility permission for VaulType (requires admin password)
+sudo tccutil reset Accessibility com.yourname.vaultype
 
 # Reset Microphone permission
-tccutil reset Microphone com.yourname.hushtype
+tccutil reset Microphone com.yourname.vaultype
 ```
 
 See `../features/PERMISSIONS.md` for the complete permission management system, including handling denied permissions gracefully.
 
 ### 9.3 Debug Console Output
 
-HushType uses `os_log` and Swift `Logger` for structured logging. In Xcode's debug console, you will see output like:
+VaulType uses `os_log` and Swift `Logger` for structured logging. In Xcode's debug console, you will see output like:
 
 ```
-[HushType/Audio] INFO: Audio engine started - sample rate: 16000 Hz, format: PCM Float32
-[HushType/Audio] INFO: Ring buffer allocated - capacity: 480000 samples (30.0 seconds)
-[HushType/Whisper] INFO: Loading whisper model: ggml-base.bin (147.4 MB)
-[HushType/Whisper] INFO: Model loaded in 1.23s - using Metal GPU acceleration
-[HushType/LLM] INFO: Loading LLM model: phi-3-mini-Q4_K_M.gguf (2.3 GB)
-[HushType/LLM] INFO: Model loaded in 3.45s - Metal layers: 32/32
-[HushType/App] INFO: HushType ready - all services initialized
+[VaulType/Audio] INFO: Audio engine started - sample rate: 16000 Hz, format: PCM Float32
+[VaulType/Audio] INFO: Ring buffer allocated - capacity: 480000 samples (30.0 seconds)
+[VaulType/Whisper] INFO: Loading whisper model: ggml-base.bin (147.4 MB)
+[VaulType/Whisper] INFO: Model loaded in 1.23s - using Metal GPU acceleration
+[VaulType/LLM] INFO: Loading LLM model: phi-3-mini-Q4_K_M.gguf (2.3 GB)
+[VaulType/LLM] INFO: Model loaded in 3.45s - Metal layers: 32/32
+[VaulType/App] INFO: VaulType ready - all services initialized
 ```
 
-To filter debug output by subsystem in the Xcode console, use the filter bar at the bottom and type `HushType`.
+To filter debug output by subsystem in the Xcode console, use the filter bar at the bottom and type `VaulType`.
 
 ### 9.4 Environment Variables for Debugging
 
@@ -964,10 +964,10 @@ You can configure additional debugging behavior through Xcode's scheme environme
 
 | Variable | Value | Purpose |
 |---|---|---|
-| `HUSHTYPE_LOG_LEVEL` | `debug` | Enable verbose debug logging |
-| `HUSHTYPE_SKIP_MODEL_LOAD` | `1` | Skip model loading (for UI development) |
-| `HUSHTYPE_MOCK_AUDIO` | `1` | Use simulated audio input |
-| `HUSHTYPE_METAL_VALIDATION` | `1` | Enable Metal API validation layer |
+| `VAULTYPE_LOG_LEVEL` | `debug` | Enable verbose debug logging |
+| `VAULTYPE_SKIP_MODEL_LOAD` | `1` | Skip model loading (for UI development) |
+| `VAULTYPE_MOCK_AUDIO` | `1` | Use simulated audio input |
+| `VAULTYPE_METAL_VALIDATION` | `1` | Enable Metal API validation layer |
 | `METAL_DEVICE_WRAPPER_TYPE` | `1` | Enable Metal debug layer (system variable) |
 
 > 💡 **Tip**: Enable `METAL_DEVICE_WRAPPER_TYPE=1` when debugging Metal-related issues. It adds runtime validation for Metal API calls and reports errors that would otherwise be silent.
@@ -976,13 +976,13 @@ You can configure additional debugging behavior through Xcode's scheme environme
 
 ## 10. Downloading Initial Models for Development
 
-HushType requires at least one Whisper model (for speech-to-text) and one LLM model (for text processing) to function. For development, we recommend lightweight models that load quickly and use minimal memory.
+VaulType requires at least one Whisper model (for speech-to-text) and one LLM model (for text processing) to function. For development, we recommend lightweight models that load quickly and use minimal memory.
 
 ### 10.1 Using the Built-in Model Manager
 
-The easiest way to download models is through HushType's built-in Model Manager:
+The easiest way to download models is through VaulType's built-in Model Manager:
 
-1. Launch HushType.
+1. Launch VaulType.
 2. Click the menu bar icon > **Settings** (or press **⌘,**).
 3. Navigate to the **Models** tab.
 4. Under **Whisper Models**, click **Download** next to **tiny** or **base**.
@@ -1001,7 +1001,7 @@ If you prefer to download models manually (e.g., for offline setups or CI enviro
 
 ```bash
 # Create the model directory
-MODEL_DIR="$HOME/Library/Application Support/HushType/Models/whisper"
+MODEL_DIR="$HOME/Library/Application Support/VaulType/Models/whisper"
 mkdir -p "$MODEL_DIR"
 
 # Download whisper-tiny (75 MB) - fastest, lowest quality
@@ -1021,7 +1021,7 @@ curl -L -o "$MODEL_DIR/ggml-small.bin" \
 
 ```bash
 # Create the model directory
-LLM_DIR="$HOME/Library/Application Support/HushType/Models/llm"
+LLM_DIR="$HOME/Library/Application Support/VaulType/Models/llm"
 mkdir -p "$LLM_DIR"
 
 # Download a small, capable LLM for development
@@ -1053,22 +1053,22 @@ After downloading, verify the models are correctly placed and valid:
 
 ```bash
 # List downloaded models
-ls -lh "$HOME/Library/Application Support/HushType/Models/whisper/"
-ls -lh "$HOME/Library/Application Support/HushType/Models/llm/"
+ls -lh "$HOME/Library/Application Support/VaulType/Models/whisper/"
+ls -lh "$HOME/Library/Application Support/VaulType/Models/llm/"
 
 # Verify file sizes (approximate)
 # ggml-tiny.bin  should be ~75 MB
 # ggml-base.bin  should be ~147 MB
 
 # Check file integrity (GGML/GGUF magic bytes)
-xxd -l 4 "$HOME/Library/Application Support/HushType/Models/whisper/ggml-tiny.bin" | head -1
+xxd -l 4 "$HOME/Library/Application Support/VaulType/Models/whisper/ggml-tiny.bin" | head -1
 # Should show: 0x67676d6c (ggml magic)
 
-xxd -l 4 "$HOME/Library/Application Support/HushType/Models/llm/qwen2-1.5b-instruct-q4_k_m.gguf" | head -1
+xxd -l 4 "$HOME/Library/Application Support/VaulType/Models/llm/qwen2-1.5b-instruct-q4_k_m.gguf" | head -1
 # Should show: 0x47475546 (GGUF magic)
 ```
 
-> ✅ **Checkpoint**: With models downloaded and verified, HushType is ready to run. Launch the app and test the full speech-to-text pipeline.
+> ✅ **Checkpoint**: With models downloaded and verified, VaulType is ready to run. Launch the app and test the full speech-to-text pipeline.
 
 ---
 
@@ -1167,8 +1167,8 @@ Undefined symbols for architecture arm64:
 
 ```bash
 # Check that the libraries exist at the expected paths
-ls -la ~/dev/hushtype/vendor/whisper/lib/
-ls -la ~/dev/hushtype/vendor/llama/lib/
+ls -la ~/dev/vaultype/vendor/whisper/lib/
+ls -la ~/dev/vaultype/vendor/llama/lib/
 ```
 
 2. Verify the libraries are linked in Build Phases (Section 6.4).
@@ -1177,7 +1177,7 @@ ls -la ~/dev/hushtype/vendor/llama/lib/
 
 ```bash
 # Check the library architecture
-lipo -info ~/dev/hushtype/vendor/whisper/lib/libwhisper.a
+lipo -info ~/dev/vaultype/vendor/whisper/lib/libwhisper.a
 
 # If building for arm64 but library is x86_64 only, rebuild with correct architecture
 ```
@@ -1212,49 +1212,49 @@ OTHER_LDFLAGS = -lstdc++ -lc++
 
 **Symptom**: Microphone not working — no audio captured.
 
-1. Check System Settings > Privacy & Security > Microphone. Ensure HushType is listed and enabled.
-2. If HushType does not appear, the `NSMicrophoneUsageDescription` key may be missing from `Info.plist` (see Section 8.2).
+1. Check System Settings > Privacy & Security > Microphone. Ensure VaulType is listed and enabled.
+2. If VaulType does not appear, the `NSMicrophoneUsageDescription` key may be missing from `Info.plist` (see Section 8.2).
 3. Reset and re-request:
 
 ```bash
-tccutil reset Microphone com.yourname.hushtype
+tccutil reset Microphone com.yourname.vaultype
 ```
 
 4. Rebuild and relaunch the app.
 
 **Symptom**: Text injection not working — no keystrokes simulated.
 
-1. Check System Settings > Privacy & Security > Accessibility. Ensure HushType is toggled ON.
+1. Check System Settings > Privacy & Security > Accessibility. Ensure VaulType is toggled ON.
 2. If you see the app but it is grayed out, the code signature may have changed. Remove and re-add it:
 
 ```bash
 # Reset accessibility permissions
-sudo tccutil reset Accessibility com.yourname.hushtype
+sudo tccutil reset Accessibility com.yourname.vaultype
 ```
 
-3. Relaunch HushType and follow the Accessibility permission prompt.
+3. Relaunch VaulType and follow the Accessibility permission prompt.
 
-> ⚠️ **Warning**: During active development, code signature changes with every build. This causes macOS to revoke Accessibility permissions frequently. Consider using `HUSHTYPE_MOCK_AUDIO=1` and testing text injection separately. See `../features/PERMISSIONS.md` Section 3.6 for details on code signature invalidation.
+> ⚠️ **Warning**: During active development, code signature changes with every build. This causes macOS to revoke Accessibility permissions frequently. Consider using `VAULTYPE_MOCK_AUDIO=1` and testing text injection separately. See `../features/PERMISSIONS.md` Section 3.6 for details on code signature invalidation.
 
 **Symptom**: Permission prompts never appear.
 
 ```bash
 # Check if the app has a valid bundle identifier
-defaults read ~/Library/Developer/Xcode/DerivedData/HushType-*/Build/Products/Debug/HushType.app/Contents/Info.plist CFBundleIdentifier
+defaults read ~/Library/Developer/Xcode/DerivedData/VaulType-*/Build/Products/Debug/VaulType.app/Contents/Info.plist CFBundleIdentifier
 
 # Check TCC database for existing entries
 # (This requires Full Disk Access for Terminal or SIP disabled)
 sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
-  "SELECT service, client, auth_value FROM access WHERE client LIKE '%hushtype%';"
+  "SELECT service, client, auth_value FROM access WHERE client LIKE '%vaultype%';"
 ```
 
 ### 11.5 Code Signing Errors
 
-**Symptom**: `Code signing "HushType" requires a development team.`
+**Symptom**: `Code signing "VaulType" requires a development team.`
 
 **Solution**: Select a team in Signing & Capabilities:
 
-1. Open the HushType target settings.
+1. Open the VaulType target settings.
 2. Under **Signing & Capabilities**, set **Team** to your Apple ID personal team.
 3. If you do not have a team listed, add your Apple ID in Xcode > Settings > Accounts.
 
@@ -1267,7 +1267,7 @@ sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
 3. If the error persists, try deleting derived data:
 
 ```bash
-rm -rf ~/Library/Developer/Xcode/DerivedData/HushType-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/VaulType-*
 ```
 
 4. Clean build folder: **Product > Clean Build Folder** (⇧⌘K).
@@ -1280,7 +1280,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/HushType-*
 2. Ensure it points to the correct `.entitlements` file:
 
 ```
-CODE_SIGN_ENTITLEMENTS = HushType/Resources/HushType.entitlements
+CODE_SIGN_ENTITLEMENTS = VaulType/Resources/VaulType.entitlements
 ```
 
 3. Verify the entitlements file contains valid XML (Section 8.1).
@@ -1300,15 +1300,15 @@ SWIFT_INCLUDE_PATHS = $(PROJECT_DIR)/vendor/whisper/include $(PROJECT_DIR)/vendo
 2. Verify the `module.modulemap` files exist:
 
 ```bash
-cat ~/dev/hushtype/vendor/whisper/include/module.modulemap
-cat ~/dev/hushtype/vendor/llama/include/module.modulemap
+cat ~/dev/vaultype/vendor/whisper/include/module.modulemap
+cat ~/dev/vaultype/vendor/llama/include/module.modulemap
 ```
 
 3. Clean the build folder and module cache:
 
 ```bash
 # Clean derived data
-rm -rf ~/Library/Developer/Xcode/DerivedData/HushType-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/VaulType-*
 
 # Clean module cache
 rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/
@@ -1320,7 +1320,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/
 
 ```bash
 # Reset SPM package caches
-rm -rf ~/dev/hushtype/.build
+rm -rf ~/dev/vaultype/.build
 rm -rf ~/Library/Caches/org.swift.swiftpm
 
 # In Xcode: File > Packages > Reset Package Caches
@@ -1363,7 +1363,7 @@ system_profiler SPDisplaysDataType | grep -A 5 "Metal"
 
 **Symptom**: App launches but freezes during model loading.
 
-1. Check that you are not running multiple copies of HushType simultaneously.
+1. Check that you are not running multiple copies of VaulType simultaneously.
 2. Ensure sufficient free memory (model loading is memory-intensive):
 
 ```bash

@@ -2,24 +2,24 @@
 
 > **Last Updated: 2026-02-20**
 
-> **HushType** — Privacy-first, macOS-native speech-to-text application
+> **VaulType** — Privacy-first, macOS-native speech-to-text application
 
 ---
 
 ## Zero Operational Cost
 
-HushType's **local-only architecture** means there are no ongoing server costs, no API usage fees, and no cloud compute expenses. All inference runs on the user's Mac hardware.
+VaulType's **local-only architecture** means there are no ongoing server costs, no API usage fees, and no cloud compute expenses. All inference runs on the user's Mac hardware.
 
 ## For Users
 
-HushType is **free to use** with zero runtime costs:
+VaulType is **free to use** with zero runtime costs:
 
 - No subscription fees
 - No API usage charges (whisper.cpp and llama.cpp run locally)
 - No cloud storage costs (all data stays on the user's device)
 - No telemetry or data collection
 
-The only user cost is downloading model files (75 MB to 3.1 GB depending on the chosen whisper model, plus optional LLM models). These are one-time downloads stored in `~/Library/Application Support/HushType/Models/`.
+The only user cost is downloading model files (75 MB to 3.1 GB depending on the chosen whisper model, plus optional LLM models). These are one-time downloads stored in `~/Library/Application Support/VaulType/Models/`.
 
 ## For Developers / Maintainers
 
@@ -36,7 +36,7 @@ Minimal ongoing costs for project maintenance:
 
 | Approach | Monthly Cost (typical) | Privacy |
 |----------|----------------------|---------|
-| HushType (local) | $0 | 100% local, no data leaves device |
+| VaulType (local) | $0 | 100% local, no data leaves device |
 | OpenAI Whisper API | $6-60+ depending on usage | Audio sent to OpenAI servers |
 | Google Speech-to-Text | $0-300+ depending on usage | Audio sent to Google servers |
 | AWS Transcribe | $1-100+ depending on usage | Audio sent to AWS servers |

@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Quick Start Guide
 
-> **HushType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always.
+> **VaulType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always.
 > Go from zero to working dictation in under 5 minutes.
 
 ---
@@ -35,14 +35,14 @@ Last Updated: 2026-02-13
 
 ## 1. TL;DR -- Build and Run
 
-For developers who want to clone, build, and run HushType from source in the fewest steps possible:
+For developers who want to clone, build, and run VaulType from source in the fewest steps possible:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/hushtype/hushtype.git
+git clone https://github.com/vaultype/vaultype.git
 
 # 2. Navigate into the project directory
-cd hushtype
+cd vaultype
 
 # 3. Initialize and fetch submodules (whisper.cpp, llama.cpp)
 git submodule update --init --recursive
@@ -51,10 +51,10 @@ git submodule update --init --recursive
 make deps
 
 # 5. Open the Xcode project and build
-open HushType.xcodeproj
+open VaulType.xcodeproj
 
 # 6. Or build from the command line and run
-xcodebuild -scheme HushType -configuration Debug build
+xcodebuild -scheme VaulType -configuration Debug build
 ```
 
 **Prerequisites for building from source:**
@@ -73,9 +73,9 @@ If you do not have CMake installed, you can install it via Homebrew:
 brew install cmake
 ```
 
-> :bulb: **Tip:** If you just want to use HushType without building from source, skip to [Section 2](#2-pre-built-binary-installation) for pre-built binaries — no development tools required.
+> :bulb: **Tip:** If you just want to use VaulType without building from source, skip to [Section 2](#2-pre-built-binary-installation) for pre-built binaries — no development tools required.
 
-> :warning: **Apple Silicon recommended.** HushType uses Metal GPU acceleration for ML inference. It runs on Intel Macs but with significantly reduced performance. See [TECH_STACK.md](../architecture/TECH_STACK.md) for the full compatibility matrix.
+> :warning: **Apple Silicon recommended.** VaulType uses Metal GPU acceleration for ML inference. It runs on Intel Macs but with significantly reduced performance. See [TECH_STACK.md](../architecture/TECH_STACK.md) for the full compatibility matrix.
 
 For the complete development environment setup, build configuration details, and contribution workflow, see the [Development Guide](DEVELOPMENT_GUIDE.md).
 
@@ -85,24 +85,24 @@ For the complete development environment setup, build configuration details, and
 
 ### 2.1 Homebrew Cask (Recommended)
 
-The fastest way to install HushType is via Homebrew:
+The fastest way to install VaulType is via Homebrew:
 
 ```bash
-brew install --cask hushtype
+brew install --cask vaultype
 ```
 
-That is it. Homebrew handles downloading, verification, and placing HushType in your `/Applications` folder.
+That is it. Homebrew handles downloading, verification, and placing VaulType in your `/Applications` folder.
 
 To update later:
 
 ```bash
-brew upgrade --cask hushtype
+brew upgrade --cask vaultype
 ```
 
 To uninstall:
 
 ```bash
-brew uninstall --cask hushtype
+brew uninstall --cask vaultype
 ```
 
 > :information_source: **Info:** The Homebrew Cask formula is maintained alongside releases. It always points to the latest stable version distributed via GitHub Releases.
@@ -111,14 +111,14 @@ brew uninstall --cask hushtype
 
 If you prefer a manual installation:
 
-1. Go to the [HushType GitHub Releases](https://github.com/hushtype/hushtype/releases) page.
-2. Download the latest `HushType-x.y.z.dmg` file.
-3. Open the DMG and drag **HushType.app** into your **Applications** folder.
+1. Go to the [VaulType GitHub Releases](https://github.com/vaultype/vaultype/releases) page.
+2. Download the latest `VaulType-x.y.z.dmg` file.
+3. Open the DMG and drag **VaulType.app** into your **Applications** folder.
 4. Eject the DMG.
 
 > :lock: **Security:** The DMG is code-signed with a valid Apple Developer ID certificate and notarized by Apple. If macOS shows a warning, right-click the app and select **Open** to bypass Gatekeeper on first launch.
 
-> :warning: **Important:** Do not run HushType directly from the DMG. Always copy it to `/Applications` first — running from a mounted disk image can cause permission issues and prevents auto-updates from working correctly.
+> :warning: **Important:** Do not run VaulType directly from the DMG. Always copy it to `/Applications` first — running from a mounted disk image can cause permission issues and prevents auto-updates from working correctly.
 
 ---
 
@@ -126,13 +126,13 @@ If you prefer a manual installation:
 
 ### 3.1 What Happens on First Launch
 
-When you open HushType for the first time, the following occurs:
+When you open VaulType for the first time, the following occurs:
 
-1. **Menu bar icon appears** — HushType is a menu bar application. You will see the HushType icon (a microphone glyph) in the macOS menu bar, near the clock.
+1. **Menu bar icon appears** — VaulType is a menu bar application. You will see the VaulType icon (a microphone glyph) in the macOS menu bar, near the clock.
 2. **Setup wizard opens** — A guided setup window walks you through the essential configuration steps.
-3. **No data leaves your Mac** — HushType has zero network dependencies at runtime. The setup wizard runs entirely locally.
+3. **No data leaves your Mac** — VaulType has zero network dependencies at runtime. The setup wizard runs entirely locally.
 
-> :apple: **macOS Behavior:** Because HushType is a menu bar app, it does not appear in the Dock by default. You interact with it through the menu bar icon and keyboard shortcuts.
+> :apple: **macOS Behavior:** Because VaulType is a menu bar app, it does not appear in the Dock by default. You interact with it through the menu bar icon and keyboard shortcuts.
 
 ### 3.2 Setup Wizard Flow
 
@@ -155,19 +155,19 @@ You can revisit the setup wizard at any time from the menu bar:
 
 **Menu Bar Icon** > **Settings...** > **Setup Wizard**
 
-> :information_source: **Info:** The wizard only appears automatically on first launch. After all steps are completed, HushType remembers your configuration across launches using local `UserDefaults` and `SwiftData` storage.
+> :information_source: **Info:** The wizard only appears automatically on first launch. After all steps are completed, VaulType remembers your configuration across launches using local `UserDefaults` and `SwiftData` storage.
 
 ---
 
 ## 4. Granting Permissions
 
-HushType requires two macOS system permissions to function. Both are standard privacy permissions managed by Apple's TCC (Transparency, Consent, and Control) framework. No data is sent anywhere — these permissions enable local-only functionality.
+VaulType requires two macOS system permissions to function. Both are standard privacy permissions managed by Apple's TCC (Transparency, Consent, and Control) framework. No data is sent anywhere — these permissions enable local-only functionality.
 
 For the complete permissions reference, including enterprise MDM pre-approval and troubleshooting, see [Permissions Guide](../features/PERMISSIONS.md).
 
 ### 4.1 Accessibility Permission
 
-**Why it is needed:** HushType uses the macOS Accessibility API (via `CGEvent`) to simulate keystrokes and inject transcribed text into the active application. Without this permission, HushType cannot type text for you.
+**Why it is needed:** VaulType uses the macOS Accessibility API (via `CGEvent`) to simulate keystrokes and inject transcribed text into the active application. Without this permission, VaulType cannot type text for you.
 
 **How to grant it:**
 
@@ -177,32 +177,32 @@ For the complete permissions reference, including enterprise MDM pre-approval an
    - **System Settings** > **Privacy & Security** > **Accessibility**
 3. Click the lock icon (:lock:) at the bottom-left and authenticate with your password or Touch ID.
 4. Click the **+** button.
-5. Navigate to **Applications** > select **HushType.app** > click **Open**.
-6. Ensure the toggle next to HushType is **ON**.
-7. Return to HushType — the wizard will detect the permission automatically.
+5. Navigate to **Applications** > select **VaulType.app** > click **Open**.
+6. Ensure the toggle next to VaulType is **ON**.
+7. Return to VaulType — the wizard will detect the permission automatically.
 
-<!-- Screenshot placeholder: System Settings > Privacy & Security > Accessibility with HushType toggled on -->
-> :bulb: **Screenshot:** `[accessibility-permission-granted.png]` — System Settings showing HushType enabled under Accessibility.
+<!-- Screenshot placeholder: System Settings > Privacy & Security > Accessibility with VaulType toggled on -->
+> :bulb: **Screenshot:** `[accessibility-permission-granted.png]` — System Settings showing VaulType enabled under Accessibility.
 
-> :warning: **Restart required after rebuilds:** If you build HushType from source, the code signature changes with each build. macOS ties Accessibility permissions to the code signature, so you must **re-grant** Accessibility permission after every rebuild. This does not apply to pre-built releases. See [Permissions Guide](../features/PERMISSIONS.md) for details.
+> :warning: **Restart required after rebuilds:** If you build VaulType from source, the code signature changes with each build. macOS ties Accessibility permissions to the code signature, so you must **re-grant** Accessibility permission after every rebuild. This does not apply to pre-built releases. See [Permissions Guide](../features/PERMISSIONS.md) for details.
 
 ### 4.2 Microphone Permission
 
-**Why it is needed:** HushType captures audio from your microphone to transcribe your speech. All audio processing happens locally via whisper.cpp — no audio data is ever transmitted over the network.
+**Why it is needed:** VaulType captures audio from your microphone to transcribe your speech. All audio processing happens locally via whisper.cpp — no audio data is ever transmitted over the network.
 
 **How to grant it:**
 
 1. When the setup wizard prompts for Microphone access, click **Request Permission**.
-   - macOS shows a standard system dialog: _"HushType would like to access the microphone."_
+   - macOS shows a standard system dialog: _"VaulType would like to access the microphone."_
 2. Click **OK** to grant permission.
 3. If you accidentally click **Don't Allow**, you must grant it manually:
    - **System Settings** > **Privacy & Security** > **Microphone**
-   - Find **HushType** in the list and toggle it **ON**.
+   - Find **VaulType** in the list and toggle it **ON**.
 
-<!-- Screenshot placeholder: macOS microphone permission dialog for HushType -->
-> :bulb: **Screenshot:** `[microphone-permission-dialog.png]` — macOS system dialog requesting microphone access for HushType.
+<!-- Screenshot placeholder: macOS microphone permission dialog for VaulType -->
+> :bulb: **Screenshot:** `[microphone-permission-dialog.png]` — macOS system dialog requesting microphone access for VaulType.
 
-> :lock: **Privacy guarantee:** HushType only activates the microphone when you press the dictation hotkey. The menu bar icon changes to indicate active recording. Audio is buffered in memory, processed by whisper.cpp, and immediately discarded — nothing is written to disk.
+> :lock: **Privacy guarantee:** VaulType only activates the microphone when you press the dictation hotkey. The menu bar icon changes to indicate active recording. Audio is buffered in memory, processed by whisper.cpp, and immediately discarded — nothing is written to disk.
 
 ### 4.3 Verifying Permissions
 
@@ -216,16 +216,16 @@ This panel shows the live status of each permission:
 |------------|--------|---------------|
 | Accessibility | :white_check_mark: Granted | Text injection is fully functional |
 | Microphone | :white_check_mark: Granted | Audio capture is available |
-| Accessibility | :x: Denied | HushType cannot type text — click to open System Settings |
-| Microphone | :x: Denied | HushType cannot hear you — click to open System Settings |
+| Accessibility | :x: Denied | VaulType cannot type text — click to open System Settings |
+| Microphone | :x: Denied | VaulType cannot hear you — click to open System Settings |
 
-> :information_source: **Info:** If either permission is revoked while HushType is running, the app detects the change and displays a non-intrusive notification guiding you to re-enable it. HushType gracefully degrades — it never crashes due to missing permissions.
+> :information_source: **Info:** If either permission is revoked while VaulType is running, the app detects the change and displays a non-intrusive notification guiding you to re-enable it. VaulType gracefully degrades — it never crashes due to missing permissions.
 
 ---
 
 ## 5. Downloading Your First Whisper Model
 
-HushType does not bundle a speech-to-text model in the app download to keep the initial install small. You need to download at least one Whisper model before you can start dictating.
+VaulType does not bundle a speech-to-text model in the app download to keep the initial install small. You need to download at least one Whisper model before you can start dictating.
 
 ### 5.1 Using the Built-In Model Manager
 
@@ -267,7 +267,7 @@ For your first model, we recommend starting with **whisper-base**:
 Downloaded models are stored locally at:
 
 ```
-~/Library/Application Support/HushType/Models/whisper/
+~/Library/Application Support/VaulType/Models/whisper/
 ```
 
 You can view storage usage and manage models from **Settings... > Models**. Models can be deleted individually to reclaim disk space. For advanced model management including LLM models for text post-processing, see [Model Management](../features/MODEL_MANAGEMENT.md).
@@ -276,7 +276,7 @@ You can view storage usage and manage models from **Settings... > Models**. Mode
 
 ## 6. Testing Dictation in TextEdit
 
-You have installed HushType, granted permissions, and downloaded a model. Time to test it.
+You have installed VaulType, granted permissions, and downloaded a model. Time to test it.
 
 ### 6.1 Complete Test Flow
 
@@ -286,8 +286,8 @@ Follow these steps to verify everything is working:
    - Press `Cmd + Space` to open Spotlight, type `TextEdit`, and press Enter.
    - Make sure you have a new, empty document open and the cursor is active in the text area.
 
-2. **Check HushType status**
-   - Look at the menu bar — the HushType icon should be visible.
+2. **Check VaulType status**
+   - Look at the menu bar — the VaulType icon should be visible.
    - Click the icon to verify the status shows **Ready** (not "No model loaded" or "Permission missing").
 
 3. **Press the dictation hotkey**
@@ -296,19 +296,19 @@ Follow these steps to verify everything is working:
    - You may also see a small floating indicator near the cursor.
 
 4. **Speak clearly into your microphone**
-   - Say something like: _"Hello, this is a test of HushType dictation."_
+   - Say something like: _"Hello, this is a test of VaulType dictation."_
    - Speak at a normal pace and volume, as you would in a conversation.
 
 5. **Stop recording**
    - Press `Option + Space` again to stop recording.
-   - Alternatively, pause speaking for a few seconds — HushType's Voice Activity Detection (VAD) can automatically stop recording after silence is detected (configurable in Settings).
+   - Alternatively, pause speaking for a few seconds — VaulType's Voice Activity Detection (VAD) can automatically stop recording after silence is detected (configurable in Settings).
 
 6. **See transcribed text appear**
-   - HushType processes the audio locally using whisper.cpp.
+   - VaulType processes the audio locally using whisper.cpp.
    - The transcribed text is injected into TextEdit at the cursor position.
    - You should see your spoken words appear as typed text.
 
-> :white_check_mark: **Success!** If text appeared in TextEdit, HushType is fully operational. You can now use it in any application — text editors, browsers, email clients, Slack, terminal emulators, and more.
+> :white_check_mark: **Success!** If text appeared in TextEdit, VaulType is fully operational. You can now use it in any application — text editors, browsers, email clients, Slack, terminal emulators, and more.
 
 ### 6.2 Expected Behavior
 
@@ -345,7 +345,7 @@ If text did not appear, check these common issues:
 
 ## 7. Next Steps
 
-Congratulations — you have HushType running with local, private dictation. Here are some things to explore next:
+Congratulations — you have VaulType running with local, private dictation. Here are some things to explore next:
 
 ### Customize Your Workflow
 
@@ -356,15 +356,15 @@ Congratulations — you have HushType running with local, private dictation. Her
 ### Try Different Models
 
 - Start with `whisper-base`, then experiment with `whisper-small` for better accuracy or `whisper-tiny` for faster response times.
-- Models can be swapped without restarting HushType — just select a different model in **Settings... > Models**.
+- Models can be swapped without restarting VaulType — just select a different model in **Settings... > Models**.
 
 ### Explore Text Injection Options
 
-- HushType supports multiple text injection strategies depending on the target application. See [Text Injection](../features/TEXT_INJECTION.md) for details on CGEvent keystroke simulation, clipboard-based injection, and per-app configuration.
+- VaulType supports multiple text injection strategies depending on the target application. See [Text Injection](../features/TEXT_INJECTION.md) for details on CGEvent keystroke simulation, clipboard-based injection, and per-app configuration.
 
 ### Contribute
 
-- HushType is open source under GPL-3.0. Contributions are welcome.
+- VaulType is open source under GPL-3.0. Contributions are welcome.
 - See the [Development Guide](DEVELOPMENT_GUIDE.md) for building from source, running tests, and the contribution workflow.
 
 ---
@@ -379,6 +379,6 @@ Congratulations — you have HushType running with local, private dictation. Her
 | [Speech Recognition](../features/SPEECH_RECOGNITION.md) | whisper.cpp integration, audio pipeline, language support |
 | [Model Management](../features/MODEL_MANAGEMENT.md) | Model lifecycle, downloads, storage, verification |
 | [LLM Processing](../features/LLM_PROCESSING.md) | Local LLM text post-processing and formatting |
-| [Text Injection](../features/TEXT_INJECTION.md) | How HushType types text into applications |
+| [Text Injection](../features/TEXT_INJECTION.md) | How VaulType types text into applications |
 | [Architecture](../architecture/ARCHITECTURE.md) | System architecture, threading model, data flows |
 | [Tech Stack](../architecture/TECH_STACK.md) | Technology choices, version matrix, performance notes |

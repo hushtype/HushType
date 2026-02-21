@@ -2,13 +2,13 @@
 
 > **Last Updated: 2026-02-20**
 
-> **HushType** — Privacy-first, macOS-native speech-to-text application
+> **VaulType** — Privacy-first, macOS-native speech-to-text application
 
 ---
 
 ## Not Applicable
 
-HushType is a **single-user desktop application**. It runs entirely on the user's Mac with no server-side components. Concepts like horizontal scaling, load balancing, database replication, or infrastructure scaling do not apply.
+VaulType is a **single-user desktop application**. It runs entirely on the user's Mac with no server-side components. Concepts like horizontal scaling, load balancing, database replication, or infrastructure scaling do not apply.
 
 ## Single-User Desktop Architecture
 
@@ -19,7 +19,7 @@ All processing runs locally on the user's machine:
 - **SwiftData** — local on-device database for history, profiles, and vocabulary
 - **No network** — zero outbound connections for core functionality
 
-The only "scaling" concerns for HushType are hardware-specific performance tuning for a single user:
+The only "scaling" concerns for VaulType are hardware-specific performance tuning for a single user:
 
 - **Model selection** — choose whisper/LLM model size appropriate for the Mac's RAM and chip
 - **Memory management** — concurrent vs. sequential model loading based on available unified memory
@@ -30,7 +30,7 @@ These are documented in [PERFORMANCE_OPTIMIZATION.md](../reference/PERFORMANCE_O
 
 ## Distribution
 
-HushType is distributed as a signed, notarized DMG. There is no server to deploy. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for the release process.
+VaulType is distributed as a signed, notarized DMG. There is no server to deploy. See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for the release process.
 
 ## Related Documentation
 

@@ -1,8 +1,8 @@
 Last Updated: 2026-02-13
 
-# Legal Compliance — HushType
+# Legal Compliance — VaulType
 
-> **HushType** — Privacy-first, macOS-native speech-to-text. "Hush" (voice stays private) + "Type" (text appears at cursor). 100% local processing, zero network, no telemetry.
+> **VaulType** — Privacy-first, macOS-native speech-to-text. "Hush" (voice stays private) + "Type" (text appears at cursor). 100% local processing, zero network, no telemetry.
 
 ---
 
@@ -54,7 +54,7 @@ Last Updated: 2026-02-13
   - [9.3 Other Jurisdictions](#93-other-jurisdictions)
   - [9.4 Why Data Protection Regulations Have Minimal Impact](#94-why-data-protection-regulations-have-minimal-impact)
 - [10. Trademark Considerations](#10-trademark-considerations)
-  - [10.1 HushType Name](#101-hushtype-name)
+  - [10.1 VaulType Name](#101-vaultype-name)
   - [10.2 Avoiding Trademark Conflicts](#102-avoiding-trademark-conflicts)
   - [10.3 Third-Party Trademark Usage](#103-third-party-trademark-usage)
 - [Related Documentation](#related-documentation)
@@ -63,7 +63,7 @@ Last Updated: 2026-02-13
 
 ## 1. Project License: GPL-3.0
 
-HushType is released under the **GNU General Public License v3.0 (GPL-3.0)**. The full license text is available in the `LICENSE` file at the root of the repository.
+VaulType is released under the **GNU General Public License v3.0 (GPL-3.0)**. The full license text is available in the `LICENSE` file at the root of the repository.
 
 ### 1.1 What GPL-3.0 Means
 
@@ -78,37 +78,37 @@ The GPL-3.0 is a strong copyleft free software license that guarantees end users
 
 ### 1.2 Why GPL-3.0 Was Chosen
 
-GPL-3.0 was selected for HushType for the following reasons:
+GPL-3.0 was selected for VaulType for the following reasons:
 
-1. **Protecting User Privacy by Design** — A privacy-focused app should have verifiable source code. GPL-3.0 ensures that any distributed version of HushType must include source code, allowing users and security researchers to verify that privacy claims are genuine.
+1. **Protecting User Privacy by Design** — A privacy-focused app should have verifiable source code. GPL-3.0 ensures that any distributed version of VaulType must include source code, allowing users and security researchers to verify that privacy claims are genuine.
 
-2. **Ensuring Derivatives Remain Open Source** — Any fork or derivative of HushType must also be released under GPL-3.0. This prevents a third party from taking HushType's code, adding telemetry or data collection, and distributing it as a proprietary product.
+2. **Ensuring Derivatives Remain Open Source** — Any fork or derivative of VaulType must also be released under GPL-3.0. This prevents a third party from taking VaulType's code, adding telemetry or data collection, and distributing it as a proprietary product.
 
-3. **Protecting User Freedoms** — Users can inspect, modify, and redistribute HushType. This aligns with the project's philosophy that users should have complete control over their tools, especially tools that handle sensitive data like voice recordings.
+3. **Protecting User Freedoms** — Users can inspect, modify, and redistribute VaulType. This aligns with the project's philosophy that users should have complete control over their tools, especially tools that handle sensitive data like voice recordings.
 
 4. **Patent Protection** — GPL-3.0 includes an explicit patent grant, protecting contributors and users from patent litigation related to the covered code.
 
 5. **Anti-Tivoization** — GPL-3.0 prevents hardware restrictions that would stop users from running modified versions of the software, preserving the practical exercise of software freedom.
 
-> ℹ️ **Info**: GPL-3.0 is not the same as AGPL-3.0. Since HushType is a desktop application with no server component, the standard GPL-3.0 is appropriate. AGPL would be relevant only if HushType offered network-accessible services.
+> ℹ️ **Info**: GPL-3.0 is not the same as AGPL-3.0. Since VaulType is a desktop application with no server component, the standard GPL-3.0 is appropriate. AGPL would be relevant only if VaulType offered network-accessible services.
 
 ### 1.3 Implications for Users
 
-- **You may use HushType** for any purpose, personal or commercial, without restriction.
-- **You may modify HushType** to suit your needs. The source code is freely available.
-- **You may redistribute HushType** (original or modified) as long as you also distribute it under GPL-3.0 and include the source code.
+- **You may use VaulType** for any purpose, personal or commercial, without restriction.
+- **You may modify VaulType** to suit your needs. The source code is freely available.
+- **You may redistribute VaulType** (original or modified) as long as you also distribute it under GPL-3.0 and include the source code.
 - **You are not required to share modifications** you make for personal use only. The copyleft obligation triggers upon *distribution*.
 
 ### 1.4 Implications for Contributors
 
-- **All contributions** to HushType are licensed under GPL-3.0.
+- **All contributions** to VaulType are licensed under GPL-3.0.
 - **Contributors retain copyright** over their individual contributions but grant a license to distribute under GPL-3.0.
 - **A Contributor License Agreement (CLA)** is not currently required, but contributors should be aware that their code will be distributed under GPL-3.0.
 - **Contributors should not submit** code that is incompatible with GPL-3.0 (e.g., code under proprietary licenses or GPL-incompatible open-source licenses).
 
 ### 1.5 Copyleft Obligations
 
-When distributing HushType (original or modified), the following obligations apply:
+When distributing VaulType (original or modified), the following obligations apply:
 
 | Obligation | Details |
 |------------|---------|
@@ -126,9 +126,9 @@ When distributing HushType (original or modified), the following obligations app
 
 ### 2.1 Dependency License Summary
 
-The following table lists all third-party dependencies used by HushType and their respective licenses:
+The following table lists all third-party dependencies used by VaulType and their respective licenses:
 
-| Dependency | Version | License | License Type | Usage in HushType |
+| Dependency | Version | License | License Type | Usage in VaulType |
 |------------|---------|---------|--------------|-------------------|
 | **whisper.cpp** | Latest stable | MIT | Permissive | Core speech-to-text inference engine |
 | **llama.cpp** | Latest stable | MIT | Permissive | Text post-processing and formatting via local LLMs |
@@ -139,11 +139,11 @@ The following table lists all third-party dependencies used by HushType and thei
 | **AVFoundation** | macOS 14+ | Apple EULA | Proprietary (platform) | Audio capture (bundled with macOS) |
 | **CoreML** | macOS 14+ | Apple EULA | Proprietary (platform) | ML inference acceleration (bundled with macOS) |
 
-> ℹ️ **Info**: Apple system frameworks (SwiftUI, AppKit, AVFoundation, CoreML) are part of macOS and are not distributed with HushType. They are accessed via system APIs and do not create licensing obligations for HushType's source distribution.
+> ℹ️ **Info**: Apple system frameworks (SwiftUI, AppKit, AVFoundation, CoreML) are part of macOS and are not distributed with VaulType. They are accessed via system APIs and do not create licensing obligations for VaulType's source distribution.
 
 ### 2.2 License Compatibility Analysis
 
-All third-party dependencies must be compatible with HushType's GPL-3.0 license. The following analysis confirms compatibility:
+All third-party dependencies must be compatible with VaulType's GPL-3.0 license. The following analysis confirms compatibility:
 
 | License | GPL-3.0 Compatible? | Rationale |
 |---------|---------------------|-----------|
@@ -167,7 +167,7 @@ Transitive dependencies (dependencies of dependencies) must also be GPL-3.0 comp
 
 ## 3. AI Model Licensing
 
-HushType supports downloading and running various AI models locally. Each model family has its own license terms. HushType does **not** bundle any models — users download them separately during setup or configuration.
+VaulType supports downloading and running various AI models locally. Each model family has its own license terms. VaulType does **not** bundle any models — users download them separately during setup or configuration.
 
 ### 3.1 Supported Models and Their Licenses
 
@@ -184,7 +184,7 @@ HushType supports downloading and running various AI models locally. Each model 
 - **Source**: [github.com/openai/whisper](https://github.com/openai/whisper)
 - **Compatibility**: Fully compatible with GPL-3.0 and all use cases.
 - **Obligations**: Include the MIT license notice and copyright when redistributing the model files.
-- **HushType Usage**: Whisper models are the primary speech-to-text engine. Users download the model in GGML format for use with whisper.cpp.
+- **VaulType Usage**: Whisper models are the primary speech-to-text engine. Users download the model in GGML format for use with whisper.cpp.
 
 > ℹ️ **Info**: The MIT license on Whisper models is one of the most permissive available. There are no restrictions on commercial use, modification, or redistribution beyond attribution.
 
@@ -198,9 +198,9 @@ HushType supports downloading and running various AI models locally. Each model 
   - **Acceptable Use Policy** prohibits specific harmful uses (e.g., weapons development, surveillance of individuals, generating disinformation).
   - **No sublicensing** — downstream recipients receive their license directly from Meta.
 
-> ⚠️ **Warning**: The Llama Community License is **not** an open-source license by the OSI definition. It imposes use-based restrictions that go beyond traditional open-source licenses. HushType does not redistribute Llama models; users must agree to Meta's license terms independently when downloading models.
+> ⚠️ **Warning**: The Llama Community License is **not** an open-source license by the OSI definition. It imposes use-based restrictions that go beyond traditional open-source licenses. VaulType does not redistribute Llama models; users must agree to Meta's license terms independently when downloading models.
 
-- **HushType's Approach**: HushType provides tooling to download Llama models but does not bundle or redistribute them. Users must accept Meta's license terms during the download process. HushType's GPL-3.0 license applies only to HushType's own source code, not to downloaded model files.
+- **VaulType's Approach**: VaulType provides tooling to download Llama models but does not bundle or redistribute them. Users must accept Meta's license terms during the download process. VaulType's GPL-3.0 license applies only to VaulType's own source code, not to downloaded model files.
 
 ### 3.4 Qwen Models (Alibaba)
 
@@ -219,13 +219,13 @@ HushType supports downloading and running various AI models locally. Each model 
 
 ### 3.6 User Responsibility
 
-> ⚠️ **Warning**: Users are responsible for complying with the license terms of any AI model they download and use with HushType. HushType is a tool that runs models locally — it does not grant any license to the models themselves.
+> ⚠️ **Warning**: Users are responsible for complying with the license terms of any AI model they download and use with VaulType. VaulType is a tool that runs models locally — it does not grant any license to the models themselves.
 
 Key responsibilities for users:
 
 1. **Read and accept** the license terms for each model before downloading.
 2. **Comply with use-based restrictions** where applicable (e.g., Llama's Acceptable Use Policy).
-3. **Verify commercial use rights** if using HushType in a commercial context with models that have commercial restrictions.
+3. **Verify commercial use rights** if using VaulType in a commercial context with models that have commercial restrictions.
 4. **Retain license files** that accompany downloaded models; do not delete them.
 5. **Do not redistribute models** without verifying that you comply with the model's redistribution terms.
 
@@ -235,7 +235,7 @@ Key responsibilities for users:
 
 ### 4.1 Data Collection Statement
 
-**HushType does not collect, transmit, store, or process any user data on external servers.** This is a core architectural principle, not merely a policy choice.
+**VaulType does not collect, transmit, store, or process any user data on external servers.** This is a core architectural principle, not merely a policy choice.
 
 | Data Category | Collected? | Transmitted? | Stored Externally? |
 |---------------|-----------|--------------|---------------------|
@@ -249,19 +249,19 @@ Key responsibilities for users:
 
 ### 4.2 Audio Data Handling
 
-HushType processes audio data with the following guarantees:
+VaulType processes audio data with the following guarantees:
 
 1. **Audio capture** occurs through macOS system APIs (AVFoundation) and is processed entirely in local memory.
 2. **Audio buffers** are used only for real-time inference by the local Whisper model and are released from memory immediately after transcription.
 3. **No audio is written to disk** unless the user explicitly enables an audio logging/debug feature (if implemented, disabled by default).
-4. **No audio is transmitted** over any network connection. HushType has no networking code in its audio processing pipeline.
-5. **Transcribed text** is inserted at the user's cursor position and is not retained, logged, or stored by HushType.
+4. **No audio is transmitted** over any network connection. VaulType has no networking code in its audio processing pipeline.
+5. **Transcribed text** is inserted at the user's cursor position and is not retained, logged, or stored by VaulType.
 
 > 🔒 **Security**: The entire speech-to-text pipeline runs in-process on the user's Mac. There is no intermediary server, API endpoint, cloud service, or external dependency involved in processing audio or generating text.
 
 ### 4.3 Crash Reporting (Optional)
 
-HushType may include optional crash reporting via Sentry (or a similar service). This feature:
+VaulType may include optional crash reporting via Sentry (or a similar service). This feature:
 
 - **Is disabled by default** and requires explicit user opt-in.
 - **Presents a clear disclosure** explaining exactly what data is collected before the user enables it.
@@ -271,11 +271,11 @@ HushType may include optional crash reporting via Sentry (or a similar service).
 
 If crash reporting is enabled, the following disclosure is shown to the user:
 
-> "HushType can send anonymous crash reports to help us fix bugs. Crash reports include only technical information (stack traces, OS version, app version) and never include your audio, text, or personal data. You can disable this at any time in Settings."
+> "VaulType can send anonymous crash reports to help us fix bugs. Crash reports include only technical information (stack traces, OS version, app version) and never include your audio, text, or personal data. You can disable this at any time in Settings."
 
 ### 4.4 Network Activity
 
-HushType's network activity is strictly limited to:
+VaulType's network activity is strictly limited to:
 
 | Activity | Purpose | User Control |
 |----------|---------|--------------|
@@ -283,21 +283,21 @@ HushType's network activity is strictly limited to:
 | **Model downloads** | Downloading AI models during initial setup or when the user adds a new model | User-initiated only |
 | **Crash reports** | Sending anonymous crash data (if opted in) | Opt-in only; can be disabled |
 
-> 🔒 **Security**: HushType does not make any network requests during normal operation (recording, transcribing, or typing). All inference is 100% local. Network activity occurs only for the three purposes listed above, all of which are user-initiated or user-controllable.
+> 🔒 **Security**: VaulType does not make any network requests during normal operation (recording, transcribing, or typing). All inference is 100% local. Network activity occurs only for the three purposes listed above, all of which are user-initiated or user-controllable.
 
 ### 4.5 User Accounts and Authentication
 
-HushType does not implement user accounts, authentication, login, registration, or any form of identity management. There is no concept of a "user" in HushType's data model. The app runs entirely as a local tool with no server-side component.
+VaulType does not implement user accounts, authentication, login, registration, or any form of identity management. There is no concept of a "user" in VaulType's data model. The app runs entirely as a local tool with no server-side component.
 
 ---
 
 ## 5. App Store Review Guidelines
 
-This section documents compliance considerations for potential submission to the Mac App Store. Even if HushType is initially distributed outside the App Store (via direct download with Sparkle updates), maintaining App Store compatibility is a design goal.
+This section documents compliance considerations for potential submission to the Mac App Store. Even if VaulType is initially distributed outside the App Store (via direct download with Sparkle updates), maintaining App Store compatibility is a design goal.
 
 ### 5.1 Sandboxing Requirements
 
-The Mac App Store requires App Sandbox. HushType requires the following entitlements:
+The Mac App Store requires App Sandbox. VaulType requires the following entitlements:
 
 | Entitlement | Purpose | Justification |
 |-------------|---------|---------------|
@@ -306,25 +306,25 @@ The Mac App Store requires App Sandbox. HushType requires the following entitlem
 | `com.apple.security.network.client` | Outbound network | Required for auto-updates and model downloads |
 | `com.apple.security.files.downloads.read-write` | Downloads folder access | Required for storing downloaded AI models |
 
-> ⚠️ **Warning**: The Accessibility entitlement (`com.apple.security.accessibility`) is heavily scrutinized during App Store review. Apple requires a clear justification and may request a demo video showing why it is necessary. HushType's use case (typing transcribed text at the cursor position in any application) is a legitimate use of this API.
+> ⚠️ **Warning**: The Accessibility entitlement (`com.apple.security.accessibility`) is heavily scrutinized during App Store review. Apple requires a clear justification and may request a demo video showing why it is necessary. VaulType's use case (typing transcribed text at the cursor position in any application) is a legitimate use of this API.
 
 **Sandboxing challenges**:
-- The Accessibility API is essential for HushType's core functionality but may conflict with App Sandbox restrictions.
+- The Accessibility API is essential for VaulType's core functionality but may conflict with App Sandbox restrictions.
 - Model files may be large (several GB), and sandboxed storage limits could apply.
-- If App Sandbox proves incompatible with HushType's requirements, distribution via direct download (with notarization) is the fallback strategy.
+- If App Sandbox proves incompatible with VaulType's requirements, distribution via direct download (with notarization) is the fallback strategy.
 
 ### 5.2 Payment and Monetization
 
-- **Initial release**: HushType is free and open source. No in-app purchases, subscriptions, or paid features.
+- **Initial release**: VaulType is free and open source. No in-app purchases, subscriptions, or paid features.
 - **Future consideration**: If a paid tier is introduced, it must comply with Apple's App Store payment guidelines (using StoreKit for Mac App Store distribution).
 - **No external payment links**: The Mac App Store version must not link to external payment mechanisms.
 
 ### 5.3 Content and Functionality
 
-- **Minimum functionality**: HushType must provide meaningful functionality to pass review (speech-to-text clearly qualifies).
-- **No private API usage**: HushType must use only public macOS APIs.
+- **Minimum functionality**: VaulType must provide meaningful functionality to pass review (speech-to-text clearly qualifies).
+- **No private API usage**: VaulType must use only public macOS APIs.
 - **Accurate metadata**: App Store listing must accurately describe functionality and required permissions.
-- **Age rating**: HushType processes user-generated content (speech), so an appropriate age rating must be selected (likely 4+ as the app itself contains no objectionable content).
+- **Age rating**: VaulType processes user-generated content (speech), so an appropriate age rating must be selected (likely 4+ as the app itself contains no objectionable content).
 
 ### 5.4 Accessibility Requirements
 
@@ -336,9 +336,9 @@ Apple's App Store Review Guidelines (Section 2.1) require apps to be accessible 
 
 ### 6.1 WCAG 2.1 AA Compliance Goals
 
-HushType aims to meet WCAG 2.1 Level AA compliance for all user-facing interfaces, particularly the Settings UI and any overlay/status windows. Key principles:
+VaulType aims to meet WCAG 2.1 Level AA compliance for all user-facing interfaces, particularly the Settings UI and any overlay/status windows. Key principles:
 
-| WCAG Principle | Requirement | HushType Implementation |
+| WCAG Principle | Requirement | VaulType Implementation |
 |----------------|-------------|------------------------|
 | **Perceivable** | Text alternatives for non-text content; content adaptable to different presentations; distinguishable (color contrast >= 4.5:1) | All icons have text labels or accessibility descriptions; UI respects system font size and display settings; color contrast meets 4.5:1 minimum |
 | **Operable** | Keyboard accessible; enough time; no seizure-inducing content; navigable | Full keyboard navigation in Settings; no time-limited interactions; no flashing content; clear focus indicators |
@@ -347,7 +347,7 @@ HushType aims to meet WCAG 2.1 Level AA compliance for all user-facing interface
 
 ### 6.2 VoiceOver Support
 
-VoiceOver is macOS's built-in screen reader. HushType must provide full VoiceOver compatibility:
+VoiceOver is macOS's built-in screen reader. VaulType must provide full VoiceOver compatibility:
 
 1. **All interactive elements** must have meaningful accessibility labels (`.accessibilityLabel()`).
 2. **All status changes** (e.g., "Recording started", "Transcription complete") must be announced via accessibility notifications (`.accessibilityAddTraits(.updatesFrequently)` or `NSAccessibility.post()`).
@@ -373,11 +373,11 @@ VoiceOver is macOS's built-in screen reader. HushType must provide full VoiceOve
 
 ### 7.1 About Window Attribution
 
-HushType's About window (or a dedicated "Acknowledgements" / "Open Source Licenses" section accessible from it) must display attribution for all third-party dependencies. The required format:
+VaulType's About window (or a dedicated "Acknowledgements" / "Open Source Licenses" section accessible from it) must display attribution for all third-party dependencies. The required format:
 
 ```
-HushType
-Copyright (C) 2026 HushType Contributors
+VaulType
+Copyright (C) 2026 VaulType Contributors
 Licensed under the GNU General Public License v3.0
 
 ---
@@ -414,7 +414,7 @@ The project repository must include:
 
 ### 7.3 Distribution Attribution
 
-When distributing HushType (binary or source):
+When distributing VaulType (binary or source):
 
 - The **GPL-3.0 license text** must be included in every distribution.
 - The **third-party license texts** must be included (they are part of the source distribution and bundled into the app binary via the About window / Acknowledgements file).
@@ -427,7 +427,7 @@ When distributing HushType (binary or source):
 
 ### 8.1 Encryption Usage Disclosure
 
-HushType's use of encryption is limited to:
+VaulType's use of encryption is limited to:
 
 | Encryption Use | Technology | Purpose | Custom Implementation? |
 |----------------|-----------|---------|----------------------|
@@ -435,7 +435,7 @@ HushType's use of encryption is limited to:
 | **Code signing** | Apple codesign | Verifying app integrity | No — uses Apple's standard tooling |
 | **Notarization** | Apple notarization service | macOS Gatekeeper compliance | No — uses Apple's standard tooling |
 
-HushType does **not**:
+VaulType does **not**:
 - Implement any custom cryptographic algorithms.
 - Include any cryptographic libraries beyond what macOS provides.
 - Encrypt user data (there is no user data to encrypt).
@@ -444,17 +444,17 @@ HushType does **not**:
 
 ### 8.2 Classification
 
-Based on the above, HushType qualifies for the following export control classification:
+Based on the above, VaulType qualifies for the following export control classification:
 
-- **U.S. Export Administration Regulations (EAR)**: HushType uses only standard operating system-provided encryption for HTTPS connections. This qualifies under the **EAR99** classification, meaning no export license is required.
-- **BIS Encryption Registration**: Not required, as HushType does not include custom encryption and relies solely on OS-level TLS.
-- **Wassenaar Arrangement**: Not applicable, as HushType does not implement or distribute cryptographic technology.
+- **U.S. Export Administration Regulations (EAR)**: VaulType uses only standard operating system-provided encryption for HTTPS connections. This qualifies under the **EAR99** classification, meaning no export license is required.
+- **BIS Encryption Registration**: Not required, as VaulType does not include custom encryption and relies solely on OS-level TLS.
+- **Wassenaar Arrangement**: Not applicable, as VaulType does not implement or distribute cryptographic technology.
 
 > ℹ️ **Info**: The use of HTTPS (via the operating system's built-in TLS implementation) for downloading updates and models does not trigger export control requirements in most jurisdictions. This is explicitly exempted under EAR Section 740.13(e) (publicly available encryption source code) and BIS guidance on mass-market software.
 
 ### 8.3 App Store Export Compliance
 
-When submitting to the Mac App Store, Apple asks whether the app uses encryption. The correct responses for HushType:
+When submitting to the Mac App Store, Apple asks whether the app uses encryption. The correct responses for VaulType:
 
 1. **"Does your app use encryption?"** — Yes (HTTPS is technically encryption).
 2. **"Does your app qualify for any of the exemptions?"** — Yes, the app uses only standard OS-provided HTTPS/TLS.
@@ -468,24 +468,24 @@ No additional export compliance documentation (e.g., CCATS filing) should be nec
 
 ### 9.1 GDPR Considerations
 
-The **General Data Protection Regulation (EU)** applies to organizations that process personal data of individuals in the European Economic Area. Key analysis for HushType:
+The **General Data Protection Regulation (EU)** applies to organizations that process personal data of individuals in the European Economic Area. Key analysis for VaulType:
 
-| GDPR Concept | Applicability to HushType |
+| GDPR Concept | Applicability to VaulType |
 |--------------|---------------------------|
-| **Data Controller** | Not applicable — HushType (the project) does not collect or process any personal data. The user's Mac processes data locally; the HushType project has no access to it. |
-| **Data Processor** | Not applicable — HushType does not process data on behalf of any controller. |
-| **Personal Data Processing** | Audio and text are processed locally on the user's device. This data never leaves the device and is never accessible to HushType's developers. |
-| **Right to Access** | Not applicable — no data is held by HushType's developers or infrastructure. |
-| **Right to Erasure** | Not applicable — uninstalling HushType and deleting model files removes all traces. No external data exists to erase. |
+| **Data Controller** | Not applicable — VaulType (the project) does not collect or process any personal data. The user's Mac processes data locally; the VaulType project has no access to it. |
+| **Data Processor** | Not applicable — VaulType does not process data on behalf of any controller. |
+| **Personal Data Processing** | Audio and text are processed locally on the user's device. This data never leaves the device and is never accessible to VaulType's developers. |
+| **Right to Access** | Not applicable — no data is held by VaulType's developers or infrastructure. |
+| **Right to Erasure** | Not applicable — uninstalling VaulType and deleting model files removes all traces. No external data exists to erase. |
 | **Data Protection Impact Assessment** | Not required — no high-risk processing occurs. |
 
 ### 9.2 CCPA Considerations
 
-The **California Consumer Privacy Act** applies to businesses that collect personal information of California residents. Analysis for HushType:
+The **California Consumer Privacy Act** applies to businesses that collect personal information of California residents. Analysis for VaulType:
 
-- HushType does not "collect" personal information as defined by CCPA.
-- HushType does not "sell" or "share" personal information.
-- HushType is not a "business" under CCPA (it is an open-source project, not a for-profit entity meeting CCPA thresholds).
+- VaulType does not "collect" personal information as defined by CCPA.
+- VaulType does not "sell" or "share" personal information.
+- VaulType is not a "business" under CCPA (it is an open-source project, not a for-profit entity meeting CCPA thresholds).
 - No CCPA-mandated disclosures (e.g., "Do Not Sell My Personal Information") are required.
 
 ### 9.3 Other Jurisdictions
@@ -502,27 +502,27 @@ The same logic applies to data protection regulations in other jurisdictions:
 
 ### 9.4 Why Data Protection Regulations Have Minimal Impact
 
-> 🔒 **Security**: HushType's architecture makes most data protection regulations inapplicable by design. Since all processing occurs on the user's local device and no data is transmitted to or accessible by the HushType project, there is no "processing of personal data" by HushType in the legal sense. This is an intentional architectural decision — privacy by design, not merely privacy by policy.
+> 🔒 **Security**: VaulType's architecture makes most data protection regulations inapplicable by design. Since all processing occurs on the user's local device and no data is transmitted to or accessible by the VaulType project, there is no "processing of personal data" by VaulType in the legal sense. This is an intentional architectural decision — privacy by design, not merely privacy by policy.
 
 Key architectural guarantees:
 
 1. **No server component** — There is no server that could receive, store, or process user data.
 2. **No telemetry** — No usage data, analytics, or behavioral data is collected (unless the user explicitly opts into crash reporting, which collects only technical data).
-3. **No user accounts** — There is no concept of a user identity in HushType.
+3. **No user accounts** — There is no concept of a user identity in VaulType.
 4. **No persistent audio storage** — Audio is processed in memory and discarded.
 5. **No persistent text storage** — Transcribed text is delivered to the cursor and not retained.
 
-> 💡 **Tip**: If HushType is deployed within an organization (e.g., as part of an enterprise toolset), that organization may have its own data protection obligations regarding the audio content processed by HushType on employee devices. Those obligations are the responsibility of the deploying organization, not the HushType project.
+> 💡 **Tip**: If VaulType is deployed within an organization (e.g., as part of an enterprise toolset), that organization may have its own data protection obligations regarding the audio content processed by VaulType on employee devices. Those obligations are the responsibility of the deploying organization, not the VaulType project.
 
 ---
 
 ## 10. Trademark Considerations
 
-### 10.1 HushType Name
+### 10.1 VaulType Name
 
-- **"HushType"** is the project name combining "Hush" (voice stays private) and "Type" (text appears at cursor).
-- As of this writing, "HushType" has not been registered as a trademark. Registration should be considered if the project gains significant adoption.
-- The name should be used consistently in all official materials: **HushType** (one word, capital H and T).
+- **"VaulType"** is the project name combining "Hush" (voice stays private) and "Type" (text appears at cursor).
+- As of this writing, "VaulType" has not been registered as a trademark. Registration should be considered if the project gains significant adoption.
+- The name should be used consistently in all official materials: **VaulType** (one word, capital H and T).
 
 **Recommended trademark protection steps**:
 
@@ -533,20 +533,20 @@ Key architectural guarantees:
 
 ### 10.2 Avoiding Trademark Conflicts
 
-Before finalizing the HushType name, the following searches should be conducted:
+Before finalizing the VaulType name, the following searches should be conducted:
 
 | Search Type | Source | Status |
 |-------------|--------|--------|
 | **USPTO TESS** | United States Patent and Trademark Office | Recommended |
 | **EUIPO TMView** | European Union Intellectual Property Office | Recommended |
 | **Common law search** | Web search, app stores, domain registrars | Recommended |
-| **Domain availability** | hushtype.com, hushtype.app, hushtype.io | Recommended |
+| **Domain availability** | vaultype.com, vaultype.app, vaultype.io | Recommended |
 
 > ⚠️ **Warning**: Using a name that conflicts with an existing trademark could result in a cease-and-desist letter, forced rebranding, or legal action. Conduct thorough searches before investing heavily in branding.
 
 ### 10.3 Third-Party Trademark Usage
 
-HushType's documentation and marketing materials reference third-party trademarks. These must be used correctly:
+VaulType's documentation and marketing materials reference third-party trademarks. These must be used correctly:
 
 | Trademark | Owner | Correct Usage |
 |-----------|-------|---------------|
@@ -558,15 +558,15 @@ HushType's documentation and marketing materials reference third-party trademark
 | **Swift**, **SwiftUI** | Apple Inc. | Apple trademarks. Use as proper nouns. |
 | **Sparkle** | Sparkle Project | Community project name. Use with attribution. |
 
-> ℹ️ **Info**: All third-party trademarks mentioned in this document and in HushType's materials are the property of their respective owners. HushType is not affiliated with, endorsed by, or sponsored by any of the trademark owners listed above.
+> ℹ️ **Info**: All third-party trademarks mentioned in this document and in VaulType's materials are the property of their respective owners. VaulType is not affiliated with, endorsed by, or sponsored by any of the trademark owners listed above.
 
 ---
 
 ## Related Documentation
 
 - [Security Policy](SECURITY.md) — Vulnerability reporting, security architecture, and threat model
-- [Privacy Architecture](../architecture/PRIVACY.md) — Technical details of HushType's privacy-preserving architecture
-- [Contributing Guide](../../CONTRIBUTING.md) — How to contribute to HushType, including license requirements for contributions
+- [Privacy Architecture](../architecture/PRIVACY.md) — Technical details of VaulType's privacy-preserving architecture
+- [Contributing Guide](../../CONTRIBUTING.md) — How to contribute to VaulType, including license requirements for contributions
 - [License (GPL-3.0)](../../LICENSE) — Full text of the GNU General Public License v3.0
 - [Third-Party Licenses](../../THIRD_PARTY_LICENSES) — Full license texts for all third-party dependencies
 - [Build & Distribution](../development/BUILD.md) — Build instructions including code signing and notarization
@@ -576,4 +576,4 @@ HushType's documentation and marketing materials reference third-party trademark
 
 *This document is provided for informational purposes and does not constitute legal advice. For specific legal questions regarding licensing, compliance, or trademark matters, consult a qualified attorney.*
 
-*HushType is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.*
+*VaulType is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.*

@@ -28,7 +28,7 @@ Testing a macOS app that integrates local ML inference (whisper.cpp, llama.cpp),
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    HushType Test Layers                       │
+│                    VaulType Test Layers                       │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌─────────────────────────────────────────────────────┐     │
@@ -54,7 +54,7 @@ Testing a macOS app that integrates local ML inference (whisper.cpp, llama.cpp),
 
 ### Test Plans
 
-HushType uses Xcode Test Plans to organize tests:
+VaulType uses Xcode Test Plans to organize tests:
 
 | Test Plan | Contains | Runs In CI |
 |-----------|----------|------------|
@@ -93,10 +93,10 @@ HushType uses Xcode Test Plans to organize tests:
 ### Command Parser
 
 ```swift
-// HushTypeTests/Services/CommandParserTests.swift
+// VaulTypeTests/Services/CommandParserTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class CommandParserTests: XCTestCase {
 
@@ -161,10 +161,10 @@ final class CommandParserTests: XCTestCase {
 ### Prompt Template Engine
 
 ```swift
-// HushTypeTests/Services/PromptTemplateEngineTests.swift
+// VaulTypeTests/Services/PromptTemplateEngineTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class PromptTemplateEngineTests: XCTestCase {
 
@@ -231,10 +231,10 @@ final class PromptTemplateEngineTests: XCTestCase {
 ### Text Processor
 
 ```swift
-// HushTypeTests/Services/TextProcessorTests.swift
+// VaulTypeTests/Services/TextProcessorTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class TextProcessorTests: XCTestCase {
 
@@ -275,10 +275,10 @@ final class TextProcessorTests: XCTestCase {
 ### Vocabulary Matcher
 
 ```swift
-// HushTypeTests/Models/VocabularyMatcherTests.swift
+// VaulTypeTests/Models/VocabularyMatcherTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class VocabularyMatcherTests: XCTestCase {
 
@@ -314,10 +314,10 @@ Integration tests require compiled whisper.cpp/llama.cpp libraries and test mode
 ### Whisper Wrapper Tests
 
 ```swift
-// HushTypeTests/Integration/WhisperServiceTests.swift
+// VaulTypeTests/Integration/WhisperServiceTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class WhisperServiceTests: XCTestCase {
 
@@ -374,10 +374,10 @@ final class WhisperServiceTests: XCTestCase {
 ### LLM Wrapper Tests
 
 ```swift
-// HushTypeTests/Integration/LLMServiceTests.swift
+// VaulTypeTests/Integration/LLMServiceTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class LLMServiceTests: XCTestCase {
 
@@ -433,7 +433,7 @@ final class LLMServiceTests: XCTestCase {
 ### Settings Window
 
 ```swift
-// HushTypeUITests/SettingsUITests.swift
+// VaulTypeUITests/SettingsUITests.swift
 
 import XCTest
 
@@ -489,7 +489,7 @@ final class SettingsUITests: XCTestCase {
 
     private func openSettings() {
         // Click menu bar item → Settings
-        app.menuBarItems["HushType"].click()
+        app.menuBarItems["VaulType"].click()
         app.menuItems["Settings..."].click()
     }
 }
@@ -498,7 +498,7 @@ final class SettingsUITests: XCTestCase {
 ### Overlay Window
 
 ```swift
-// HushTypeUITests/OverlayUITests.swift
+// VaulTypeUITests/OverlayUITests.swift
 
 import XCTest
 
@@ -548,10 +548,10 @@ Since CI runners don't have physical microphones, use mock audio input:
 ### Mock Audio Service
 
 ```swift
-// HushTypeTests/Mocks/MockAudioCaptureService.swift
+// VaulTypeTests/Mocks/MockAudioCaptureService.swift
 
 import Foundation
-@testable import HushType
+@testable import VaulType
 
 final class MockAudioCaptureService: AudioCapturing {
     weak var delegate: AudioCaptureDelegate?
@@ -587,10 +587,10 @@ final class MockAudioCaptureService: AudioCapturing {
 ### Audio Pipeline Integration Test
 
 ```swift
-// HushTypeTests/Integration/AudioPipelineTests.swift
+// VaulTypeTests/Integration/AudioPipelineTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class AudioPipelineTests: XCTestCase {
 
@@ -621,10 +621,10 @@ Text injection testing is challenging in CI because CGEvent requires Accessibili
 ### Unit Test — Injection Logic
 
 ```swift
-// HushTypeTests/Services/TextInjectionServiceTests.swift
+// VaulTypeTests/Services/TextInjectionServiceTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class TextInjectionServiceTests: XCTestCase {
 
@@ -693,10 +693,10 @@ final class TextInjectionServiceTests: XCTestCase {
 ## Performance Benchmarking
 
 ```swift
-// HushTypeTests/Performance/TranscriptionBenchmarkTests.swift
+// VaulTypeTests/Performance/TranscriptionBenchmarkTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class TranscriptionBenchmarkTests: XCTestCase {
 
@@ -764,10 +764,10 @@ Prevent regressions when updating whisper.cpp or llama.cpp versions.
 ### Accuracy Test Suite
 
 ```swift
-// HushTypeTests/Accuracy/WhisperAccuracyTests.swift
+// VaulTypeTests/Accuracy/WhisperAccuracyTests.swift
 
 import XCTest
-@testable import HushType
+@testable import VaulType
 
 final class WhisperAccuracyTests: XCTestCase {
 
@@ -817,7 +817,7 @@ final class WhisperAccuracyTests: XCTestCase {
 ### Automated Accessibility Audit
 
 ```swift
-// HushTypeUITests/AccessibilityTests.swift
+// VaulTypeUITests/AccessibilityTests.swift
 
 import XCTest
 
@@ -894,7 +894,7 @@ final class AccessibilityTests: XCTestCase {
     }
 
     private func openSettings() {
-        app.menuBarItems["HushType"].click()
+        app.menuBarItems["VaulType"].click()
         app.menuItems["Settings..."].click()
     }
 }
@@ -924,7 +924,7 @@ Create test plans in Xcode: Product > Test Plan > New Test Plan.
     "configurations": [{
         "name": "Unit Tests",
         "options": {
-            "targetForVariableExpansion": { "containerPath": "HushType.xcodeproj", "identifier": "HushTypeTests" }
+            "targetForVariableExpansion": { "containerPath": "VaulType.xcodeproj", "identifier": "VaulTypeTests" }
         }
     }],
     "defaultOptions": {
@@ -932,7 +932,7 @@ Create test plans in Xcode: Product > Test Plan > New Test Plan.
         "defaultTestExecutionTimeAllowance": 30
     },
     "testTargets": [{
-        "target": { "containerPath": "HushType.xcodeproj", "identifier": "HushTypeTests" },
+        "target": { "containerPath": "VaulType.xcodeproj", "identifier": "VaulTypeTests" },
         "skippedTests": ["Integration/", "Performance/", "Accuracy/"]
     }]
 }
@@ -943,8 +943,8 @@ Create test plans in Xcode: Product > Test Plan > New Test Plan.
 ```bash
 # Unit tests only (fast, no models needed)
 xcodebuild test \
-    -project HushType.xcodeproj \
-    -scheme HushType \
+    -project VaulType.xcodeproj \
+    -scheme VaulType \
     -testPlan UnitTests \
     -destination "platform=macOS,arch=arm64" \
     CODE_SIGN_IDENTITY="" \
@@ -952,8 +952,8 @@ xcodebuild test \
 
 # Integration tests (requires test models)
 xcodebuild test \
-    -project HushType.xcodeproj \
-    -scheme HushType \
+    -project VaulType.xcodeproj \
+    -scheme VaulType \
     -testPlan IntegrationTests \
     -destination "platform=macOS,arch=arm64" \
     CODE_SIGN_IDENTITY="" \
@@ -966,10 +966,10 @@ xcodebuild test \
 
 ### Test Audio Files
 
-Store test audio in `HushTypeTests/Resources/Audio/`:
+Store test audio in `VaulTypeTests/Resources/Audio/`:
 
 ```
-HushTypeTests/Resources/Audio/
+VaulTypeTests/Resources/Audio/
 ├── hello_world_en.wav       # 2s, 16kHz, mono, English
 ├── merhaba_tr.wav           # 2s, 16kHz, mono, Turkish
 ├── the_quick_brown_fox.wav  # 5s, 16kHz, mono, English
@@ -990,7 +990,7 @@ git lfs track "*.gguf"
 
 ### Test Models
 
-Store tiny models in `HushTypeTests/Resources/Models/`:
+Store tiny models in `VaulTypeTests/Resources/Models/`:
 - `ggml-tiny.bin` — ~75MB Whisper tiny model
 - `test-model-q4.gguf` — Small quantized LLM for tests
 

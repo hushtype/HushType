@@ -31,7 +31,7 @@ CWHISPER_INCLUDE="$PROJECT_ROOT/WhisperKit/Sources/CWhisper/include"
 WHISPER_REPO="https://github.com/ggerganov/whisper.cpp.git"
 WHISPER_TAG="v1.7.4"
 
-echo "=== HushType: whisper.cpp Setup ==="
+echo "=== VaulType: whisper.cpp Setup ==="
 echo ""
 
 # Step 1: Clone whisper.cpp (check for CMakeLists.txt, not just directory existence)

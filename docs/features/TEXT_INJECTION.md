@@ -2,7 +2,7 @@
 
 Last Updated: 2026-02-13
 
-> HushType's text injection system delivers transcribed speech directly into any active text field
+> VaulType's text injection system delivers transcribed speech directly into any active text field
 > on macOS. This document provides a deep dive into CGEvent keystroke simulation, clipboard-based
 > injection, accessibility API integration, Unicode handling, and per-app compatibility strategies.
 
@@ -70,17 +70,17 @@ Last Updated: 2026-02-13
 
 ## Overview
 
-Text injection is the final stage of HushType's speech-to-text pipeline. After audio is captured,
+Text injection is the final stage of VaulType's speech-to-text pipeline. After audio is captured,
 transcribed by whisper.cpp, and optionally refined by llama.cpp, the resulting text must be
 delivered into whatever application and text field the user is currently focused on. This is a
 deceptively complex problem on macOS, involving low-level Core Graphics events, the system
 pasteboard, accessibility APIs, and per-application workarounds.
 
 > 🍎 **macOS-specific**: Text injection on macOS requires Accessibility permissions. The user
-> must grant HushType access in System Settings > Privacy & Security > Accessibility. See
+> must grant VaulType access in System Settings > Privacy & Security > Accessibility. See
 > [PERMISSIONS.md](PERMISSIONS.md) for the full permissions guide.
 
-HushType supports two primary injection methods:
+VaulType supports two primary injection methods:
 
 | Method | Mechanism | Best For | Latency |
 |--------|-----------|----------|---------|
@@ -170,7 +170,7 @@ The event flow for CGEvent keystroke injection:
 
 ```
 +------------+     +----------------+     +------------------+     +---------------+
-| HushType   |---->| CGEvent API    |---->| macOS Event      |---->| Target App    |
+| VaulType   |---->| CGEvent API    |---->| macOS Event      |---->| Target App    |
 | creates    |     | (CoreGraphics) |     | System (WindowServer) | | receives      |
 | CGEvent    |     |                |     |                  |     | key event     |
 +------------+     +----------------+     +------------------+     +---------------+
@@ -184,12 +184,12 @@ Key concepts:
 - Events posted via `CGEvent.post()` pass through the same path as real hardware events
 
 > 🔒 **Security**: CGEvent posting requires the Accessibility permission. Without it,
-> `CGEvent.post()` silently drops events. HushType checks permission status before
+> `CGEvent.post()` silently drops events. VaulType checks permission status before
 > attempting injection. See [PERMISSIONS.md](PERMISSIONS.md).
 
 ### Creating Key Events
 
-HushType wraps CGEvent creation in a type-safe Swift layer:
+VaulType wraps CGEvent creation in a type-safe Swift layer:
 
 ```swift
 import CoreGraphics
@@ -274,7 +274,7 @@ CGEvents can be posted at three different tap locations, each with different beh
 | Session Event Tap | `.cgSessionEventTap` | After HID processing; session-level injection |
 | Annotated Session | `.cgAnnotatedSessionEventTap` | Events are marked as synthetic |
 
-HushType defaults to `.cghidEventTap` for maximum compatibility. Some applications
+VaulType defaults to `.cghidEventTap` for maximum compatibility. Some applications
 (notably certain Electron apps) behave differently with annotated events.
 
 ```swift
@@ -299,7 +299,7 @@ enum EventTapStrategy {
 
 ### Character-by-Character Injection
 
-For reliable text injection, HushType iterates through each character in the text and
+For reliable text injection, VaulType iterates through each character in the text and
 posts individual keystroke events:
 
 ```swift
@@ -387,7 +387,7 @@ Injection Speed Factors:
 ### Key Code Mapping
 
 macOS key codes are hardware-level virtual key codes defined in `Carbon.HIToolbox`.
-HushType maintains a mapping table for ASCII characters:
+VaulType maintains a mapping table for ASCII characters:
 
 ```swift
 import Carbon.HIToolbox
@@ -586,7 +586,7 @@ enum KeyCodeMapper {
 
 > ⚠️ **Warning**: Key code mappings assume a US keyboard layout. For international
 > keyboard layouts, CGEvent's Unicode string override (set via
-> `keyboardSetUnicodeString`) is essential. HushType always sets the Unicode string
+> `keyboardSetUnicodeString`) is essential. VaulType always sets the Unicode string
 > on every CGEvent to ensure correct character output regardless of the user's keyboard
 > layout.
 
@@ -816,7 +816,7 @@ struct InjectionMethodSelector {
 
 ### Saving Current Clipboard Contents
 
-Before using the clipboard for injection, HushType preserves the user's existing
+Before using the clipboard for injection, VaulType preserves the user's existing
 clipboard contents. The pasteboard can contain multiple item types simultaneously
 (text, RTF, images, files, custom data), all of which must be saved and restored.
 
@@ -916,7 +916,7 @@ extension ClipboardInjector {
 
 ### Handling Different Pasteboard Types
 
-The macOS pasteboard supports numerous data types. HushType preserves all of them:
+The macOS pasteboard supports numerous data types. VaulType preserves all of them:
 
 | Pasteboard Type | Constant | Description |
 |---|---|---|
@@ -976,12 +976,12 @@ Several edge cases require special handling in clipboard preservation:
 >
 > 1. **Empty clipboard**: If the user's clipboard is empty before injection, do not
 >    attempt to restore (there is nothing to restore).
-> 2. **Large clipboard contents**: Images and files can be very large. HushType caps
+> 2. **Large clipboard contents**: Images and files can be very large. VaulType caps
 >    clipboard preservation at 50MB to avoid memory pressure.
 > 3. **Transient pasteboard types**: Some apps use custom transient types that cannot
 >    be meaningfully saved/restored (e.g., drag session data).
 > 4. **Clipboard managers**: Third-party clipboard managers (Paste, Maccy, CopyClip)
->    may record HushType's injection as a clipboard entry. There is no reliable way to
+>    may record VaulType's injection as a clipboard entry. There is no reliable way to
 >    prevent this.
 > 5. **Rapid sequential injections**: If multiple injections occur in quick succession,
 >    each must complete its full save-inject-restore cycle before the next begins.
@@ -1028,7 +1028,7 @@ actor ClipboardInjectionQueue {
 
 ### AXUIElement API
 
-HushType uses the macOS Accessibility API (`AXUIElement`) to determine what application
+VaulType uses the macOS Accessibility API (`AXUIElement`) to determine what application
 is frontmost, which element is focused, and whether that element accepts text input.
 This information drives injection routing decisions.
 
@@ -1049,7 +1049,7 @@ Accessibility Hierarchy:
                             +-- AXInsertionPointLineNumber
 ```
 
-> 🔒 **Security**: The Accessibility API requires explicit user consent. HushType must
+> 🔒 **Security**: The Accessibility API requires explicit user consent. VaulType must
 > be listed in System Settings > Privacy & Security > Accessibility. Without this
 > permission, all `AXUIElement` queries return `kAXErrorAPIDisabled`. See
 > [PERMISSIONS.md](PERMISSIONS.md) for details on requesting and verifying this permission.
@@ -1143,7 +1143,7 @@ final class AccessibilityDetector {
 
 ### Checking If Element Accepts Text Input
 
-Not all focused elements accept text input. HushType must verify the element's role
+Not all focused elements accept text input. VaulType must verify the element's role
 and editability before attempting injection:
 
 ```swift
@@ -1215,7 +1215,7 @@ extension AccessibilityDetector {
 
 ### Getting Cursor Position
 
-Knowing the cursor position allows HushType to provide visual feedback and handle
+Knowing the cursor position allows VaulType to provide visual feedback and handle
 text insertion accurately:
 
 ```swift
@@ -1282,7 +1282,7 @@ extension AccessibilityDetector {
 
 ### Frontmost App Detection
 
-HushType monitors the frontmost application to apply per-app injection strategies:
+VaulType monitors the frontmost application to apply per-app injection strategies:
 
 ```swift
 import Combine
@@ -1347,7 +1347,7 @@ final class FrontmostAppMonitor: ObservableObject {
 
 ### Emoji Injection
 
-Emoji characters cannot be represented by single key codes. HushType uses the Unicode
+Emoji characters cannot be represented by single key codes. VaulType uses the Unicode
 string override on CGEvents or falls back to clipboard injection:
 
 ```swift
@@ -1394,7 +1394,7 @@ extension CGEventKeystrokeInjector {
 > Zero Width Joiners (ZWJ). For example, the family emoji (U+1F468 U+200D U+1F469
 > U+200D U+1F467) has 5 code points. `keyboardSetUnicodeString` supports a maximum
 > of 20 UTF-16 code units. Most emoji fit within this limit, but extremely complex
-> ZWJ sequences may not. HushType falls back to clipboard injection for emoji that
+> ZWJ sequences may not. VaulType falls back to clipboard injection for emoji that
 > exceed the CGEvent Unicode string limit.
 
 ### CJK Characters
@@ -1439,7 +1439,7 @@ extension CGEventKeystrokeInjector {
 
 > ℹ️ **Info**: When a CJK Input Method Editor (IME) is active, it intercepts raw key
 > events and presents a candidate selection UI. CGEvent keystrokes would trigger the IME
-> rather than producing the intended characters. HushType detects active IMEs and
+> rather than producing the intended characters. VaulType detects active IMEs and
 > automatically switches to clipboard injection for CJK text.
 
 ### Diacritics and Combining Characters
@@ -1521,7 +1521,7 @@ extension KeyCodeMapper {
 
 > ⚠️ **Warning**: In terminal applications, the Return key sends different escape
 > sequences depending on the terminal mode. In normal mode, Return sends `\r` (0x0D).
-> In some terminal apps, pasting text with newlines can execute commands. HushType
+> In some terminal apps, pasting text with newlines can execute commands. VaulType
 > warns the user before injecting multi-line text into detected terminal applications.
 
 ---
@@ -1649,7 +1649,7 @@ Apple's built-in Terminal.app processes input through its own event handling:
   the current line. Backslash, quotes, and other shell metacharacters are not escaped.
 - **Clipboard paste**: Works well. Terminal.app wraps pasted text in bracketed paste
   escape sequences (`\e[200~...\e[201~`) when the running program supports it.
-- **Recommendation**: Use clipboard paste for Terminal.app. For safety, HushType wraps
+- **Recommendation**: Use clipboard paste for Terminal.app. For safety, VaulType wraps
   the pasted text in single quotes if it contains shell metacharacters and the focused
   element appears to be a shell prompt.
 
@@ -1683,7 +1683,7 @@ iTerm2 has the best support for programmatic text injection among terminal emula
 
 - **Bracketed paste**: iTerm2 properly supports bracketed paste mode, wrapping pasted
   text in `\e[200~...\e[201~` sequences so shells know not to execute line by line.
-- **Shell integration**: With iTerm2's shell integration installed, HushType can detect
+- **Shell integration**: With iTerm2's shell integration installed, VaulType can detect
   when a shell prompt is active versus when a program is running.
 - **AppleScript API**: iTerm2 exposes a comprehensive AppleScript/JXA interface that
   can be used for text injection as an alternative to CGEvent/clipboard.
@@ -1756,7 +1756,7 @@ struct TerminalInjector {
             // In a real implementation, this would present a confirmation dialog
             // to the user before injecting multi-line text into a terminal.
             NotificationCenter.default.post(
-                name: .hushTypeTerminalMultilineWarning,
+                name: .vaulTypeTerminalMultilineWarning,
                 object: nil,
                 userInfo: ["text": text, "terminal": terminal]
             )
@@ -1787,8 +1787,8 @@ struct TerminalInjector {
 }
 
 extension Notification.Name {
-    static let hushTypeTerminalMultilineWarning = Notification.Name(
-        "com.hushtype.terminalMultilineWarning"
+    static let vaulTypeTerminalMultilineWarning = Notification.Name(
+        "com.vaultype.terminalMultilineWarning"
     )
 }
 ```
@@ -1814,7 +1814,7 @@ VS Code uses a custom text editor (Monaco) running inside an Electron shell:
 - **Multi-cursor**: If VS Code has multiple cursors active, both CGEvent and clipboard
   injection will insert text at all cursor positions. This is usually desirable.
 - **Integrated terminal**: The VS Code integrated terminal has the same issues as
-  standalone terminals. HushType detects when the terminal panel is focused.
+  standalone terminals. VaulType detects when the terminal panel is focused.
 - **Known quirk**: VS Code's "editor.acceptSuggestionOnCommitCharacter" setting can
   cause autocomplete suggestions to be accepted during CGEvent injection if the
   injected character matches a commit character (e.g., `.`, `(`).
@@ -1857,7 +1857,7 @@ Slack's message input field is a contentEditable div inside Electron's Chromium:
 - **Clipboard paste**: Generally reliable. Slack processes pasted text through its own
   formatting pipeline.
 - **Known quirk**: Pasting text that starts with `/` triggers Slack's command parser.
-  HushType adds a zero-width space prefix if the transcribed text begins with `/` and
+  VaulType adds a zero-width space prefix if the transcribed text begins with `/` and
   the target is Slack.
 - **Threading**: If a thread is open, text injection goes to the thread reply field,
   not the main channel input.
@@ -1870,10 +1870,10 @@ Discord's input handling is similar to Slack:
   certain character sequences as formatting.
 - **Clipboard paste**: Reliable for plain text. Rich text paste may include formatting
   that Discord cannot render.
-- **Known quirk**: Discord splits long messages at 2000 characters. HushType does not
+- **Known quirk**: Discord splits long messages at 2000 characters. VaulType does not
   automatically split injected text; the user sees Discord's character limit warning.
 - **Voice channels**: When in a voice channel, Discord's input focus may be on the
-  voice controls rather than a text field. HushType detects this and avoids injection.
+  voice controls rather than a text field. VaulType detects this and avoids injection.
 
 ### Electron Input Handling Quirks
 
@@ -1958,7 +1958,7 @@ Firefox uses the Gecko engine with distinct input handling characteristics:
   correctly with CGEvent injection.
 - **Clipboard paste**: Reliable and the recommended method for Firefox.
 - **Accessibility**: Firefox has good AX support but the element hierarchy differs
-  from Safari. HushType handles Firefox's AX tree structure separately.
+  from Safari. VaulType handles Firefox's AX tree structure separately.
 
 ### ContentEditable Fields
 
@@ -2151,7 +2151,7 @@ actor TextInjectionCoordinator {
 
 ## Error Handling and Recovery
 
-Text injection can fail for numerous reasons. HushType implements a multi-layer error
+Text injection can fail for numerous reasons. VaulType implements a multi-layer error
 handling strategy:
 
 ```
@@ -2227,7 +2227,7 @@ struct InjectionErrorHandler {
 }
 ```
 
-> ✅ **Success**: HushType's multi-layer error recovery ensures that transcribed text
+> ✅ **Success**: VaulType's multi-layer error recovery ensures that transcribed text
 > is never lost. In the worst case, the text is placed on the clipboard with a
 > notification telling the user to paste manually with Command+V.
 
@@ -2329,9 +2329,9 @@ final class OptimizedInjector {
 ### Memory Considerations
 
 > ℹ️ **Info**: Clipboard preservation can use significant memory when the user has
-> large items on the clipboard (e.g., high-resolution images). HushType limits
+> large items on the clipboard (e.g., high-resolution images). VaulType limits
 > clipboard preservation to 50MB. If the clipboard contents exceed this limit,
-> HushType skips preservation and notifies the user that their clipboard was replaced.
+> VaulType skips preservation and notifies the user that their clipboard was replaced.
 
 ```swift
 extension ClipboardPreserver {
@@ -2365,12 +2365,12 @@ extension ClipboardPreserver {
 | [Architecture Overview](../architecture/ARCHITECTURE.md) | System architecture and component relationships |
 | [Permissions Guide](PERMISSIONS.md) | Accessibility, microphone, and other macOS permissions |
 | [API Documentation](../api/API_DOCUMENTATION.md) | Public API reference for the injection subsystem |
-| [Tech Stack](../architecture/TECH_STACK.md) | Frameworks and libraries used in HushType |
+| [Tech Stack](../architecture/TECH_STACK.md) | Frameworks and libraries used in VaulType |
 | [Security Model](../security/SECURITY.md) | Security considerations for event injection |
 | [Accessibility Reference](../reference/ACCESSIBILITY.md) | macOS accessibility API usage guide |
 
 ---
 
-*This document is part of the [HushType](https://github.com/hushtype/hushtype) project,
+*This document is part of the [VaulType](https://github.com/vaultype/vaultype) project,
 licensed under GPL-3.0. All processing happens locally on your Mac — no cloud, no telemetry,
 no network calls.*

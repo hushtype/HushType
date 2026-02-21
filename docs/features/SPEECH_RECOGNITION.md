@@ -2,7 +2,7 @@
 
 **Last Updated: 2026-02-13**
 
-HushType's speech recognition engine is built on [whisper.cpp](https://github.com/ggerganov/whisper.cpp), a high-performance C/C++ port of OpenAI's Whisper model, compiled as a static library with Metal GPU acceleration for macOS. Every byte of audio is processed locally — no network calls, no cloud APIs, no telemetry.
+VaulType's speech recognition engine is built on [whisper.cpp](https://github.com/ggerganov/whisper.cpp), a high-performance C/C++ port of OpenAI's Whisper model, compiled as a static library with Metal GPU acceleration for macOS. Every byte of audio is processed locally — no network calls, no cloud APIs, no telemetry.
 
 ---
 
@@ -62,11 +62,11 @@ HushType's speech recognition engine is built on [whisper.cpp](https://github.co
 
 ## 1. Whisper.cpp Integration Architecture
 
-HushType integrates whisper.cpp as a statically linked C library, bridged into Swift through a custom C-to-Swift interop layer. This approach avoids dynamic linking pitfalls, keeps the binary self-contained, and enables fine-grained control over GPU acceleration via Metal.
+VaulType integrates whisper.cpp as a statically linked C library, bridged into Swift through a custom C-to-Swift interop layer. This approach avoids dynamic linking pitfalls, keeps the binary self-contained, and enables fine-grained control over GPU acceleration via Metal.
 
 ### 1.1 Static Library Compilation
 
-whisper.cpp is compiled as a static library (`libwhisper.a`) as part of HushType's build process. The library is built with Metal support enabled and optimized for the target architecture.
+whisper.cpp is compiled as a static library (`libwhisper.a`) as part of VaulType's build process. The library is built with Metal support enabled and optimized for the target architecture.
 
 > 🍎 **macOS-specific**: The build process uses `xcrun` and targets the macOS SDK directly, ensuring compatibility with Apple's code signing and notarization requirements.
 
@@ -110,25 +110,25 @@ The Xcode project includes the static library via:
 
 Swift communicates with whisper.cpp through a bridging header that exposes the C API, combined with a Swift wrapper layer that provides type-safe, idiomatic Swift interfaces.
 
-**Bridging Header** (`HushType-Bridging-Header.h`):
+**Bridging Header** (`VaulType-Bridging-Header.h`):
 
 ```c
 //
-//  HushType-Bridging-Header.h
-//  HushType
+//  VaulType-Bridging-Header.h
+//  VaulType
 //
 //  Bridges whisper.cpp C API into Swift
 //
 
-#ifndef HushType_Bridging_Header_h
-#define HushType_Bridging_Header_h
+#ifndef VaulType_Bridging_Header_h
+#define VaulType_Bridging_Header_h
 
 #include "whisper.h"
 
 // Additional helper declarations for Swift interop
 // whisper.h uses opaque pointer types that Swift can consume directly
 
-#endif /* HushType_Bridging_Header_h */
+#endif /* VaulType_Bridging_Header_h */
 ```
 
 **Swift Wrapper** (`WhisperBridge.swift`):
@@ -187,7 +187,7 @@ final class WhisperBridge: @unchecked Sendable {
     // MARK: - Properties
 
     private var context: OpaquePointer?
-    private let queue = DispatchQueue(label: "com.hushtype.whisper", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.vaultype.whisper", qos: .userInitiated)
     private(set) var isModelLoaded: Bool = false
     private(set) var currentModelPath: String?
 
@@ -260,7 +260,7 @@ final class WhisperBridge: @unchecked Sendable {
 
 ### 1.3 Metal GPU Acceleration
 
-whisper.cpp uses Metal shaders to accelerate matrix multiplication and other compute-heavy operations on Apple GPUs. HushType bundles the Metal shader source and compiles it at runtime.
+whisper.cpp uses Metal shaders to accelerate matrix multiplication and other compute-heavy operations on Apple GPUs. VaulType bundles the Metal shader source and compiles it at runtime.
 
 ```swift
 extension WhisperBridge {
@@ -298,7 +298,7 @@ The Metal shader file (`ggml-metal.metal`) must be included in the app bundle's 
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                       HushType Application                       │
+│                       VaulType Application                       │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌─────────────────┐    ┌──────────────────┐    ┌────────────┐  │
@@ -337,7 +337,7 @@ The Metal shader file (`ggml-metal.metal`) must be included in the app bundle's 
 
 ## 2. Model Management
 
-HushType supports multiple Whisper model sizes, allowing users to choose the optimal balance between speed, accuracy, and resource consumption.
+VaulType supports multiple Whisper model sizes, allowing users to choose the optimal balance between speed, accuracy, and resource consumption.
 
 ### 2.1 Supported Models
 
@@ -410,7 +410,7 @@ actor ModelManager {
     static let modelsDirectory: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return appSupport
-            .appendingPathComponent("HushType", isDirectory: true)
+            .appendingPathComponent("VaulType", isDirectory: true)
             .appendingPathComponent("Models", isDirectory: true)
             .appendingPathComponent("whisper", isDirectory: true)
     }()
@@ -563,7 +563,7 @@ actor ModelManager {
 ### 2.3 Storage Layout
 
 ```
-~/Library/Application Support/HushType/
+~/Library/Application Support/VaulType/
 └── Models/
     └── whisper/
         ├── ggml-tiny.bin          # 75 MB
@@ -573,7 +573,7 @@ actor ModelManager {
         └── ggml-large-v3.bin      # 3.1 GB
 ```
 
-> 🍎 **macOS-specific**: The `~/Library/Application Support/` directory is the standard location for application data on macOS. It is excluded from iCloud backup by default unless explicitly configured otherwise. HushType does **not** sync models to iCloud — they must be downloaded on each machine.
+> 🍎 **macOS-specific**: The `~/Library/Application Support/` directory is the standard location for application data on macOS. It is excluded from iCloud backup by default unless explicitly configured otherwise. VaulType does **not** sync models to iCloud — they must be downloaded on each machine.
 
 ### 2.4 Model Selection UI
 
@@ -692,7 +692,7 @@ The audio preprocessing pipeline captures microphone input, converts it to the f
 
 ### 3.1 AVAudioEngine Setup
 
-HushType uses `AVAudioEngine` for audio capture, which provides low-latency access to the system's audio input hardware through a tap on the input node.
+VaulType uses `AVAudioEngine` for audio capture, which provides low-latency access to the system's audio input hardware through a tap on the input node.
 
 ```swift
 import AVFoundation
@@ -886,7 +886,7 @@ enum AudioCaptureError: Error, LocalizedError {
 }
 ```
 
-> 🍎 **macOS-specific**: On macOS 14+, microphone access requires explicit user permission. HushType requests this via `AVCaptureDevice.requestAccess(for: .audio)` at first launch. The `NSMicrophoneUsageDescription` key must be present in `Info.plist`.
+> 🍎 **macOS-specific**: On macOS 14+, microphone access requires explicit user permission. VaulType requests this via `AVCaptureDevice.requestAccess(for: .audio)` at first launch. The `NSMicrophoneUsageDescription` key must be present in `Info.plist`.
 
 ### 3.2 Sample Rate Conversion
 
@@ -904,7 +904,7 @@ Input Device          AVAudioConverter           Whisper
 
 ### 3.3 Voice Activity Detection (VAD)
 
-VAD determines whether a given audio segment contains speech. HushType uses an energy-based VAD with zero-crossing rate analysis to distinguish speech from silence and background noise.
+VAD determines whether a given audio segment contains speech. VaulType uses an energy-based VAD with zero-crossing rate analysis to distinguish speech from silence and background noise.
 
 ```swift
 import Accelerate
@@ -1092,7 +1092,7 @@ Audio buffers accumulate samples during recording. For batch mode, the entire bu
 | Memory growth | Linear with duration | Fixed (~320 KB) |
 | Max duration | 5 minutes (configurable) | Unlimited |
 
-> ⚠️ **Warning**: For batch mode, audio buffers grow linearly. A 5-minute recording at 16kHz mono produces approximately 9.6 MB of Float32 data. HushType enforces a configurable maximum recording duration (default: 5 minutes) to prevent excessive memory use.
+> ⚠️ **Warning**: For batch mode, audio buffers grow linearly. A 5-minute recording at 16kHz mono produces approximately 9.6 MB of Float32 data. VaulType enforces a configurable maximum recording duration (default: 5 minutes) to prevent excessive memory use.
 
 ### 3.7 Pipeline Diagram
 
@@ -1151,7 +1151,7 @@ Audio buffers accumulate samples during recording. For batch mode, the entire bu
 
 ## 4. Streaming vs Batch Transcription
 
-HushType supports two transcription modes: batch (process after recording) and streaming (real-time partial results). Each mode has distinct performance characteristics and user experience implications.
+VaulType supports two transcription modes: batch (process after recording) and streaming (real-time partial results). Each mode has distinct performance characteristics and user experience implications.
 
 ### 4.1 Batch Transcription (Process After Recording)
 
@@ -1314,7 +1314,7 @@ struct TranscriptionOptions: Sendable {
 }
 ```
 
-> ✅ **Success**: Batch mode produces the most accurate transcription because Whisper processes the full audio context. It is the default mode for HushType's push-to-talk workflow.
+> ✅ **Success**: Batch mode produces the most accurate transcription because Whisper processes the full audio context. It is the default mode for VaulType's push-to-talk workflow.
 
 ### 4.2 Streaming Transcription (Real-Time Partial Results)
 
@@ -1451,7 +1451,7 @@ actor StreamingTranscriber {
 | **Use case** | Push-to-talk, short utterances | Long dictation, live captioning |
 | **Implementation** | Simpler | More complex (overlap, merging) |
 
-> 💡 **Tip**: HushType defaults to batch mode for its push-to-talk workflow (record → release → transcribe). Streaming mode can be enabled in Settings for users who prefer real-time feedback during longer dictations.
+> 💡 **Tip**: VaulType defaults to batch mode for its push-to-talk workflow (record → release → transcribe). Streaming mode can be enabled in Settings for users who prefer real-time feedback during longer dictations.
 
 ### 4.4 Implementation Details
 
@@ -1518,7 +1518,7 @@ extension StreamingTranscriber {
 
 ## 5. Language Detection and Selection
 
-Whisper natively supports 90+ languages with automatic language identification. HushType exposes this capability through both automatic detection and manual language selection.
+Whisper natively supports 90+ languages with automatic language identification. VaulType exposes this capability through both automatic detection and manual language selection.
 
 ### 5.1 Automatic Language Detection
 
@@ -1630,7 +1630,7 @@ Whisper supports the following 99 languages. Performance and accuracy vary by la
 
 ### 5.4 Language-Specific Optimizations
 
-For certain languages, HushType applies specific post-processing rules to improve output quality:
+For certain languages, VaulType applies specific post-processing rules to improve output quality:
 
 ```swift
 /// Language-specific post-processing rules applied after Whisper transcription.
@@ -1690,7 +1690,7 @@ struct LanguagePostProcessor {
 
 ## 6. Performance Tuning Parameters
 
-Whisper.cpp exposes several parameters that significantly affect transcription speed and accuracy. HushType provides sensible defaults and allows advanced users to tune these parameters.
+Whisper.cpp exposes several parameters that significantly affect transcription speed and accuracy. VaulType provides sensible defaults and allows advanced users to tune these parameters.
 
 ### 6.1 Core Parameters
 
@@ -1747,7 +1747,7 @@ enum PerformancePreset: String, CaseIterable, Identifiable {
 
 ### 6.2 Apple Silicon Optimization
 
-Apple Silicon Macs benefit from the unified memory architecture and the Neural Engine. HushType automatically detects the chip family and adjusts parameters accordingly.
+Apple Silicon Macs benefit from the unified memory architecture and the Neural Engine. VaulType automatically detects the chip family and adjusts parameters accordingly.
 
 ```swift
 /// Determines optimal Whisper parameters for the current hardware.
@@ -1870,7 +1870,7 @@ struct HardwareOptimizer {
 | Expected speed | 0.2x–3x realtime depending on model |
 | Memory warning | 16 GB RAM minimum for `medium` |
 
-> ⚠️ **Warning**: The `large-v3` model on Intel Macs will likely run slower than realtime and may cause memory pressure on systems with less than 32 GB RAM. HushType shows a warning when selecting `large-v3` on Intel hardware.
+> ⚠️ **Warning**: The `large-v3` model on Intel Macs will likely run slower than realtime and may cause memory pressure on systems with less than 32 GB RAM. VaulType shows a warning when selecting `large-v3` on Intel hardware.
 
 ### 6.4 Memory Management
 
@@ -1919,7 +1919,7 @@ extension WhisperBridge {
 
 ## 7. Custom Vocabulary Integration
 
-HushType allows users to define custom vocabulary entries — domain-specific terms, proper nouns, abbreviations, and technical jargon — that improve recognition accuracy. Custom vocabulary works through two mechanisms: prompt conditioning and post-processing corrections.
+VaulType allows users to define custom vocabulary entries — domain-specific terms, proper nouns, abbreviations, and technical jargon — that improve recognition accuracy. Custom vocabulary works through two mechanisms: prompt conditioning and post-processing corrections.
 
 ### 7.1 Vocabulary Entry Format
 
@@ -1973,7 +1973,7 @@ final class VocabularyEntry {
 
 ### 7.2 Prompt Conditioning with Custom Vocabulary
 
-Whisper supports an "initial prompt" parameter that biases the model toward specific vocabulary. HushType builds this prompt from the user's custom vocabulary entries.
+Whisper supports an "initial prompt" parameter that biases the model toward specific vocabulary. VaulType builds this prompt from the user's custom vocabulary entries.
 
 ```swift
 /// Builds a Whisper prompt conditioning string from custom vocabulary.
@@ -2003,7 +2003,7 @@ struct VocabularyPromptBuilder {
 
         guard !relevantEntries.isEmpty else { return nil }
 
-        // Build prompt: "The following terms may appear: HushType, PostgreSQL, Kubernetes, ..."
+        // Build prompt: "The following terms may appear: VaulType, PostgreSQL, Kubernetes, ..."
         var prompt = "The following terms may appear: "
         var currentLength = prompt.count
 
@@ -2028,7 +2028,7 @@ struct VocabularyPromptBuilder {
 
 ### 7.3 Post-Processing Corrections
 
-After Whisper produces a transcription, HushType applies post-processing rules based on custom vocabulary to correct common misrecognitions.
+After Whisper produces a transcription, VaulType applies post-processing rules based on custom vocabulary to correct common misrecognitions.
 
 ```swift
 /// Applies post-processing corrections to transcribed text based on custom vocabulary.
@@ -2081,7 +2081,7 @@ Example vocabulary entries and their effect:
 
 | Term | Spoken Forms | Before Correction | After Correction |
 |------|-------------|-------------------|------------------|
-| `HushType` | `hush type`, `hushtype` | "Open hush type settings" | "Open HushType settings" |
+| `VaulType` | `hush type`, `vaultype` | "Open hush type settings" | "Open VaulType settings" |
 | `PostgreSQL` | `postgres`, `post gres` | "Connect to the postgres database" | "Connect to the PostgreSQL database" |
 | `Kubernetes` | `kubernetes`, `k8s` | "Deploy to kubernetes" | "Deploy to Kubernetes" |
 | `async/await` | `async await`, `a sync a wait` | "Use a sync a wait pattern" | "Use async/await pattern" |
@@ -2201,7 +2201,7 @@ struct ContextPromptBuilder {
     }
 }
 
-/// HushType processing modes.
+/// VaulType processing modes.
 enum ProcessingMode: String, CaseIterable, Identifiable, Codable {
     case raw = "Raw"
     case clean = "Clean"
@@ -2218,7 +2218,7 @@ enum ProcessingMode: String, CaseIterable, Identifiable, Codable {
 
 ### 8.3 Audio Quality Tips
 
-Audio quality has a dramatic impact on transcription accuracy. HushType provides the following guidance to users:
+Audio quality has a dramatic impact on transcription accuracy. VaulType provides the following guidance to users:
 
 | Factor | Impact | Recommendation |
 |--------|--------|---------------|
@@ -2227,7 +2227,7 @@ Audio quality has a dramatic impact on transcription accuracy. HushType provides
 | **Speaking pace** | Medium | Speak naturally; avoid rushing or extreme slowness |
 | **Microphone quality** | Medium | USB condenser or headset mic > built-in laptop mic |
 | **Pop filter** | Low | Reduces plosive sounds (p, b, t) that cause artifacts |
-| **Sample rate** | Low | HushType handles conversion; native 48kHz is fine |
+| **Sample rate** | Low | VaulType handles conversion; native 48kHz is fine |
 | **Echo** | Medium | Avoid large, reverberant rooms |
 
 ---
@@ -2236,7 +2236,7 @@ Audio quality has a dramatic impact on transcription accuracy. HushType provides
 
 ### 9.1 Background Noise
 
-Background noise is the most common source of transcription errors. HushType mitigates noise through the audio preprocessing pipeline (noise gate + VAD) and model-level robustness.
+Background noise is the most common source of transcription errors. VaulType mitigates noise through the audio preprocessing pipeline (noise gate + VAD) and model-level robustness.
 
 ```swift
 /// Adaptive noise profile that adjusts to the ambient environment.
@@ -2309,7 +2309,7 @@ Whisper is trained on a diverse multilingual dataset and handles most accents re
 
 ### 9.3 Technical Jargon
 
-Programming terms, acronyms, and domain-specific vocabulary are challenging for general-purpose speech recognition. HushType addresses this through the Code processing mode and custom vocabulary.
+Programming terms, acronyms, and domain-specific vocabulary are challenging for general-purpose speech recognition. VaulType addresses this through the Code processing mode and custom vocabulary.
 
 ```swift
 /// Built-in vocabulary for common programming terms.
@@ -2355,7 +2355,7 @@ struct ProgrammingVocabulary {
 }
 ```
 
-> 💡 **Tip**: When dictating code, speak punctuation explicitly: "open paren", "close bracket", "semicolon". HushType's Code processing mode with llama.cpp post-processing handles the conversion from spoken punctuation to symbols. See [Processing Modes](../api/API_DOCUMENTATION.md) for details.
+> 💡 **Tip**: When dictating code, speak punctuation explicitly: "open paren", "close bracket", "semicolon". VaulType's Code processing mode with llama.cpp post-processing handles the conversion from spoken punctuation to symbols. See [Processing Modes](../api/API_DOCUMENTATION.md) for details.
 
 ### 9.4 Mixed-Language Speech
 
@@ -2393,12 +2393,12 @@ struct MixedLanguageConfig {
 
 Whisper processes audio in 30-second chunks internally. For recordings longer than 30 seconds, whisper.cpp automatically segments the audio. However, segment boundaries can occasionally split words or sentences awkwardly.
 
-**HushType's handling of long recordings**:
+**VaulType's handling of long recordings**:
 
-1. **Automatic segmentation** — whisper.cpp handles chunking internally. HushType passes the full audio buffer and receives segmented results.
+1. **Automatic segmentation** — whisper.cpp handles chunking internally. VaulType passes the full audio buffer and receives segmented results.
 2. **Segment merging** — Adjacent segments are merged with attention to sentence boundaries to produce coherent text.
 3. **Maximum duration** — Batch mode enforces a configurable maximum (default: 5 minutes). For longer dictations, streaming mode is recommended.
-4. **Progress reporting** — For long recordings, HushType reports transcription progress based on the segment being processed.
+4. **Progress reporting** — For long recordings, VaulType reports transcription progress based on the segment being processed.
 
 ```swift
 extension WhisperBridge {

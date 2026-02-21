@@ -1,12 +1,12 @@
 #!/bin/bash
-# create-dmg.sh — Create a branded macOS DMG installer for HushType.
+# create-dmg.sh — Create a branded macOS DMG installer for VaulType.
 #
-# Usage: ./scripts/create-dmg.sh <version> [path/to/HushType.app]
+# Usage: ./scripts/create-dmg.sh <version> [path/to/VaulType.app]
 #
 # Uses native hdiutil + AppleScript. No external dependencies required.
 # If 'create-dmg' (brew install create-dmg) is installed, uses it instead.
 #
-# Output: build/HushType-<version>.dmg
+# Output: build/VaulType-<version>.dmg
 
 set -euo pipefail
 
@@ -19,34 +19,34 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-DEFAULT_APP_PATH="$PROJECT_ROOT/build/Build/Products/Release/HushType.app"
+DEFAULT_APP_PATH="$PROJECT_ROOT/build/Build/Products/Release/VaulType.app"
 OUTPUT_DIR="$PROJECT_ROOT/build"
 BACKGROUND_IMAGE="$PROJECT_ROOT/assets/dmg-background.png"
-VOLUME_NAME="HushType"
+VOLUME_NAME="VaulType"
 
 # ---------------------------------------------------------------------------
 # Help
 # ---------------------------------------------------------------------------
 usage() {
     cat <<EOF
-Usage: $(basename "$0") <version> [path/to/HushType.app]
+Usage: $(basename "$0") <version> [path/to/VaulType.app]
 
-Create a branded macOS DMG installer for HushType.
+Create a branded macOS DMG installer for VaulType.
 
 Arguments:
   version               Release version string (e.g. 1.0.0)
-  path/to/HushType.app  Path to the built .app bundle
+  path/to/VaulType.app  Path to the built .app bundle
                         (default: $DEFAULT_APP_PATH)
 
 Options:
   --help                Show this help message and exit
 
 Output:
-  build/HushType-<version>.dmg
+  build/VaulType-<version>.dmg
 
 Examples:
   ./scripts/create-dmg.sh 1.0.0
-  ./scripts/create-dmg.sh 1.0.0 /path/to/Release/HushType.app
+  ./scripts/create-dmg.sh 1.0.0 /path/to/Release/VaulType.app
 EOF
 }
 
@@ -79,14 +79,14 @@ APP_PATH="${2:-$DEFAULT_APP_PATH}"
 if [[ ! -d "$APP_PATH" ]]; then
     die ".app bundle not found at: $APP_PATH
        Build the app first with:
-         xcodebuild -scheme HushType -configuration Release build"
+         xcodebuild -scheme VaulType -configuration Release build"
 fi
 
 # ---------------------------------------------------------------------------
 # Prepare output directory
 # ---------------------------------------------------------------------------
 mkdir -p "$OUTPUT_DIR"
-OUTPUT_DMG="$OUTPUT_DIR/HushType-${VERSION}.dmg"
+OUTPUT_DMG="$OUTPUT_DIR/VaulType-${VERSION}.dmg"
 
 # Remove stale DMG
 if [[ -f "$OUTPUT_DMG" ]]; then
@@ -94,7 +94,7 @@ if [[ -f "$OUTPUT_DMG" ]]; then
     rm -f "$OUTPUT_DMG"
 fi
 
-echo "=== HushType: DMG Packaging ==="
+echo "=== VaulType: DMG Packaging ==="
 echo ""
 echo "Version    : $VERSION"
 echo "App bundle : $APP_PATH"
@@ -112,9 +112,9 @@ if command -v create-dmg &>/dev/null; then
         --volname "$VOLUME_NAME"
         --window-size 600 400
         --icon-size 128
-        --icon "HushType.app" 150 190
+        --icon "VaulType.app" 150 190
         --app-drop-link 450 190
-        --hide-extension "HushType.app"
+        --hide-extension "VaulType.app"
     )
 
     if [[ -f "$BACKGROUND_IMAGE" ]]; then
@@ -141,7 +141,7 @@ fi
 echo "Using: native hdiutil + AppleScript"
 echo ""
 
-TEMP_DMG="$OUTPUT_DIR/HushType-temp.dmg"
+TEMP_DMG="$OUTPUT_DIR/VaulType-temp.dmg"
 MOUNT_POINT="/Volumes/$VOLUME_NAME"
 
 # Ensure no stale mount
@@ -198,7 +198,7 @@ tell application "Finder"
             set background picture of theViewOptions to file ".background:background.png"
         end if
 
-        set position of item "HushType.app" of container window to {150, 190}
+        set position of item "VaulType.app" of container window to {150, 190}
         set position of item "Applications" of container window to {450, 190}
 
         -- Hide background folder

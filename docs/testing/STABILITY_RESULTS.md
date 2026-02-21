@@ -1,8 +1,8 @@
-# HushType Stability Testing Protocol
+# VaulType Stability Testing Protocol
 
 ## Overview
 
-Protocol for verifying HushType can sustain continuous operation without crashes, resource leaks,
+Protocol for verifying VaulType can sustain continuous operation without crashes, resource leaks,
 or degraded performance. This document defines repeatable one-hour test scenarios tied to the
 actual service lifecycle patterns in the codebase. Each scenario targets a specific failure mode
 that arises in long-running menu bar apps, C-bridged inference engines, or real-time audio
@@ -36,28 +36,28 @@ The cumulative test session totals approximately **60–70 minutes** of active r
 Open **Activity Monitor** before starting any scenario:
 
 1. Open **Activity Monitor** (Applications > Utilities > Activity Monitor).
-2. Select the **Memory** tab. Locate the `HushType` process row.
+2. Select the **Memory** tab. Locate the `VaulType` process row.
 3. Select the **CPU** tab in a second Activity Monitor window (Window > CPU Usage) or pin the
    CPU column alongside Memory.
-4. Enable **View > All Processes** if HushType does not appear.
+4. Enable **View > All Processes** if VaulType does not appear.
 5. Pin both **Real Memory** and **CPU %** columns to visible positions.
 6. Set the update frequency: **Activity Monitor > View > Update Frequency > Every 2 Seconds**.
 
 ### Terminal Monitoring Setup
 
-Open a terminal and run the following `top` command pinned to the HushType process for
+Open a terminal and run the following `top` command pinned to the VaulType process for
 continuous sampling throughout the session:
 
 ```bash
-# Replace <PID> with the actual HushType process ID from Activity Monitor
-top -pid $(pgrep HushType) -stats pid,command,cpu,rsize,vsize,threads -d 2
+# Replace <PID> with the actual VaulType process ID from Activity Monitor
+top -pid $(pgrep VaulType) -stats pid,command,cpu,rsize,vsize,threads -d 2
 ```
 
 For periodic snapshots at key scenario boundaries, use:
 
 ```bash
 # Snapshot CPU and memory at any moment
-ps -o pid,pcpu,rss,vsz,threads -p $(pgrep HushType)
+ps -o pid,pcpu,rss,vsz,threads -p $(pgrep VaulType)
 ```
 
 For virtual memory pressure:
@@ -78,17 +78,17 @@ sudo powermetrics --samplers gpu_power -n 1
 
 ## Pre-Test Baseline
 
-Capture the following baseline measurements **before running any scenario**, with HushType
+Capture the following baseline measurements **before running any scenario**, with VaulType
 launched and fully idle, no models loaded, settings window closed.
 
 **Steps**:
 
 1. Build a Release configuration:
    ```bash
-   xcodebuild -scheme HushType -configuration Release build \
+   xcodebuild -scheme VaulType -configuration Release build \
      ONLY_ACTIVE_ARCH=YES
    ```
-2. Launch HushType from the build output (not from Xcode — Xcode's debugger inflates memory).
+2. Launch VaulType from the build output (not from Xcode — Xcode's debugger inflates memory).
 3. Wait **60 seconds** for all launch-time service initialisations to settle
    (`AppDelegate.applicationDidFinishLaunching` completes, `NotificationCenter` observers
    registered, `PowerManagementService` sampling started).
@@ -100,7 +100,7 @@ launched and fully idle, no models loaded, settings window closed.
 | Virtual Memory (VSZ) | _______ MB |
 | CPU % (idle, 10-second average) | _______ % |
 | Thread count | _______ |
-| Open files (via `lsof -p $(pgrep HushType) | wc -l`) | _______ |
+| Open files (via `lsof -p $(pgrep VaulType) | wc -l`) | _______ |
 
 5. Run `vm_stat` and record **Pages free** and **Pages wired down** as numeric baselines.
 
@@ -118,7 +118,7 @@ launched and fully idle, no models loaded, settings window closed.
 **Purpose**: Confirm the app produces no resource drift when completely inactive — no dictation,
 no settings window open, no model loaded.
 
-**Source files**: `HushType/App/AppDelegate.swift`, `HushType/Services/PowerManagementService.swift`
+**Source files**: `VaulType/App/AppDelegate.swift`, `VaulType/Services/PowerManagementService.swift`
 
 **Relevant behaviour**:
 ```
@@ -130,9 +130,9 @@ AppContextService — NSWorkspace.didActivateApplicationNotification observer ac
 
 **Steps**:
 
-1. Launch HushType with no whisper model and no LLM model selected.
-2. Close all HushType windows (settings, overlay).
-3. Start a terminal `top` session pinned to HushType.
+1. Launch VaulType with no whisper model and no LLM model selected.
+2. Close all VaulType windows (settings, overlay).
+3. Start a terminal `top` session pinned to VaulType.
 4. Record the **start RSS** from Activity Monitor.
 5. Do nothing for **30 minutes**. Do not interact with the Mac in a way that switches the
    frontmost app more than once per minute (AppContextService fires on every app switch).
@@ -143,7 +143,7 @@ AppContextService — NSWorkspace.didActivateApplicationNotification observer ac
 - **CPU**: Average < 0.5% over any 5-minute window during the idle period.
 - **RSS growth**: Total growth from start RSS to end RSS < 5 MB over 30 minutes.
 - **Thread count**: Stable — no new threads created after the initial stabilisation period.
-- **No crashes**: HushType process remains alive for the full 30 minutes.
+- **No crashes**: VaulType process remains alive for the full 30 minutes.
 - **Open file descriptors**: Count at end matches count at start (within ±5 for any transient
   system operations).
 
@@ -151,7 +151,7 @@ AppContextService — NSWorkspace.didActivateApplicationNotification observer ac
 
 - Activity Monitor: CPU and Real Memory columns, sampled every 2 seconds.
 - `top` terminal output: watch `rsize` and `cpu` columns for trends.
-- Console.app: filter by `com.hushtype.app` subsystem — any `fault` or `error` level log
+- Console.app: filter by `com.vaultype.app` subsystem — any `fault` or `error` level log
   during idle indicates unexpected background activity.
 
 **Pass criteria**:
@@ -177,9 +177,9 @@ AppContextService — NSWorkspace.didActivateApplicationNotification observer ac
 **Purpose**: Confirm the full dictation pipeline can execute repeatedly over 30 minutes without
 cumulative memory growth or degraded transcription quality.
 
-**Source files**: `HushType/Services/DictationController.swift`,
-                 `HushType/Services/Audio/AudioCaptureService.swift`,
-                 `HushType/Services/Speech/WhisperContext.swift`
+**Source files**: `VaulType/Services/DictationController.swift`,
+                 `VaulType/Services/Audio/AudioCaptureService.swift`,
+                 `VaulType/Services/Speech/WhisperContext.swift`
 
 **Relevant pipeline**:
 ```
@@ -204,7 +204,7 @@ hotkey up    → audioService.stopCapture()          // tap removed, Float array
 
 1. Record **start RSS** and **start thread count**.
 2. Every **2 minutes**, dictate a 10-second phrase (e.g., "The quick brown fox jumps over the
-   lazy dog. Testing one two three. HushType stability test in progress.").
+   lazy dog. Testing one two three. VaulType stability test in progress.").
 3. Confirm each dictation cycle:
    - DictationState transitions: `idle → recording → transcribing → injecting → idle`
    - Transcribed text appears in TextEdit within 5 seconds of hotkey release.
@@ -215,15 +215,15 @@ hotkey up    → audioService.stopCapture()          // tap removed, Float array
 - **Each cycle**: Completes within 10 seconds of hotkey release (audio + whisper).
 - **No cycle failures**: DictationState never stalls in `transcribing` or `processing`.
 - **RSS growth**: Total growth across all 15 cycles < 10 MB.
-- **Thread count**: Stable — no accumulation of orphaned `com.hushtype.whisper.context` dispatch
+- **Thread count**: Stable — no accumulation of orphaned `com.vaultype.whisper.context` dispatch
   queue threads.
 - **Audio device**: `AVAudioEngine` reports no errors; no `kAudioHardwareUnspecifiedError` in logs.
 
 **Monitor**:
 
 - Activity Monitor: RSS sampled immediately after each cycle completes.
-- `lsof -p $(pgrep HushType) | wc -l`: Run after every 5 cycles to confirm no file descriptor leak.
-- Console.app: Watch for any `error` or `fault` level entries on `com.hushtype.app` subsystem.
+- `lsof -p $(pgrep VaulType) | wc -l`: Run after every 5 cycles to confirm no file descriptor leak.
+- Console.app: Watch for any `error` or `fault` level entries on `com.vaultype.app` subsystem.
 
 **Pass criteria**:
 
@@ -249,7 +249,7 @@ hotkey up    → audioService.stopCapture()          // tap removed, Float array
 **Purpose**: Confirm that rapidly toggling audio capture does not leak AVAudioEngine taps,
 audio buffers, or file descriptors to the audio subsystem.
 
-**Source file**: `HushType/Services/Audio/AudioCaptureService.swift`
+**Source file**: `VaulType/Services/Audio/AudioCaptureService.swift`
 
 **Relevant pattern**:
 ```swift
@@ -281,7 +281,7 @@ accumulate on the same bus, causing `kAudioUnitErr_TooManyFramesToProcess` or a 
 
 **Expected**:
 
-- **No crash**: HushType survives all rapid cycles.
+- **No crash**: VaulType survives all rapid cycles.
 - **Audio device**: No `AVAudioSessionErrorCode` or `kAudioHardwareError` logs.
 - **RSS growth**: < 5 MB over the full scenario.
 - **File descriptors**: `lsof` count returns to start value after each stop (within ±2).
@@ -290,8 +290,8 @@ accumulate on the same bus, causing `kAudioUnitErr_TooManyFramesToProcess` or a 
 
 **Monitor**:
 
-- Console.app: Filter by process `HushType` — watch for any `AVAudio*` error messages.
-- `lsof -p $(pgrep HushType) | grep -i audio | wc -l`: Run every 2 minutes to monitor
+- Console.app: Filter by process `VaulType` — watch for any `AVAudio*` error messages.
+- `lsof -p $(pgrep VaulType) | grep -i audio | wc -l`: Run every 2 minutes to monitor
   audio-related file descriptor count.
 - Activity Monitor: Thread count — should not grow with each cycle.
 
@@ -318,9 +318,9 @@ accumulate on the same bus, causing `kAudioUnitErr_TooManyFramesToProcess` or a 
 **Purpose**: Verify the audio buffer accumulation, whisper inference on a large sample, and
 the minimum-sample padding logic all work correctly for a sustained recording.
 
-**Source files**: `HushType/Services/Audio/AudioCaptureService.swift`,
-                 `HushType/Services/Speech/WhisperContext.swift`,
-                 `HushType/Services/DictationController.swift`
+**Source files**: `VaulType/Services/Audio/AudioCaptureService.swift`,
+                 `VaulType/Services/Speech/WhisperContext.swift`,
+                 `VaulType/Services/DictationController.swift`
 
 **Relevant constraint**:
 ```
@@ -356,7 +356,7 @@ The AudioBuffer (os_unfair_lock-protected) holds this in a [Float] array through
 **Monitor**:
 
 - Activity Monitor: Watch RSS spike during transcription, then confirm descent on completion.
-- `top -pid $(pgrep HushType)`: Log the peak `rsize` value during whisper inference.
+- `top -pid $(pgrep VaulType)`: Log the peak `rsize` value during whisper inference.
 - Console.app: Any `whisper` category logs reporting segment count or transcription duration.
 
 **Pass criteria**:
@@ -383,8 +383,8 @@ The AudioBuffer (os_unfair_lock-protected) holds this in a [Float] array through
 pipeline configuration errors, stale LLM state, or memory accumulation from abandoned
 `ProcessingModeRouter` or `PromptTemplateEngine` instances.
 
-**Source files**: `HushType/Services/LLM/LLMService.swift`,
-                 `HushType/Services/DictationController.swift` (`processingRouter`)
+**Source files**: `VaulType/Services/LLM/LLMService.swift`,
+                 `VaulType/Services/DictationController.swift` (`processingRouter`)
 
 **Relevant modes** (from `DictationController.processingRouter`):
 ```
@@ -424,7 +424,7 @@ Custom    — user-defined processing chain
 
 - Activity Monitor: RSS during LLM inference cycles vs Raw cycles — confirm LLM is not
   accumulating KV-cache across mode switches.
-- Console.app: Filter by `com.hushtype.app` `llm` category for any `GenerationResult` errors.
+- Console.app: Filter by `com.vaultype.app` `llm` category for any `GenerationResult` errors.
 
 **Pass criteria**:
 
@@ -449,8 +449,8 @@ Custom    — user-defined processing chain
 **Purpose**: Verify the whisper pipeline reconfigures cleanly when a different model is selected
 mid-session, with no residual C-heap allocations from the previous `whisper_context`.
 
-**Source files**: `HushType/Services/Speech/WhisperContext.swift`,
-                 `HushType/Services/DictationController.swift` (`loadWhisperModel`, `unloadWhisperModel`)
+**Source files**: `VaulType/Services/Speech/WhisperContext.swift`,
+                 `VaulType/Services/DictationController.swift` (`loadWhisperModel`, `unloadWhisperModel`)
 
 **Relevant pattern**:
 ```swift
@@ -486,7 +486,7 @@ NotificationCenter.default.post(name: .whisperModelDownloaded, object: nil)
 - **RSS after each unload**: Drops by approximately the size of the unloaded model's memory
   footprint (model A ≈ 150–200 MB, model B ≈ 500–600 MB).
 - **No residual whisper_context**: After switching away from model A, no model-A-sized
-  anonymous VM regions persist (confirm with `vmmap -resident $(pgrep HushType) | grep -i ggml`).
+  anonymous VM regions persist (confirm with `vmmap -resident $(pgrep VaulType) | grep -i ggml`).
 - **Pipeline reconfiguration**: Each dictation after a switch uses the correct model with
   no `contextNotInitialized` errors.
 - **RSS stability**: After 5 switches, RSS with model A loaded should be within 20 MB of
@@ -496,7 +496,7 @@ NotificationCenter.default.post(name: .whisperModelDownloaded, object: nil)
 
 ```bash
 # After each model switch, sample GGML anonymous regions
-vmmap -resident $(pgrep HushType) | grep -E "MALLOC|anonymous" | sort -k3 -rn | head -20
+vmmap -resident $(pgrep VaulType) | grep -E "MALLOC|anonymous" | sort -k3 -rn | head -20
 ```
 
 **Pass criteria**:
@@ -522,9 +522,9 @@ vmmap -resident $(pgrep HushType) | grep -E "MALLOC|anonymous" | sort -k3 -rn | 
 **Purpose**: Verify that modifying settings while a dictation cycle is in progress does not
 corrupt shared state, cause a crash, or produce incorrect output.
 
-**Source files**: `HushType/App/AppDelegate.swift` (settings observers),
-                 `HushType/Services/DictationController.swift` (configuration properties),
-                 `HushType/Views/Settings/` (all tab views)
+**Source files**: `VaulType/App/AppDelegate.swift` (settings observers),
+                 `VaulType/Services/DictationController.swift` (configuration properties),
+                 `VaulType/Views/Settings/` (all tab views)
 
 **Risk**: `AppDelegate` monitors `UserSettings` changes and reconfigures the pipeline
 (e.g., changing the hotkey, thread count, or processing mode). If a settings write races
@@ -579,7 +579,7 @@ undefined behaviour.
 **Purpose**: Verify that unplugging and replugging a microphone during recording does not
 crash the app, leave the `AVAudioEngine` in a broken state, or permanently disable dictation.
 
-**Source file**: `HushType/Services/Audio/AudioCaptureService.swift`
+**Source file**: `VaulType/Services/Audio/AudioCaptureService.swift`
 
 **Relevant risk**:
 ```swift
@@ -599,7 +599,7 @@ System Settings > Sound > Input.
 3. Begin a dictation (press and hold the hotkey). While recording:
    - **Physically unplug** the USB microphone.
 4. Observe the app behaviour:
-   - Does HushType crash?
+   - Does VaulType crash?
    - Does it display an error, or silently continue recording on the fallback (built-in) mic?
    - Does `DictationState` resolve to `idle` or `error`?
 5. Replug the USB microphone.
@@ -620,7 +620,7 @@ System Settings > Sound > Input.
 **Monitor**:
 
 - Console.app: Filter by `AVAudio` for `AVAudioEngineConfigurationChange` and engine error logs.
-- `lsof -p $(pgrep HushType) | grep -i audio`: Confirm audio file descriptor count is stable
+- `lsof -p $(pgrep VaulType) | grep -i audio`: Confirm audio file descriptor count is stable
   after each reconnect.
 
 **Pass criteria**:
@@ -651,36 +651,36 @@ single log file per test session:
 
 ```bash
 # --- PID lookup ---
-HUSHTYPE_PID=$(pgrep HushType)
-echo "HushType PID: $HUSHTYPE_PID"
+VAULTYPE_PID=$(pgrep VaulType)
+echo "VaulType PID: $VAULTYPE_PID"
 
 # --- Continuous CPU and memory via top ---
-top -pid $HUSHTYPE_PID -stats pid,command,cpu,rsize,vsize,threads -d 2
+top -pid $VAULTYPE_PID -stats pid,command,cpu,rsize,vsize,threads -d 2
 
 # --- Point-in-time snapshot ---
-ps -o pid,pcpu,rss,vsz,threads -p $HUSHTYPE_PID
+ps -o pid,pcpu,rss,vsz,threads -p $VAULTYPE_PID
 
 # --- Open file descriptor count ---
-lsof -p $HUSHTYPE_PID | wc -l
+lsof -p $VAULTYPE_PID | wc -l
 
 # --- Audio-related file descriptors only ---
-lsof -p $HUSHTYPE_PID | grep -iE "audio|sound|core audio" | wc -l
+lsof -p $VAULTYPE_PID | grep -iE "audio|sound|core audio" | wc -l
 
 # --- Virtual memory pressure (run before and after each scenario) ---
 vm_stat
 
 # --- GGML memory regions (run after model loads and after model switches) ---
-vmmap -resident $HUSHTYPE_PID | grep -E "MALLOC|anonymous" | sort -k3 -rn | head -30
+vmmap -resident $VAULTYPE_PID | grep -E "MALLOC|anonymous" | sort -k3 -rn | head -30
 
 # --- Full virtual map snapshot (save to file for comparison) ---
-vmmap $HUSHTYPE_PID > /tmp/hushtype_vmmap_$(date +%H%M%S).txt
+vmmap $VAULTYPE_PID > /tmp/vaultype_vmmap_$(date +%H%M%S).txt
 
 # --- Diff two vmmap snapshots to detect new anonymous regions ---
-diff /tmp/hushtype_vmmap_before.txt /tmp/hushtype_vmmap_after.txt
+diff /tmp/vaultype_vmmap_before.txt /tmp/vaultype_vmmap_after.txt
 
 # --- Thread count over time ---
 while true; do
-  ps -M -p $HUSHTYPE_PID | tail -n +2 | wc -l
+  ps -M -p $VAULTYPE_PID | tail -n +2 | wc -l
   sleep 5
 done
 
@@ -726,11 +726,11 @@ task before continuing. Crashes invalidate subsequent scenario results.
 For each scenario that produces a **FAIL** result:
 
 1. Note the exact step number and action that triggered the failure.
-2. Capture a Console.app log export filtered to the `com.hushtype.app` subsystem for the
+2. Capture a Console.app log export filtered to the `com.vaultype.app` subsystem for the
    relevant time window (File > Export).
 3. Capture an Activity Monitor screenshot showing the RSS and CPU at the time of failure.
 4. If the app crashed, open `~/Library/Logs/DiagnosticReports/` and locate the
-   `HushType-*.crash` file. Attach the symbolicated crash log.
+   `VaulType-*.crash` file. Attach the symbolicated crash log.
 5. Record the following:
 
 ```
@@ -749,7 +749,7 @@ Crash log: <filename, or "no crash">
      -H "Authorization: Api-Key $DEVTRACK_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
-       "project": "HUSHTYPE",
+       "project": "VAULTYPE",
        "title": "Bug: Stability failure in <Scenario N: name>",
        "description": "Step <N> failed. Trigger: <action>. Console error: <log>. RSS: <value>.",
        "priority": "high"

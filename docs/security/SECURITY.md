@@ -1,8 +1,8 @@
 Last Updated: 2026-02-13
 
-# HushType Security Documentation
+# VaulType Security Documentation
 
-> **HushType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always.
+> **VaulType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always.
 
 ---
 
@@ -60,7 +60,7 @@ Last Updated: 2026-02-13
   - [12.3 Safe Harbor](#123-safe-harbor)
 - [13. Security Best Practices for Users](#13-security-best-practices-for-users)
   - [13.1 System-Level Recommendations](#131-system-level-recommendations)
-  - [13.2 HushType-Specific Recommendations](#132-hushtype-specific-recommendations)
+  - [13.2 VaulType-Specific Recommendations](#132-vaultype-specific-recommendations)
   - [13.3 Verifying Installation Integrity](#133-verifying-installation-integrity)
 - [Related Documentation](#related-documentation)
 
@@ -70,15 +70,15 @@ Last Updated: 2026-02-13
 
 ### 1.1 Privacy-First Architecture
 
-HushType is designed from the ground up with a single, unwavering principle: **your voice data never leaves your device**. Every architectural decision flows from this commitment.
+VaulType is designed from the ground up with a single, unwavering principle: **your voice data never leaves your device**. Every architectural decision flows from this commitment.
 
 The core speech-to-text pipeline operates entirely on-device using [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for speech recognition and [llama.cpp](https://github.com/ggerganov/llama.cpp) for optional LLM post-processing. Both engines leverage Apple Metal for GPU acceleration and require zero network connectivity.
 
-> 🔒 **Security**: HushType can function with all network interfaces disabled. Core STT functionality requires only microphone access and a local ML model — nothing else.
+> 🔒 **Security**: VaulType can function with all network interfaces disabled. Core STT functionality requires only microphone access and a local ML model — nothing else.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    HushType Process                      │
+│                    VaulType Process                      │
 │                                                         │
 │  Microphone ──► AVAudioEngine ──► whisper.cpp (Metal)   │
 │                    (memory)          │                   │
@@ -99,18 +99,18 @@ The core speech-to-text pipeline operates entirely on-device using [whisper.cpp]
 
 ### 1.2 Zero-Trust-Cloud Model
 
-HushType adopts a zero-trust approach toward cloud services:
+VaulType adopts a zero-trust approach toward cloud services:
 
-- **No cloud STT APIs**: Unlike Whisper API, Google Speech-to-Text, or Azure Cognitive Services, HushType never transmits audio to external servers.
+- **No cloud STT APIs**: Unlike Whisper API, Google Speech-to-Text, or Azure Cognitive Services, VaulType never transmits audio to external servers.
 - **No analytics or telemetry**: No usage data, no crash reports (unless explicitly opted in by the user), no feature flags fetched from remote servers.
-- **No account system**: HushType does not require user registration, authentication tokens, or any form of identity.
+- **No account system**: VaulType does not require user registration, authentication tokens, or any form of identity.
 - **No remote configuration**: All settings are stored locally. The app never fetches configuration from a remote server.
 
 > ℹ️ **Info**: The only network activity that can occur is explicitly user-initiated (model downloads, update checks, optional crash reporting). See [Section 2: Network Security](#2-network-security) for the complete inventory.
 
 ### 1.3 Defense in Depth
 
-HushType employs multiple layers of security:
+VaulType employs multiple layers of security:
 
 | Layer | Mechanism |
 |-------|-----------|
@@ -128,7 +128,7 @@ HushType employs multiple layers of security:
 
 ### 2.1 Core Functionality: Zero Network
 
-HushType's core speech-to-text pipeline makes **zero network requests**. The following features operate entirely offline:
+VaulType's core speech-to-text pipeline makes **zero network requests**. The following features operate entirely offline:
 
 - Audio capture and processing
 - Speech-to-text transcription (whisper.cpp)
@@ -138,11 +138,11 @@ HushType's core speech-to-text pipeline makes **zero network requests**. The fol
 - Voice command execution
 - All user settings and preferences
 
-> ✅ **Do**: Verify HushType's offline capability by disabling all network interfaces. Core STT functionality will continue to work without interruption.
+> ✅ **Do**: Verify VaulType's offline capability by disabling all network interfaces. Core STT functionality will continue to work without interruption.
 
 ### 2.2 Network Endpoint Inventory
 
-The following table is a **complete and exhaustive** list of all network endpoints HushType may contact. Any network activity not listed here is a bug and should be reported immediately.
+The following table is a **complete and exhaustive** list of all network endpoints VaulType may contact. Any network activity not listed here is a bug and should be reported immediately.
 
 | Endpoint | Purpose | When Contacted | User Control | Protocol |
 |----------|---------|----------------|--------------|----------|
@@ -155,23 +155,23 @@ The following table is a **complete and exhaustive** list of all network endpoin
 
 ### 2.3 Network Monitoring & Verification
 
-Users and auditors can verify HushType's network behavior:
+Users and auditors can verify VaulType's network behavior:
 
 ```bash
-# Monitor all HushType network connections in real-time
-sudo lsof -i -n -P | grep HushType
+# Monitor all VaulType network connections in real-time
+sudo lsof -i -n -P | grep VaulType
 
 # Use Little Snitch, LuLu, or similar tools
 # to verify no unexpected outbound connections
 
-# Use tcpdump to capture all HushType traffic on a specific interface
-sudo tcpdump -i en0 -n proc HushType
+# Use tcpdump to capture all VaulType traffic on a specific interface
+sudo tcpdump -i en0 -n proc VaulType
 
 # Verify with nettop
-nettop -p $(pgrep HushType) -J bytes_in,bytes_out
+nettop -p $(pgrep VaulType) -J bytes_in,bytes_out
 ```
 
-> 💡 **Tip**: For maximum assurance, use a network-level firewall like [LuLu](https://objective-see.org/products/lulu.html) (free, open source) to block all HushType network access. Core functionality will remain fully operational.
+> 💡 **Tip**: For maximum assurance, use a network-level firewall like [LuLu](https://objective-see.org/products/lulu.html) (free, open source) to block all VaulType network access. Core functionality will remain fully operational.
 
 ### 2.4 Certificate Pinning
 
@@ -231,7 +231,7 @@ audioEngine.inputNode.installTap(
 
 ### 3.2 Memory Handling
 
-HushType implements explicit memory hygiene for audio data:
+VaulType implements explicit memory hygiene for audio data:
 
 ```swift
 /// Securely clears audio buffer contents after processing
@@ -294,16 +294,16 @@ Microphone Hardware
 
 ### 4.1 SwiftData Database
 
-HushType uses SwiftData for persistent storage of user preferences and optional transcription history.
+VaulType uses SwiftData for persistent storage of user preferences and optional transcription history.
 
 **Storage location:**
 ```
-~/Library/Containers/com.hushtype.app/Data/Library/Application Support/
+~/Library/Containers/com.vaultype.app/Data/Library/Application Support/
 ```
 
 If running outside of the App Sandbox (required for Accessibility API):
 ```
-~/Library/Application Support/HushType/
+~/Library/Application Support/VaulType/
 ```
 
 **What is stored:**
@@ -316,7 +316,7 @@ If running outside of the App Sandbox (required for Accessibility API):
 | Audio recordings | **Never** | N/A | Audio is never written to disk |
 | API keys / tokens | **Never** | N/A | No cloud services used |
 
-> 🍎 **macOS-specific**: SwiftData databases in the app container are protected by macOS Data Protection and FileVault full-disk encryption when enabled. HushType strongly recommends FileVault be enabled (see [Section 13](#13-security-best-practices-for-users)).
+> 🍎 **macOS-specific**: SwiftData databases in the app container are protected by macOS Data Protection and FileVault full-disk encryption when enabled. VaulType strongly recommends FileVault be enabled (see [Section 13](#13-security-best-practices-for-users)).
 
 ### 4.2 Keychain Usage
 
@@ -325,15 +325,15 @@ Sensitive configuration values are stored in the macOS Keychain rather than in U
 ```swift
 // Keychain storage for sensitive settings
 enum KeychainItem: String {
-    case sparkleEdDSAPublicKey = "com.hushtype.sparkle.eddsaPublicKey"
-    case sentryDSN = "com.hushtype.sentry.dsn"  // Only if crash reporting opted in
+    case sparkleEdDSAPublicKey = "com.vaultype.sparkle.eddsaPublicKey"
+    case sentryDSN = "com.vaultype.sentry.dsn"  // Only if crash reporting opted in
 }
 
 func storeInKeychain(item: KeychainItem, data: Data) throws {
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
         kSecAttrService as String: item.rawValue,
-        kSecAttrAccount as String: "HushType",
+        kSecAttrAccount as String: "VaulType",
         kSecValueData as String: data,
         kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
     ]
@@ -349,7 +349,7 @@ func storeInKeychain(item: KeychainItem, data: Data) throws {
 
 ### 4.3 Temporary Files
 
-HushType avoids temporary files for audio data. The only temporary files created are:
+VaulType avoids temporary files for audio data. The only temporary files created are:
 
 | Temporary File | Purpose | Lifetime | Cleanup |
 |----------------|---------|----------|---------|
@@ -360,7 +360,7 @@ HushType avoids temporary files for audio data. The only temporary files created
 // Temporary file cleanup on app launch
 func cleanStaleTempFiles() {
     let tempDir = FileManager.default.temporaryDirectory
-        .appendingPathComponent("HushType", isDirectory: true)
+        .appendingPathComponent("VaulType", isDirectory: true)
 
     if FileManager.default.fileExists(atPath: tempDir.path) {
         try? FileManager.default.removeItem(at: tempDir)
@@ -373,7 +373,7 @@ func cleanStaleTempFiles() {
 ML model files (`.gguf` format for both whisper.cpp and llama.cpp) are stored locally:
 
 ```
-~/Library/Application Support/HushType/Models/
+~/Library/Application Support/VaulType/Models/
 ├── whisper/
 │   └── ggml-base.en.bin          # Whisper STT model
 └── llama/
@@ -383,11 +383,11 @@ ML model files (`.gguf` format for both whisper.cpp and llama.cpp) are stored lo
 **Model file security considerations:**
 
 - Models are downloaded over HTTPS from Hugging Face with SHA-256 integrity verification.
-- Models are read-only after download; HushType does not modify model files.
+- Models are read-only after download; VaulType does not modify model files.
 - Models do not contain executable code — they are weight tensors loaded by whisper.cpp/llama.cpp.
 - Model files should be treated as untrusted input; both whisper.cpp and llama.cpp include input validation for GGUF/GGML file parsing.
 
-> ⚠️ **Warning**: Users who manually place model files (e.g., downloaded from third-party sources) bypass integrity verification. Only models downloaded through HushType's built-in model manager are checksum-verified. See [Threat Model: Malicious Model Files](#101-threat-matrix).
+> ⚠️ **Warning**: Users who manually place model files (e.g., downloaded from third-party sources) bypass integrity verification. Only models downloaded through VaulType's built-in model manager are checksum-verified. See [Threat Model: Malicious Model Files](#101-threat-matrix).
 
 ---
 
@@ -395,7 +395,7 @@ ML model files (`.gguf` format for both whisper.cpp and llama.cpp) are stored lo
 
 ### 5.1 CGEvent Text Injection
 
-HushType injects transcribed text into the active application using macOS Accessibility APIs via `CGEvent`:
+VaulType injects transcribed text into the active application using macOS Accessibility APIs via `CGEvent`:
 
 ```swift
 func injectTextViaCGEvent(_ text: String) {
@@ -424,7 +424,7 @@ func injectTextViaCGEvent(_ text: String) {
 
 ### 5.2 Clipboard Operations
 
-For long text blocks or text containing special characters that CGEvent handles poorly, HushType offers a clipboard-based paste fallback:
+For long text blocks or text containing special characters that CGEvent handles poorly, VaulType offers a clipboard-based paste fallback:
 
 ```swift
 func injectTextViaClipboard(_ text: String) {
@@ -468,8 +468,8 @@ func injectTextViaClipboard(_ text: String) {
 
 | Risk | Severity | Description | Mitigation |
 |------|----------|-------------|------------|
-| **Clipboard snooping** | Medium | Clipboard managers (e.g., Paste, Maccy) may capture transcribed text during the brief window (~150ms) where it occupies the clipboard. | HushType restores the original clipboard within 150ms. Use CGEvent injection (default) instead of clipboard paste for sensitive content. Consider documenting clipboard manager exclusions. |
-| **Clipboard history exposure** | Low | Some clipboard managers maintain persistent history databases that may retain briefly pasted content. | Users handling sensitive transcriptions should prefer CGEvent injection mode or configure their clipboard manager to exclude HushType. |
+| **Clipboard snooping** | Medium | Clipboard managers (e.g., Paste, Maccy) may capture transcribed text during the brief window (~150ms) where it occupies the clipboard. | VaulType restores the original clipboard within 150ms. Use CGEvent injection (default) instead of clipboard paste for sensitive content. Consider documenting clipboard manager exclusions. |
+| **Clipboard history exposure** | Low | Some clipboard managers maintain persistent history databases that may retain briefly pasted content. | Users handling sensitive transcriptions should prefer CGEvent injection mode or configure their clipboard manager to exclude VaulType. |
 | **Injected text visibility** | Low | Other processes with Accessibility permissions could observe injected keystrokes. | This is a fundamental property of the macOS Accessibility system; it cannot be mitigated at the application level. Users should audit which apps have Accessibility permissions. |
 | **Race condition on paste** | Low | If the user copies something to the clipboard during the 150ms paste window, that content will be overwritten by the clipboard restore operation. | The 150ms window is intentionally short. A future enhancement could use `NSPasteboard.changeCount` to detect external clipboard changes. |
 
@@ -483,15 +483,15 @@ func injectTextViaClipboard(_ text: String) {
 
 ### 6.1 Required Permissions
 
-HushType requests only the permissions strictly necessary for its functionality:
+VaulType requests only the permissions strictly necessary for its functionality:
 
 | Permission | System Prompt | Why Required | Revocable? |
 |------------|---------------|--------------|------------|
-| **Microphone** | "HushType would like to access the microphone" | Audio capture for speech-to-text via AVAudioEngine | Yes, in System Settings > Privacy & Security > Microphone |
+| **Microphone** | "VaulType would like to access the microphone" | Audio capture for speech-to-text via AVAudioEngine | Yes, in System Settings > Privacy & Security > Microphone |
 | **Accessibility** | Listed in System Settings > Privacy & Security > Accessibility | CGEvent text injection into target applications | Yes, by toggling off in System Settings |
-| **Automation** (optional) | "HushType wants to control [App]" | AppleScript-based voice commands (e.g., "open Safari") | Yes, per-app in System Settings > Privacy & Security > Automation |
+| **Automation** (optional) | "VaulType wants to control [App]" | AppleScript-based voice commands (e.g., "open Safari") | Yes, per-app in System Settings > Privacy & Security > Automation |
 
-> 🍎 **macOS-specific**: HushType will function in a degraded mode if Microphone or Accessibility permissions are denied. The app will guide the user to grant permissions but will never attempt to circumvent macOS permission controls.
+> 🍎 **macOS-specific**: VaulType will function in a degraded mode if Microphone or Accessibility permissions are denied. The app will guide the user to grant permissions but will never attempt to circumvent macOS permission controls.
 
 ### 6.2 Entitlements Breakdown
 
@@ -533,11 +533,11 @@ HushType requests only the permissions strictly necessary for its functionality:
 
 ### 6.3 Principle of Least Privilege
 
-HushType follows the principle of least privilege rigorously:
+VaulType follows the principle of least privilege rigorously:
 
-- **No Full Disk Access**: HushType does not request or require Full Disk Access.
-- **No Screen Recording**: HushType does not capture screen content.
-- **No Camera**: HushType does not access the camera.
+- **No Full Disk Access**: VaulType does not request or require Full Disk Access.
+- **No Screen Recording**: VaulType does not capture screen content.
+- **No Camera**: VaulType does not access the camera.
 - **No Contacts / Calendars / Reminders**: No personal data access.
 - **No Location**: No location services.
 - **No Network (for core features)**: Network is only used for optional, user-initiated features.
@@ -551,14 +551,14 @@ HushType follows the principle of least privilege rigorously:
 
 ### 7.1 Developer ID Signing
 
-All HushType releases are signed with a valid Apple Developer ID:
+All VaulType releases are signed with a valid Apple Developer ID:
 
 ```bash
-# Verify code signature of HushType.app
-codesign --verify --deep --strict --verbose=4 /Applications/HushType.app
+# Verify code signature of VaulType.app
+codesign --verify --deep --strict --verbose=4 /Applications/VaulType.app
 
 # Display signing details
-codesign -dv --verbose=4 /Applications/HushType.app
+codesign -dv --verbose=4 /Applications/VaulType.app
 
 # Expected output includes:
 # Authority=Developer ID Application: [Developer Name] ([Team ID])
@@ -569,10 +569,10 @@ codesign -dv --verbose=4 /Applications/HushType.app
 
 All binaries within the app bundle are signed, including:
 
-- `HushType.app/Contents/MacOS/HushType` (main executable)
-- `HushType.app/Contents/Frameworks/libwhisper.dylib`
-- `HushType.app/Contents/Frameworks/libllama.dylib`
-- `HushType.app/Contents/Frameworks/Sparkle.framework`
+- `VaulType.app/Contents/MacOS/VaulType` (main executable)
+- `VaulType.app/Contents/Frameworks/libwhisper.dylib`
+- `VaulType.app/Contents/Frameworks/libllama.dylib`
+- `VaulType.app/Contents/Frameworks/Sparkle.framework`
 
 ### 7.2 Notarization
 
@@ -580,18 +580,18 @@ Every release build is submitted to Apple's notarization service:
 
 ```bash
 # Notarization submission (performed by CI/CD)
-xcrun notarytool submit HushType.dmg \
+xcrun notarytool submit VaulType.dmg \
     --apple-id "$APPLE_ID" \
     --team-id "$TEAM_ID" \
     --password "$APP_SPECIFIC_PASSWORD" \
     --wait
 
 # Staple the notarization ticket to the DMG
-xcrun stapler staple HushType.dmg
+xcrun stapler staple VaulType.dmg
 
 # Verify notarization
-spctl --assess --verbose=4 --type execute /Applications/HushType.app
-# Expected: /Applications/HushType.app: accepted
+spctl --assess --verbose=4 --type execute /Applications/VaulType.app
+# Expected: /Applications/VaulType.app: accepted
 # source=Notarized Developer ID
 ```
 
@@ -602,7 +602,7 @@ Notarization ensures:
 
 ### 7.3 Hardened Runtime
 
-HushType enables the Hardened Runtime, which provides the following protections:
+VaulType enables the Hardened Runtime, which provides the following protections:
 
 | Protection | Status | Notes |
 |------------|--------|-------|
@@ -632,7 +632,7 @@ HushType enables the Hardened Runtime, which provides the following protections:
 
 ### 8.2 Supply Chain Security
 
-HushType takes the following steps to secure its dependency supply chain:
+VaulType takes the following steps to secure its dependency supply chain:
 
 - **Pinned versions**: All dependencies are pinned to specific versions or commit hashes in `Package.swift`. No floating version ranges for security-critical dependencies.
 - **Source review**: Major version updates of whisper.cpp and llama.cpp are reviewed before adoption, with particular attention to GGUF/GGML file parsing code.
@@ -670,7 +670,7 @@ dependencies: [
 
 ### 9.1 App Sandbox Limitations
 
-HushType **cannot use the full macOS App Sandbox** due to its core functionality requirements:
+VaulType **cannot use the full macOS App Sandbox** due to its core functionality requirements:
 
 | Feature | Sandbox Compatibility | Reason |
 |---------|----------------------|--------|
@@ -687,10 +687,10 @@ HushType **cannot use the full macOS App Sandbox** due to its core functionality
 | Distribution Method | App Sandbox | Accessibility API | Auto-Update | Gatekeeper | Notes |
 |--------------------|-------------|-------------------|-------------|------------|-------|
 | **Mac App Store** | Required | Not possible (standard sandbox) | Via App Store | Yes | Would require removing core text injection functionality |
-| **Direct (Developer ID + Notarization)** | Not required | Full support | Via Sparkle | Yes (notarized) | **HushType's chosen distribution method** |
+| **Direct (Developer ID + Notarization)** | Not required | Full support | Via Sparkle | Yes (notarized) | **VaulType's chosen distribution method** |
 | **Direct (unsigned)** | Not required | Full support | Manual | No (Gatekeeper warning) | Not recommended; requires user to bypass Gatekeeper |
 
-HushType is distributed directly via Developer ID signing and notarization. This provides:
+VaulType is distributed directly via Developer ID signing and notarization. This provides:
 - Full Accessibility API support for text injection
 - Gatekeeper approval via notarization (no security warnings)
 - Automatic updates via Sparkle with EdDSA signature verification
@@ -698,16 +698,16 @@ HushType is distributed directly via Developer ID signing and notarization. This
 
 ### 9.3 Compensating Controls
 
-Since HushType cannot use the App Sandbox, the following compensating security controls are in place:
+Since VaulType cannot use the App Sandbox, the following compensating security controls are in place:
 
 1. **Hardened Runtime**: Enables most sandbox-like protections (code injection prevention, library validation, debugger restrictions) without the full sandbox.
-2. **Minimal file system access**: HushType only reads/writes to its own Application Support directory and the user-selected model storage directory.
+2. **Minimal file system access**: VaulType only reads/writes to its own Application Support directory and the user-selected model storage directory.
 3. **No network access for core features**: Eliminates the largest attack surface that sandboxing typically protects against.
 4. **Principle of least privilege**: Only the entitlements strictly required for functionality are included.
 5. **Notarization**: Apple scans the binary for malware before distribution.
 6. **Open source (GPL-3.0)**: The full source code is available for audit, providing transparency that closed-source sandboxed apps cannot offer.
 
-> ℹ️ **Info**: For a detailed discussion of HushType's architecture and the rationale behind these design decisions, see [Architecture](../architecture/ARCHITECTURE.md).
+> ℹ️ **Info**: For a detailed discussion of VaulType's architecture and the rationale behind these design decisions, see [Architecture](../architecture/ARCHITECTURE.md).
 
 ---
 
@@ -718,15 +718,15 @@ Since HushType cannot use the App Sandbox, the following compensating security c
 | # | Threat | Likelihood | Impact | Severity | Mitigation | Status |
 |---|--------|-----------|--------|----------|------------|--------|
 | T1 | **Malicious model files** — Crafted GGUF/GGML files exploiting parser vulnerabilities in whisper.cpp or llama.cpp | Low | High | High | SHA-256 integrity checks on downloaded models. Only official Hugging Face repositories used. Users warned about manually placed models. Parser hardening upstream. | Mitigated |
-| T2 | **Clipboard snooping** — Third-party clipboard managers capturing transcribed text during paste operations | Medium | Medium | Medium | CGEvent injection (default) bypasses clipboard entirely. Clipboard restore within 150ms for paste mode. Users advised to exclude HushType from clipboard managers. | Partially mitigated |
-| T3 | **Audio eavesdropping via compromised microphone permission** — Malware leveraging HushType's microphone access | Low | High | Medium | HushType does not expose audio to other processes. Microphone permission is per-app in macOS. macOS shows orange dot indicator when mic is active. Audio never leaves process memory. | Mitigated |
+| T2 | **Clipboard snooping** — Third-party clipboard managers capturing transcribed text during paste operations | Medium | Medium | Medium | CGEvent injection (default) bypasses clipboard entirely. Clipboard restore within 150ms for paste mode. Users advised to exclude VaulType from clipboard managers. | Partially mitigated |
+| T3 | **Audio eavesdropping via compromised microphone permission** — Malware leveraging VaulType's microphone access | Low | High | Medium | VaulType does not expose audio to other processes. Microphone permission is per-app in macOS. macOS shows orange dot indicator when mic is active. Audio never leaves process memory. | Mitigated |
 | T4 | **Supply chain compromise** — Malicious code injected into whisper.cpp, llama.cpp, or Sparkle dependencies | Low | Critical | High | Pinned dependency versions, source code review for updates, compiled from source (no binary dependencies), notarization scan by Apple. | Mitigated |
 | T5 | **Update hijacking** — Man-in-the-middle attack on Sparkle update channel | Low | Critical | High | Sparkle uses EdDSA (Ed25519) signatures. Public key embedded at build time. Even compromised HTTPS cannot inject unsigned updates. | Mitigated |
-| T6 | **Accessibility API abuse** — A compromised HushType process using Accessibility permissions to control other apps | Very Low | Critical | Medium | Hardened runtime prevents code injection. Code signing prevents binary tampering. Notarization validates at distribution. macOS kernel enforces code signature at runtime. | Mitigated |
+| T6 | **Accessibility API abuse** — A compromised VaulType process using Accessibility permissions to control other apps | Very Low | Critical | Medium | Hardened runtime prevents code injection. Code signing prevents binary tampering. Notarization validates at distribution. macOS kernel enforces code signature at runtime. | Mitigated |
 | T7 | **Memory forensics** — Extracting audio data from process memory or swap | Very Low | High | Low | Audio buffers zeroed with `memset_s` after processing. FileVault encrypts swap. Small buffer sizes minimize exposure window. | Mitigated |
 | T8 | **Transcription history exposure** — Unauthorized access to SwiftData database containing transcription history | Low | Medium | Medium | Database stored in app container with macOS file permissions. FileVault encrypts at rest. History is opt-in (disabled by default). Users can purge history. | Mitigated |
-| T9 | **Keystroke injection manipulation** — Malicious process altering CGEvent stream | Very Low | Medium | Low | CGEvents are posted at HID level. The sending process (HushType) is code-signed. No inter-process channel for injection manipulation. | Mitigated |
-| T10 | **Denial of service via microphone monopolization** — HushType holding exclusive mic access | Low | Low | Low | AVAudioEngine uses shared mic access by default. Other apps can capture audio simultaneously. HushType releases mic when not actively transcribing. | Mitigated |
+| T9 | **Keystroke injection manipulation** — Malicious process altering CGEvent stream | Very Low | Medium | Low | CGEvents are posted at HID level. The sending process (VaulType) is code-signed. No inter-process channel for injection manipulation. | Mitigated |
+| T10 | **Denial of service via microphone monopolization** — VaulType holding exclusive mic access | Low | Low | Low | AVAudioEngine uses shared mic access by default. Other apps can capture audio simultaneously. VaulType releases mic when not actively transcribing. | Mitigated |
 
 ### 10.2 Attack Surface Analysis
 
@@ -759,7 +759,7 @@ Since HushType cannot use the App Sandbox, the following compensating security c
 
 ### 10.3 Out-of-Scope Threats
 
-The following threats are considered out of scope for HushType's threat model, as they require a fundamentally compromised system:
+The following threats are considered out of scope for VaulType's threat model, as they require a fundamentally compromised system:
 
 - **Kernel-level rootkits**: A compromised kernel can intercept any process's memory, audio, or keystrokes regardless of application-level mitigations.
 - **Physical access attacks**: An attacker with physical access to an unlocked Mac can access any running application's data.
@@ -819,12 +819,12 @@ The following threats are considered out of scope for HushType's threat model, a
 
 ### 12.1 Reporting a Vulnerability
 
-We take security vulnerabilities seriously. If you discover a security issue in HushType, please report it responsibly.
+We take security vulnerabilities seriously. If you discover a security issue in VaulType, please report it responsibly.
 
 **How to report:**
 
-1. **Email**: Send a detailed report to **security@hushtype.app** (preferred).
-2. **GitHub Security Advisory**: Use the [GitHub Security Advisory](https://github.com/hushtype/hushtype/security/advisories/new) feature to create a private vulnerability report.
+1. **Email**: Send a detailed report to **security@vaultype.app** (preferred).
+2. **GitHub Security Advisory**: Use the [GitHub Security Advisory](https://github.com/vaultype/vaultype/security/advisories/new) feature to create a private vulnerability report.
 
 **What to include:**
 
@@ -866,53 +866,53 @@ We will acknowledge security researchers who report valid vulnerabilities (with 
 
 | Recommendation | Priority | How |
 |----------------|----------|-----|
-| **Enable FileVault** | Critical | System Settings > Privacy & Security > FileVault > Turn On. Encrypts your entire disk, protecting all HushType data at rest. |
-| **Keep macOS updated** | Critical | System Settings > General > Software Update. Security patches protect the TCC framework, kernel, and audio subsystem that HushType depends on. |
+| **Enable FileVault** | Critical | System Settings > Privacy & Security > FileVault > Turn On. Encrypts your entire disk, protecting all VaulType data at rest. |
+| **Keep macOS updated** | Critical | System Settings > General > Software Update. Security patches protect the TCC framework, kernel, and audio subsystem that VaulType depends on. |
 | **Use a strong login password** | Critical | Your macOS login password protects FileVault encryption and Keychain access. |
 | **Audit Accessibility permissions** | High | System Settings > Privacy & Security > Accessibility. Remove apps you no longer use. Any app with Accessibility permission can inject keystrokes and observe UI elements. |
 | **Audit Microphone permissions** | High | System Settings > Privacy & Security > Microphone. Remove apps that should not have microphone access. |
 | **Use a firewall** | Medium | System Settings > Network > Firewall > Turn On. Or use a third-party firewall like LuLu for per-app network control. |
-| **Enable Lockdown Mode** (if applicable) | Optional | System Settings > Privacy & Security > Lockdown Mode. Note: This may affect HushType's ability to load ML models. Test before enabling in production use. |
+| **Enable Lockdown Mode** (if applicable) | Optional | System Settings > Privacy & Security > Lockdown Mode. Note: This may affect VaulType's ability to load ML models. Test before enabling in production use. |
 
-### 13.2 HushType-Specific Recommendations
+### 13.2 VaulType-Specific Recommendations
 
 | Recommendation | Priority | How |
 |----------------|----------|-----|
 | **Use CGEvent injection (default)** | High | Prefer CGEvent over clipboard paste for text injection. CGEvent never touches the clipboard. |
 | **Disable transcription history for sensitive work** | High | Settings > Privacy > Transcription History > Off. When disabled, no text is persisted after injection. |
-| **Download models only through HushType** | High | Use the built-in model manager (Settings > Models > Download). This ensures SHA-256 integrity verification. |
+| **Download models only through VaulType** | High | Use the built-in model manager (Settings > Models > Download). This ensures SHA-256 integrity verification. |
 | **Review Sparkle update settings** | Medium | Settings > Updates. Choose between automatic checks, manual checks, or disabled. |
-| **Keep crash reporting opt-in conscious** | Medium | Settings > Privacy > Send Crash Reports. Default is OFF. Only enable if you want to help improve HushType and are comfortable sharing crash data with Sentry. |
+| **Keep crash reporting opt-in conscious** | Medium | Settings > Privacy > Send Crash Reports. Default is OFF. Only enable if you want to help improve VaulType and are comfortable sharing crash data with Sentry. |
 | **Purge transcription history regularly** | Medium | Settings > Privacy > Clear History. If you use transcription history, clear it periodically. |
-| **Exclude HushType from clipboard managers** | Medium | If you use a clipboard manager (Paste, Maccy, etc.), add HushType to its exclusion list to prevent it from capturing brief clipboard operations during paste-mode injection. |
+| **Exclude VaulType from clipboard managers** | Medium | If you use a clipboard manager (Paste, Maccy, etc.), add VaulType to its exclusion list to prevent it from capturing brief clipboard operations during paste-mode injection. |
 
 ### 13.3 Verifying Installation Integrity
 
-After downloading HushType, verify the installation is authentic and untampered:
+After downloading VaulType, verify the installation is authentic and untampered:
 
 ```bash
 # 1. Verify code signature
-codesign --verify --deep --strict /Applications/HushType.app
+codesign --verify --deep --strict /Applications/VaulType.app
 # Expected: valid on disk
 
 # 2. Verify notarization
-spctl --assess --verbose=4 --type execute /Applications/HushType.app
+spctl --assess --verbose=4 --type execute /Applications/VaulType.app
 # Expected: accepted / source=Notarized Developer ID
 
 # 3. Check the signing authority
-codesign -dv /Applications/HushType.app 2>&1 | grep "Authority"
+codesign -dv /Applications/VaulType.app 2>&1 | grep "Authority"
 # Expected: Three lines showing Developer ID → Apple chain
 
 # 4. Verify no modifications since signing
-codesign --verify --verbose=4 /Applications/HushType.app 2>&1 | grep "valid"
+codesign --verify --verbose=4 /Applications/VaulType.app 2>&1 | grep "valid"
 # Expected: "valid on disk" and "satisfies its Designated Requirement"
 ```
 
-> 💡 **Tip**: If any of the above commands report errors, do **not** run the application. Re-download HushType from the official source and verify again.
+> 💡 **Tip**: If any of the above commands report errors, do **not** run the application. Re-download VaulType from the official source and verify again.
 
 ```bash
 # Optional: Compare SHA-256 of the downloaded DMG against published checksums
-shasum -a 256 ~/Downloads/HushType-*.dmg
+shasum -a 256 ~/Downloads/VaulType-*.dmg
 # Compare output against checksums published on the GitHub Releases page
 ```
 

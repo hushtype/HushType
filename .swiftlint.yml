@@ -1,10 +1,10 @@
-# SwiftLint Configuration for HushType
+# SwiftLint Configuration for VaulType
 
 excluded:
   - vendor
   - DerivedData
   - .build
-  - HushType.xcodeproj
+  - VaulType.xcodeproj
   - WhisperKit/Sources/CWhisper
   - LlamaKit/Sources/CLlama
 

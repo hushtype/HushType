@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Frequently Asked Questions
 
-> Common questions about HushType — privacy, compatibility, features, and troubleshooting.
+> Common questions about VaulType — privacy, compatibility, features, and troubleshooting.
 
 ## Table of Contents
 
@@ -20,27 +20,27 @@ Last Updated: 2026-02-13
 
 ## General
 
-### What is HushType?
+### What is VaulType?
 
-HushType is a privacy-first, macOS-native speech-to-text application that lets you dictate text into any app where your cursor is active. It uses local AI models (whisper.cpp for speech recognition and llama.cpp for text post-processing) — nothing ever leaves your Mac.
+VaulType is a privacy-first, macOS-native speech-to-text application that lets you dictate text into any app where your cursor is active. It uses local AI models (whisper.cpp for speech recognition and llama.cpp for text post-processing) — nothing ever leaves your Mac.
 
-### Why is it called HushType?
+### Why is it called VaulType?
 
 The name captures the core philosophy:
 - **Hush** — Your voice stays private, never leaving your device
 - **Type** — Text appears at your cursor, as if you typed it
 
-### Is HushType free?
+### Is VaulType free?
 
-Yes. HushType is open source under the GPL-3.0 license. It's free to download, use, and modify.
+Yes. VaulType is open source under the GPL-3.0 license. It's free to download, use, and modify.
 
-### What languages does HushType support?
+### What languages does VaulType support?
 
-HushType supports **90+ languages** through Whisper, including English, Turkish, Spanish, French, German, Chinese, Japanese, Arabic, and many more. Language can be auto-detected or manually selected.
+VaulType supports **90+ languages** through Whisper, including English, Turkish, Spanish, French, German, Chinese, Japanese, Arabic, and many more. Language can be auto-detected or manually selected.
 
-### Does HushType work offline?
+### Does VaulType work offline?
 
-**Yes, 100%.** HushType is designed to work completely offline. All speech recognition and text processing happen locally on your Mac. The only network requests are:
+**Yes, 100%.** VaulType is designed to work completely offline. All speech recognition and text processing happen locally on your Mac. The only network requests are:
 - Model downloads (one-time, optional)
 - Auto-update checks via Sparkle (can be disabled)
 
@@ -50,27 +50,27 @@ HushType supports **90+ languages** through Whisper, including English, Turkish,
 
 ### Is my audio sent to the cloud?
 
-**No, absolutely not.** HushType processes all audio locally using whisper.cpp. Your voice data never leaves your Mac. There is no cloud component, no API calls, and no telemetry.
+**No, absolutely not.** VaulType processes all audio locally using whisper.cpp. Your voice data never leaves your Mac. There is no cloud component, no API calls, and no telemetry.
 
 ### Is my dictation text stored anywhere?
 
 By default, **no**. Text is transcribed, optionally processed by the LLM, and injected at your cursor — then discarded from memory. If you enable Dictation History (opt-in), transcriptions are stored locally in SwiftData on your Mac.
 
-### Does HushType collect any data?
+### Does VaulType collect any data?
 
-**No.** HushType has zero telemetry, zero analytics, and zero data collection by default. If you opt in to crash reporting (Sentry), only crash logs are sent — never audio, text, or usage data.
+**No.** VaulType has zero telemetry, zero analytics, and zero data collection by default. If you opt in to crash reporting (Sentry), only crash logs are sent — never audio, text, or usage data.
 
 ### Is it safe to use for sensitive work?
 
-Yes. Since everything is local, HushType is suitable for sensitive work including:
+Yes. Since everything is local, VaulType is suitable for sensitive work including:
 - Legal documents
 - Medical notes
 - Confidential business communications
 - Personal journaling
 
-> 🔒 HushType cannot inject text into password fields — this is a deliberate security measure.
+> 🔒 VaulType cannot inject text into password fields — this is a deliberate security measure.
 
-### What permissions does HushType need and why?
+### What permissions does VaulType need and why?
 
 | Permission | Why |
 |-----------|-----|
@@ -86,7 +86,7 @@ See [PERMISSIONS.md](../features/PERMISSIONS.md) for a detailed breakdown.
 
 ### Which Mac do I need?
 
-HushType runs on any Mac with **macOS 14.0 (Sonoma)** or later:
+VaulType runs on any Mac with **macOS 14.0 (Sonoma)** or later:
 
 - **Apple Silicon (M1/M2/M3/M4)** — Recommended. Metal GPU acceleration makes speech recognition 3-10x faster.
 - **Intel Macs** — Supported with CPU-only inference. Use smaller models (tiny, base) for acceptable speed.
@@ -119,21 +119,21 @@ You only need one Whisper model and optionally one LLM. Typical installation: **
 
 ### Does it work on macOS Sequoia?
 
-Yes. HushType is tested on macOS 14 (Sonoma) and macOS 15 (Sequoia).
+Yes. VaulType is tested on macOS 14 (Sonoma) and macOS 15 (Sequoia).
 
 ---
 
 ## Features
 
-### Can I use HushType with Claude Code?
+### Can I use VaulType with Claude Code?
 
-**Yes!** This is one of HushType's best use cases. Use **Prompt Mode** to dictate into your terminal, and HushType will automatically format your messy speech into clear, well-structured prompts for Claude Code.
+**Yes!** This is one of VaulType's best use cases. Use **Prompt Mode** to dictate into your terminal, and VaulType will automatically format your messy speech into clear, well-structured prompts for Claude Code.
 
-Example: You say *"I want to refactor the authentication module to use JWT tokens instead of sessions and add proper error handling"* and HushType formats it into a clean, structured prompt before injecting it into the terminal.
+Example: You say *"I want to refactor the authentication module to use JWT tokens instead of sessions and add proper error handling"* and VaulType formats it into a clean, structured prompt before injecting it into the terminal.
 
 ### Does it work in Terminal?
 
-**Yes.** HushType injects text into any macOS app, including Terminal.app, iTerm2, Warp, Alacritty, and Kitty. Use the Clipboard injection method for the best terminal compatibility.
+**Yes.** VaulType injects text into any macOS app, including Terminal.app, iTerm2, Warp, Alacritty, and Kitty. Use the Clipboard injection method for the best terminal compatibility.
 
 ### What are the processing modes?
 
@@ -148,13 +148,13 @@ Example: You say *"I want to refactor the authentication module to use JWT token
 
 ### Can I create custom processing modes?
 
-Yes. HushType has a full prompt template system. You can:
+Yes. VaulType has a full prompt template system. You can:
 - Write custom system and user prompts
 - Use variables like `{text}`, `{language}`, `{app_name}`, `{context}`
 - Import and export templates
 - Assign modes to specific hotkeys or apps
 
-### Does HushType support push-to-talk?
+### Does VaulType support push-to-talk?
 
 Yes, two modes are available:
 - **Push-to-talk** — Hold the hotkey to record, release to process
@@ -168,7 +168,7 @@ Yes. **App-Aware Context** (Phase 3) lets you configure default modes per applic
 - Notes → Structure Mode
 - VS Code → Code Mode
 
-### Does HushType have voice commands?
+### Does VaulType have voice commands?
 
 Yes (Phase 4). You can:
 - Launch and switch between apps: *"Open Safari"*, *"Switch to Terminal"*
@@ -217,7 +217,7 @@ On Apple Silicon with Metal GPU acceleration:
 
 ### Can I use Ollama instead of built-in llama.cpp?
 
-Yes. HushType supports Ollama as an alternative LLM backend via its localhost REST API (port 11434). This is useful if you already have Ollama installed with models downloaded.
+Yes. VaulType supports Ollama as an alternative LLM backend via its localhost REST API (port 11434). This is useful if you already have Ollama installed with models downloaded.
 
 Configure in Settings > Advanced > LLM Backend > Ollama.
 
@@ -237,7 +237,7 @@ See [TROUBLESHOOTING.md](../operations/TROUBLESHOOTING.md) for detailed solution
 ### The app says "No model loaded"
 
 You need to download a Whisper model:
-1. Open HushType Settings > Models
+1. Open VaulType Settings > Models
 2. Click Download next to a model (recommended: `small`)
 3. Wait for the download to complete
 
@@ -249,10 +249,10 @@ Try these in order:
 3. Close GPU-intensive apps
 4. Use push-to-talk for shorter recordings
 
-### HushType doesn't appear in the menu bar
+### VaulType doesn't appear in the menu bar
 
-1. Check if HushType is running: look in Activity Monitor
-2. Relaunch from `/Applications/HushType.app`
+1. Check if VaulType is running: look in Activity Monitor
+2. Relaunch from `/Applications/VaulType.app`
 3. Check System Settings > Control Center > Menu Bar Only to ensure it's not hidden
 
 ### Audio level meter shows no activity
@@ -265,9 +265,9 @@ Try these in order:
 
 ## Comparison with Alternatives
 
-### How is HushType different from Apple's built-in Dictation?
+### How is VaulType different from Apple's built-in Dictation?
 
-| Feature | HushType | Apple Dictation |
+| Feature | VaulType | Apple Dictation |
 |---------|----------|-----------------|
 | Privacy | 100% local | Sends audio to Apple servers |
 | LLM post-processing | Yes (6 modes) | No |
@@ -279,9 +279,9 @@ Try these in order:
 | App-aware context | Yes | No |
 | Cost | Free | Free with macOS |
 
-### How is HushType different from Superwhisper / VoiceInk?
+### How is VaulType different from Superwhisper / VoiceInk?
 
-| Feature | HushType | Superwhisper | VoiceInk |
+| Feature | VaulType | Superwhisper | VoiceInk |
 |---------|----------|-------------|----------|
 | Pricing | Free (GPL-3.0) | $10/month | $30 one-time |
 | Dual AI pipeline (STT + LLM) | Yes | No | No |
@@ -292,9 +292,9 @@ Try these in order:
 | Developer-focused modes | Yes (Code, Prompt) | No | No |
 | App-aware context | Yes | Limited | No |
 
-### How is HushType different from MacWhisper?
+### How is VaulType different from MacWhisper?
 
-MacWhisper is a great transcription app, but it's focused on file transcription, not real-time dictation. HushType is designed for **live dictation into any app** with LLM post-processing and voice commands.
+MacWhisper is a great transcription app, but it's focused on file transcription, not real-time dictation. VaulType is designed for **live dictation into any app** with LLM post-processing and voice commands.
 
 ---
 
@@ -335,15 +335,15 @@ See [TECH_STACK.md](../architecture/TECH_STACK.md) for detailed rationale.
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap.
 
-### Can I build HushType from source?
+### Can I build VaulType from source?
 
 Yes:
 
 ```bash
-git clone https://github.com/hushtype/hushtype.git
-cd hushtype
+git clone https://github.com/vaultype/vaultype.git
+cd vaultype
 ./scripts/build-deps.sh
-open HushType.xcodeproj
+open VaulType.xcodeproj
 # Build and run (⌘R)
 ```
 

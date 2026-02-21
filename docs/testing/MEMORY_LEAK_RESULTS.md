@@ -1,8 +1,8 @@
-# HushType Memory Leak Testing Protocol
+# VaulType Memory Leak Testing Protocol
 
 ## Overview
 
-Protocol for verifying HushType has no memory leaks using Xcode Instruments. This document
+Protocol for verifying VaulType has no memory leaks using Xcode Instruments. This document
 defines repeatable test scenarios tied to the actual C bridging and service lifecycle patterns
 in the codebase. Execute each scenario manually and record results in the Summary table.
 
@@ -23,12 +23,12 @@ in the codebase. Execute each scenario manually and record results in the Summar
 
 1. Build a **Release** configuration archive:
    ```bash
-   xcodebuild -scheme HushType -configuration Release build \
+   xcodebuild -scheme VaulType -configuration Release build \
      ONLY_ACTIVE_ARCH=YES
    ```
 2. Open **Instruments** (Xcode > Open Developer Tool > Instruments).
 3. Choose the **Leaks** template (includes both Leaks and Allocations instruments).
-4. Set the target to the HushType.app built above.
+4. Set the target to the VaulType.app built above.
 5. In the Allocations instrument, enable **"Record reference counts"** to capture retain/release
    call stacks.
 6. Launch the app and wait for it to fully initialise before starting any scenario.
@@ -45,7 +45,7 @@ in the codebase. Execute each scenario manually and record results in the Summar
 
 ### Scenario 1: WhisperContext Init/Deinit Cycle
 
-**Source file**: `HushType/Services/Speech/WhisperContext.swift`
+**Source file**: `VaulType/Services/Speech/WhisperContext.swift`
 
 **Relevant pattern**:
 ```swift
@@ -74,7 +74,7 @@ func unload() {
 ```
 
 **Risk**: If a `transcribe()` async continuation is still executing on
-`com.hushtype.whisper.context` when `deinit` fires, the `queue.sync` inside `deinit`
+`com.vaultype.whisper.context` when `deinit` fires, the `queue.sync` inside `deinit`
 will block until the in-flight closure completes. If this sequence is disrupted (e.g., a
 crash or task cancellation), `whisper_free` may not be called.
 
@@ -102,7 +102,7 @@ crash or task cancellation), `whisper_free` may not be called.
 
 ### Scenario 2: LlamaContext Init/Deinit Cycle
 
-**Source file**: `HushType/Services/LLM/LlamaContext.swift`
+**Source file**: `VaulType/Services/LLM/LlamaContext.swift`
 
 **Relevant pattern**:
 ```swift
@@ -156,7 +156,7 @@ the sampler path when an early `init` error occurs.
 
 ### Scenario 3: AudioCaptureService Start/Stop
 
-**Source file**: `HushType/Services/Audio/AudioCaptureService.swift`
+**Source file**: `VaulType/Services/Audio/AudioCaptureService.swift`
 
 **Relevant pattern**:
 ```swift
@@ -203,7 +203,7 @@ escape via the `AVAudioConverter` `inputBlock` closure in `convertBuffer`.
 
 ### Scenario 4: Repeated Full Dictation Cycles
 
-**Source file**: `HushType/Services/DictationController.swift`
+**Source file**: `VaulType/Services/DictationController.swift`
 
 **Relevant pipeline**:
 ```
@@ -247,7 +247,7 @@ hotkey up
 
 ### Scenario 5: Settings Window Open/Close
 
-**Relevant files**: `HushType/Views/Settings/` (all tab views)
+**Relevant files**: `VaulType/Views/Settings/` (all tab views)
 
 **Risk areas**:
 - SwiftUI `@Observable` observation tracking closures — confirm no strong self-captures
@@ -258,7 +258,7 @@ hotkey up
 - `PluginManagerView` holds a reference to `PluginManager` — confirm it releases on close.
 
 **Steps**:
-1. Click the HushType menu bar icon to open the menu.
+1. Click the VaulType menu bar icon to open the menu.
 2. Click **Settings** to open the settings window.
 3. Click through all 10 tabs (General → Audio → Models → Processing → App Profiles →
    Vocabulary → Language → History → Commands → Plugins).
@@ -283,8 +283,8 @@ hotkey up
 
 ### Scenario 6: Model Switching (Whisper)
 
-**Source file**: `HushType/Services/Speech/WhisperContext.swift`,
-                `HushType/Services/DictationController.swift` (`loadWhisperModel`, `unloadWhisperModel`)
+**Source file**: `VaulType/Services/Speech/WhisperContext.swift`,
+                `VaulType/Services/DictationController.swift` (`loadWhisperModel`, `unloadWhisperModel`)
 
 **Relevant pattern**:
 ```swift
@@ -326,8 +326,8 @@ func unloadWhisperModel() {
 
 ### Scenario 7: Model Switching (LLM)
 
-**Source file**: `HushType/Services/LLM/LlamaContext.swift`,
-                `HushType/Services/DictationController.swift` (`loadLLMModel`, `unloadLLMModel`)
+**Source file**: `VaulType/Services/LLM/LlamaContext.swift`,
+                `VaulType/Services/DictationController.swift` (`loadLLMModel`, `unloadLLMModel`)
 
 **Relevant pattern**:
 ```swift
@@ -374,7 +374,7 @@ extra attention in Instruments if any scenario fails.
 | Tap not removed on error | `AudioCaptureService._startCapture` | If `engine.start()` throws after `installTap`, the tap is installed but the engine never starts. Confirm `removeTap` is called in the error path. |
 | `os_unfair_lock` deadlock | `AudioBuffer` | If a lock is held when the object is deallocated, subsequent lock acquisition from a background thread will hang. |
 | NotificationCenter observers | `AppDelegate` | `NSWorkspace` and `NotificationCenter` observers must be removed in `applicationWillTerminate` or use block-based APIs with weak self. |
-| `OverlayWindow` retain cycle | `HushType/Views/Overlay/` | `NSPanel` subclass references `appState` — confirm it does not form a reference cycle with `DictationController`. |
+| `OverlayWindow` retain cycle | `VaulType/Views/Overlay/` | `NSPanel` subclass references `appState` — confirm it does not form a reference cycle with `DictationController`. |
 | `ModelContext` per-save | `DictationController.saveDictationEntry` | A new `ModelContext(container)` is created on every save; confirm it is released after the save/fetch completes and does not accumulate. |
 | `HistoryCleanupService` per-save | `DictationController.saveDictationEntry` | Created fresh inside the async closure; confirm no strong capture keeps it alive after `runCleanup()` returns. |
 | SwiftUI observation closures | All `@Observable` views | `withObservationTracking` blocks can hold strong references if the `onChange` closure captures `self` strongly. |
@@ -387,7 +387,7 @@ For each scenario that produces a **FAIL** result:
 
 1. In Instruments, click the red leak indicator to open the **Leak Detail** panel.
 2. Select the leaked allocation and expand the **Backtrace** column.
-3. Identify the allocation site (look for HushType frames, ignoring system frames).
+3. Identify the allocation site (look for VaulType frames, ignoring system frames).
 4. Export a screenshot of the Leaks instrument timeline showing the leak moment.
 5. File the following information:
 
@@ -406,7 +406,7 @@ Proposed fix:
      -H "Authorization: Api-Key $DEVTRACK_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
-       "project": "HUSHTYPE",
+       "project": "VAULTYPE",
        "title": "Bug: Memory leak in <component>",
        "description": "Scenario <N> failed. Leaked type: <type>. Backtrace: ...",
        "priority": "high"

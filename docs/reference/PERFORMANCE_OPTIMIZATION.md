@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Performance Optimization
 
-HushType runs two ML models simultaneously — whisper.cpp for speech recognition and llama.cpp for text refinement — entirely on-device with zero network dependency. This document defines every optimization strategy, tuning parameter, and monitoring technique required to deliver real-time performance across all supported Apple hardware.
+VaulType runs two ML models simultaneously — whisper.cpp for speech recognition and llama.cpp for text refinement — entirely on-device with zero network dependency. This document defines every optimization strategy, tuning parameter, and monitoring technique required to deliver real-time performance across all supported Apple hardware.
 
 ---
 
@@ -64,21 +64,21 @@ HushType runs two ML models simultaneously — whisper.cpp for speech recognitio
 
 ## Performance Philosophy
 
-HushType's performance strategy rests on three pillars:
+VaulType's performance strategy rests on three pillars:
 
 | Pillar | Meaning |
 |---|---|
 | **Latency** | The user must perceive transcription and refinement as near-instantaneous — under 500 ms total for typical utterances |
-| **Efficiency** | Dual-model inference must coexist with normal system operation; HushType should never make the Mac feel sluggish |
+| **Efficiency** | Dual-model inference must coexist with normal system operation; VaulType should never make the Mac feel sluggish |
 | **Adaptability** | Performance tuning reacts to hardware capability, power source, thermal state, and memory pressure in real time |
 
-> 💡 **Design Principle**: HushType always degrades gracefully. When resources are constrained, it reduces quality (smaller models, fewer GPU layers) rather than increasing latency or dropping audio.
+> 💡 **Design Principle**: VaulType always degrades gracefully. When resources are constrained, it reduces quality (smaller models, fewer GPU layers) rather than increasing latency or dropping audio.
 
 ---
 
 ## Apple Silicon Metal Acceleration
 
-Apple Silicon's unified memory architecture is the foundation of HushType's performance story. Both whisper.cpp and llama.cpp support Metal acceleration, which offloads matrix multiplications and attention computations to the GPU cores.
+Apple Silicon's unified memory architecture is the foundation of VaulType's performance story. Both whisper.cpp and llama.cpp support Metal acceleration, which offloads matrix multiplications and attention computations to the GPU cores.
 
 ### Metal Performance Shaders Overview
 
@@ -153,7 +153,7 @@ Available GPU Memory = Total RAM - System Overhead - Other Model - KV Cache Rese
 
 System Overhead:
   macOS base              ~3-4 GB
-  HushType app overhead   ~200 MB
+  VaulType app overhead   ~200 MB
   Audio pipeline          ~50 MB
 
 Example (16 GB M2 MacBook Air):
@@ -180,13 +180,13 @@ Example (16 GB M2 MacBook Air):
 | Hardware Ray Tracing | No | No | Yes | Yes |
 | Relative Perf (base, 7B Q4) | 1.0x | 1.3x | 1.4x | 1.6x |
 
-**Key observations for HushType:**
+**Key observations for VaulType:**
 
 - **M3/M4 Dynamic Caching** reduces GPU memory waste from shader register allocation, leaving more memory for model weights
 - **Memory bandwidth** is the primary bottleneck for LLM inference (memory-bound workload). M4 Pro's 273 GB/s provides the biggest leap
 - **M1 base (8 GB)** is the minimum viable target — use Whisper small + Q4_0 3B LLM
 
-> ℹ️ **Intel Support**: HushType supports Intel Macs but without Metal acceleration. CPU-only inference uses Accelerate.framework (BLAS). Expect 3-5x slower inference compared to equivalent-era Apple Silicon.
+> ℹ️ **Intel Support**: VaulType supports Intel Macs but without Metal acceleration. CPU-only inference uses Accelerate.framework (BLAS). Expect 3-5x slower inference compared to equivalent-era Apple Silicon.
 
 ### Unified Memory Advantages
 
@@ -228,7 +228,7 @@ This is why Apple Silicon can run larger models than discrete GPUs with the same
 
 ### Metal Configuration in Code
 
-The following shows how HushType configures GPU layer counts for both inference engines:
+The following shows how VaulType configures GPU layer counts for both inference engines:
 
 ```swift
 import Foundation
@@ -255,7 +255,7 @@ struct MetalGPUConfiguration {
     /// Estimated available memory after system overhead (in GB)
     static var estimatedAvailableMemoryGB: Double {
         let systemOverhead: Double = 4.0  // macOS + background apps
-        let appOverhead: Double = 0.25     // HushType base footprint
+        let appOverhead: Double = 0.25     // VaulType base footprint
         return max(totalSystemMemoryGB - systemOverhead - appOverhead, 1.0)
     }
 
@@ -388,7 +388,7 @@ Quantization reduces model size and inference time by representing weights with 
 | **Q4_K_M** | 4.8 | 4-bit k-quant, mixed precision. Best quality/size ratio. | Moderate (2-4% perplexity increase) |
 | **Q4_0** | 4.5 | Basic 4-bit. Fast but lower quality. | Notable (4-6% perplexity increase) |
 
-> 💡 **HushType Default**: Q4_K_M is the default for LLM text refinement. For HushType's use case (grammar correction, punctuation, formatting), the quality difference between Q4_K_M and F16 is imperceptible in practice.
+> 💡 **VaulType Default**: Q4_K_M is the default for LLM text refinement. For VaulType's use case (grammar correction, punctuation, formatting), the quality difference between Q4_K_M and F16 is imperceptible in practice.
 
 ### Whisper Model Sizes
 
@@ -496,7 +496,7 @@ struct QuantizationSelector {
 
 ## Memory Management for Dual-Model Operation
 
-Running Whisper and an LLM simultaneously is HushType's most demanding resource requirement. This section covers how to manage memory for both models.
+Running Whisper and an LLM simultaneously is VaulType's most demanding resource requirement. This section covers how to manage memory for both models.
 
 ### Memory Layout Architecture
 
@@ -507,7 +507,7 @@ Running Whisper and an LLM simultaneously is HushType's most demanding resource 
 │  ┌──────────────────────────────────────────────────────┐    │
 │  │  macOS + System Services              ~3.5 GB        │    │
 │  ├──────────────────────────────────────────────────────┤    │
-│  │  HushType App                                        │    │
+│  │  VaulType App                                        │    │
 │  │  ┌─────────────────────────────────────────────┐     │    │
 │  │  │  App Binary + Runtime          ~50 MB       │     │    │
 │  │  ├─────────────────────────────────────────────┤     │    │
@@ -535,7 +535,7 @@ Running Whisper and an LLM simultaneously is HushType's most demanding resource 
 │  │  ├─────────────────────────────────────────────┤     │    │
 │  │  │  Metal Compute Buffers         ~200 MB      │     │    │
 │  │  └─────────────────────────────────────────────┘     │    │
-│  │  Total HushType:                  ~6.6 GB            │    │
+│  │  Total VaulType:                  ~6.6 GB            │    │
 │  ├──────────────────────────────────────────────────────┤    │
 │  │  Free / Available                 ~5.9 GB            │    │
 │  └──────────────────────────────────────────────────────┘    │
@@ -625,7 +625,7 @@ struct MemoryCalculator {
 
 ### Memory Mapping Strategies
 
-Both whisper.cpp and llama.cpp support `mmap` for loading model files. This is critical for HushType:
+Both whisper.cpp and llama.cpp support `mmap` for loading model files. This is critical for VaulType:
 
 ```swift
 /// Memory mapping strategy for model loading
@@ -680,7 +680,7 @@ enum ModelMappingStrategy {
 
 ### Model Swapping
 
-When memory is insufficient for both models simultaneously, HushType can swap models:
+When memory is insufficient for both models simultaneously, VaulType can swap models:
 
 ```swift
 /// Manages loading and unloading of models to fit within memory constraints
@@ -890,7 +890,7 @@ final class MemoryPressureMonitor: @unchecked Sendable {
 
 ## Audio Buffer Optimization
 
-The audio pipeline is the first stage of HushType's transcription flow. Buffer management here directly affects both latency and reliability.
+The audio pipeline is the first stage of VaulType's transcription flow. Buffer management here directly affects both latency and reliability.
 
 ### Buffer Size Selection
 
@@ -898,11 +898,11 @@ The audio pipeline is the first stage of HushType's transcription flow. Buffer m
 |---|---|---|---|---|
 | 256 | 16 ms | Very low | Very high | Not recommended |
 | 512 | 32 ms | Low | High | Real-time monitoring |
-| 1024 | 64 ms | Medium | Medium | **Default for HushType** |
+| 1024 | 64 ms | Medium | Medium | **Default for VaulType** |
 | 2048 | 128 ms | Higher | Low | Battery-saving mode |
 | 4096 | 256 ms | High | Very low | Background processing |
 
-HushType uses 1024 frames as the default buffer size. This provides 64 ms latency at 16 kHz — fast enough that users perceive no delay between speaking and seeing the waveform indicator, while keeping CPU wake-ups reasonable.
+VaulType uses 1024 frames as the default buffer size. This provides 64 ms latency at 16 kHz — fast enough that users perceive no delay between speaking and seeing the waveform indicator, while keeping CPU wake-ups reasonable.
 
 ```swift
 /// Audio buffer size configuration
@@ -934,7 +934,7 @@ enum AudioBufferConfig {
 
 ### Sample Rate Conversion
 
-HushType captures audio at the system's native sample rate (typically 48 kHz) and converts to 16 kHz for Whisper. The conversion pipeline:
+VaulType captures audio at the system's native sample rate (typically 48 kHz) and converts to 16 kHz for Whisper. The conversion pipeline:
 
 ```
 ┌───────────────┐     ┌──────────────────┐     ┌─────────────────┐
@@ -973,8 +973,8 @@ struct AudioFormatConverter {
         // Use highest quality SRC for accuracy
         // SampleRateConverterComplexity:
         //   .linear     — fastest, lowest quality
-        //   .normal     — balanced (HushType default on battery)
-        //   .mastering  — highest quality (HushType default on power)
+        //   .normal     — balanced (VaulType default on battery)
+        //   .mastering  — highest quality (VaulType default on power)
         converter.sampleRateConverterQuality = .max
 
         return converter
@@ -1107,13 +1107,13 @@ Buffer Size:  │ 256 │ 512 │ 1024 │ 2048 │ 4096 │
  Battery:       Poor  Fair  Good  Great  Best
 ```
 
-HushType's default of 1024 frames provides the best balance. The ring buffer's capacity should be at least 8x the buffer size (8192 samples = 0.5 seconds) to absorb processing jitter.
+VaulType's default of 1024 frames provides the best balance. The ring buffer's capacity should be at least 8x the buffer size (8192 samples = 0.5 seconds) to absorb processing jitter.
 
 ---
 
 ## Lazy Model Loading Strategies
 
-Loading ML models is expensive. A 4 GB LLM takes 2-4 seconds to load from SSD. HushType uses lazy loading to keep launch time under 1 second.
+Loading ML models is expensive. A 4 GB LLM takes 2-4 seconds to load from SSD. VaulType uses lazy loading to keep launch time under 1 second.
 
 ### Load on First Use
 
@@ -1521,7 +1521,7 @@ final class ModelPreloadingService: ObservableObject {
 
 ## Battery-Aware Performance Throttling
 
-HushType adapts its performance profile based on whether the Mac is connected to power or running on battery.
+VaulType adapts its performance profile based on whether the Mac is connected to power or running on battery.
 
 ### Power Source Detection
 
@@ -1820,13 +1820,13 @@ enum PowerProfile: String, CaseIterable {
 
 ## Thermal Management
 
-Apple Silicon throttles CPU and GPU frequency under thermal pressure. HushType proactively adapts before the system forces throttling.
+Apple Silicon throttles CPU and GPU frequency under thermal pressure. VaulType proactively adapts before the system forces throttling.
 
 ### Thermal State Monitoring
 
 macOS provides four thermal states:
 
-| State | Meaning | HushType Response |
+| State | Meaning | VaulType Response |
 |---|---|---|
 | `.nominal` | Normal operating temperature | Full performance |
 | `.fair` | Slightly elevated temperature | Reduce preloading |
@@ -1962,7 +1962,7 @@ Complete thermal adaptation that integrates with the model pipeline:
 import Combine
 import Foundation
 
-/// Coordinates thermal management across all HushType subsystems
+/// Coordinates thermal management across all VaulType subsystems
 @MainActor
 final class ThermalCoordinator: ObservableObject {
     @Published private(set) var effectiveProfile: PowerProfile = .balanced
@@ -2049,11 +2049,11 @@ final class ThermalCoordinator: ObservableObject {
 
 ## Benchmarking Methodology and Tools
 
-Systematic benchmarking ensures HushType's performance improves (or at least does not regress) with every release.
+Systematic benchmarking ensures VaulType's performance improves (or at least does not regress) with every release.
 
 ### Instruments Profiling
 
-Use these Instruments templates for HushType performance analysis:
+Use these Instruments templates for VaulType performance analysis:
 
 | Template | What to Look For |
 |---|---|
@@ -2079,17 +2079,17 @@ Use these Instruments templates for HushType performance analysis:
 import Foundation
 import os.signpost
 
-/// Benchmarking harness for HushType performance measurements
+/// Benchmarking harness for VaulType performance measurements
 final class PerformanceBenchmark {
     // MARK: - Signpost Integration
 
     private static let log = OSLog(
-        subsystem: "com.hushtype.benchmark",
+        subsystem: "com.vaultype.benchmark",
         category: .pointsOfInterest
     )
 
     private static let signpostLog = OSLog(
-        subsystem: "com.hushtype.benchmark",
+        subsystem: "com.vaultype.benchmark",
         category: "Performance"
     )
 
@@ -2347,7 +2347,7 @@ func runPerformanceSuite() async throws {
 
     // Export for CI comparison
     let jsonData = try bench.exportJSON()
-    try jsonData.write(to: URL(fileURLWithPath: "/tmp/hushtype_benchmarks.json"))
+    try jsonData.write(to: URL(fileURLWithPath: "/tmp/vaultype_benchmarks.json"))
 }
 
 // Helper to get hardware name
@@ -2524,11 +2524,11 @@ struct RegressionDetector {
 
 ### End-to-End Pipeline
 
-The full HushType pipeline from microphone to text insertion:
+The full VaulType pipeline from microphone to text insertion:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    HushType Processing Pipeline                      │
+│                    VaulType Processing Pipeline                      │
 │                                                                     │
 │  ┌─────────┐   ┌──────────┐   ┌──────────┐   ┌──────────────────┐ │
 │  │ Audio   │   │ Format   │   │ Ring     │   │ Voice Activity   │ │

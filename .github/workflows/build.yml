@@ -83,7 +83,7 @@ jobs:
       - name: Build
         run: |
           xcodebuild build \
-            -scheme HushType \
+            -scheme VaulType \
             -configuration ${{ matrix.configuration }} \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath DerivedData \
@@ -97,7 +97,7 @@ jobs:
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: HushType-${{ matrix.configuration }}
-          path: DerivedData/Build/Products/${{ matrix.configuration }}/HushType.app
+          name: VaulType-${{ matrix.configuration }}
+          path: DerivedData/Build/Products/${{ matrix.configuration }}/VaulType.app
           if-no-files-found: warn
           retention-days: 7

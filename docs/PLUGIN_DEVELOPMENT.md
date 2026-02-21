@@ -1,6 +1,6 @@
-# HushType Plugin Development Guide
+# VaulType Plugin Development Guide
 
-This guide explains how to build plugins that extend HushType's dictation pipeline. Plugins are macOS bundles (`.bundle`) that are discovered and loaded at runtime. Two plugin types are supported: **ProcessingPlugin** for transforming transcribed text and **CommandPlugin** for adding custom voice commands.
+This guide explains how to build plugins that extend VaulType's dictation pipeline. Plugins are macOS bundles (`.bundle`) that are discovered and loaded at runtime. Two plugin types are supported: **ProcessingPlugin** for transforming transcribed text and **CommandPlugin** for adding custom voice commands.
 
 **Current Plugin API Version: `0.5.0`**
 
@@ -23,7 +23,7 @@ This guide explains how to build plugins that extend HushType's dictation pipeli
 
 ## Overview
 
-HushType plugins run inside the dictation pipeline on-device. They are loaded from `~/Library/Application Support/HushType/Plugins/` at launch and managed through the Plugins tab in Settings.
+VaulType plugins run inside the dictation pipeline on-device. They are loaded from `~/Library/Application Support/VaulType/Plugins/` at launch and managed through the Plugins tab in Settings.
 
 ### What plugins can do
 
@@ -53,16 +53,16 @@ AudioCaptureService
 
 ## Plugin Architecture
 
-### HushTypePlugin — the base protocol
+### VaulTypePlugin — the base protocol
 
-Every plugin must conform to `HushTypePlugin`. This protocol provides identity, versioning, and lifecycle hooks.
+Every plugin must conform to `VaulTypePlugin`. This protocol provides identity, versioning, and lifecycle hooks.
 
 ```swift
-protocol HushTypePlugin: AnyObject {
+protocol VaulTypePlugin: AnyObject {
     var identifier: String { get }        // reverse-DNS, e.g. "com.example.my-plugin"
     var displayName: String { get }       // shown in Settings → Plugins
     var version: String { get }           // semantic version of the plugin
-    var apiVersion: String { get }        // must match HushType API major version
+    var apiVersion: String { get }        // must match VaulType API major version
     var pluginDescription: String { get } // optional description
 
     func activate() throws               // called when the plugin is turned on
@@ -70,12 +70,12 @@ protocol HushTypePlugin: AnyObject {
 }
 ```
 
-Default implementations are provided for `apiVersion` (returns `kHushTypePluginAPIVersion`) and `pluginDescription` (returns `""`). You only need to override them if you have specific requirements.
+Default implementations are provided for `apiVersion` (returns `kVaulTypePluginAPIVersion`) and `pluginDescription` (returns `""`). You only need to override them if you have specific requirements.
 
 ### Plugin types
 
 ```
-HushTypePlugin (base)
+VaulTypePlugin (base)
 ├── ProcessingPlugin  — transforms text in the dictation pipeline
 └── CommandPlugin     — registers voice command patterns
 ```
@@ -98,7 +98,7 @@ If `activate()` throws, the plugin is marked as failed and stays inactive. If `d
 
 ### Version compatibility
 
-HushType checks the **major version** of `apiVersion`. A plugin declaring `apiVersion = "0.5.0"` is compatible with any HushType build whose `kHushTypePluginAPIVersion` starts with `0`. A plugin with major version `1` will be rejected by a host at `0.x`.
+VaulType checks the **major version** of `apiVersion`. A plugin declaring `apiVersion = "0.5.0"` is compatible with any VaulType build whose `kVaulTypePluginAPIVersion` starts with `0`. A plugin with major version `1` will be rejected by a host at `0.x`.
 
 ---
 
@@ -132,7 +132,7 @@ Use the plain Swift class name. If your class is inside a module, use the fully 
 
 ### Step 3 — Write the plugin class
 
-The principal class must be an `NSObject` subclass and conform to `HushTypePlugin`. Here is a minimal example:
+The principal class must be an `NSObject` subclass and conform to `VaulTypePlugin`. Here is a minimal example:
 
 ```swift
 import Foundation
@@ -140,7 +140,7 @@ import Foundation
 @objc(RemoveFillerWords)
 final class RemoveFillerWords: NSObject, ProcessingPlugin {
 
-    // MARK: - HushTypePlugin
+    // MARK: - VaulTypePlugin
 
     let identifier = "com.example.remove-filler-words"
     let displayName = "Remove Filler Words"
@@ -183,10 +183,10 @@ final class RemoveFillerWords: NSObject, ProcessingPlugin {
 Build the bundle target in Xcode. The output is a `.bundle` file. Copy it to:
 
 ```
-~/Library/Application Support/HushType/Plugins/RemoveFillerWords.bundle
+~/Library/Application Support/VaulType/Plugins/RemoveFillerWords.bundle
 ```
 
-Relaunch HushType (or use Settings → Plugins → Reload). Your plugin appears in the list. Toggle it on to activate it.
+Relaunch VaulType (or use Settings → Plugins → Reload). Your plugin appears in the list. Toggle it on to activate it.
 
 ---
 
@@ -197,7 +197,7 @@ Processing plugins transform text after Whisper transcription. They are chained 
 ### Protocol definition
 
 ```swift
-protocol ProcessingPlugin: HushTypePlugin {
+protocol ProcessingPlugin: VaulTypePlugin {
     func process(text: String, context: ProcessingContext) async throws -> String
     var applicableModes: Set<ProcessingMode> { get }
     var priority: Int { get }
@@ -235,7 +235,7 @@ Use `context` to tailor behavior — for example, applying a coding style only i
 
 ### Priority ordering
 
-Lower `priority` values run first. Built-in HushType processing runs at priority `0`. The default plugin priority is `100`. Use higher values to run after most other plugins, lower values to run before them.
+Lower `priority` values run first. Built-in VaulType processing runs at priority `0`. The default plugin priority is `100`. Use higher values to run after most other plugins, lower values to run before them.
 
 ```swift
 // Run before all other processing plugins
@@ -335,12 +335,12 @@ final class ConditionalFormatterPlugin: NSObject, ProcessingPlugin {
 
 ## CommandPlugin
 
-Command plugins register natural-language patterns. When a user speaks a phrase that matches one of your patterns, HushType calls your handler instead of injecting text.
+Command plugins register natural-language patterns. When a user speaks a phrase that matches one of your patterns, VaulType calls your handler instead of injecting text.
 
 ### Protocol definition
 
 ```swift
-protocol CommandPlugin: HushTypePlugin {
+protocol CommandPlugin: VaulTypePlugin {
     var commands: [PluginCommand] { get }
 }
 ```
@@ -450,7 +450,7 @@ final class ShellCommandPlugin: NSObject, CommandPlugin {
 
     func activate() throws {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let dir = home.appendingPathComponent("HushTypeScripts")
+        let dir = home.appendingPathComponent("VaulTypeScripts")
         // Create directory if needed
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         scriptsDirectory = dir
@@ -465,14 +465,14 @@ final class ShellCommandPlugin: NSObject, CommandPlugin {
             PluginCommand(
                 name: "run-build-script",
                 patterns: ["build project", "run build", "start build"],
-                description: "Run ~/HushTypeScripts/build.sh",
+                description: "Run ~/VaulTypeScripts/build.sh",
                 handler: { [weak self] _ in
                     guard let dir = self?.scriptsDirectory else {
                         return .failure("Plugin not activated")
                     }
                     let script = dir.appendingPathComponent("build.sh")
                     guard FileManager.default.fileExists(atPath: script.path) else {
-                        return .failure("build.sh not found in ~/HushTypeScripts/")
+                        return .failure("build.sh not found in ~/VaulTypeScripts/")
                     }
                     let process = Process()
                     process.executableURL = URL(fileURLWithPath: "/bin/sh")
@@ -546,7 +546,7 @@ Every plugin bundle requires a valid `Info.plist`. The minimum required keys are
 
 ### Versioning
 
-Use [Semantic Versioning](https://semver.org/) for both your plugin (`version` property / `CFBundleShortVersionString`) and your declared `apiVersion`. HushType validates only the **major** component of `apiVersion`. A plugin at API `0.5.0` and a HushType host at `0.9.0` are compatible. A plugin at API `1.0.0` is not compatible with a `0.x` host.
+Use [Semantic Versioning](https://semver.org/) for both your plugin (`version` property / `CFBundleShortVersionString`) and your declared `apiVersion`. VaulType validates only the **major** component of `apiVersion`. A plugin at API `0.5.0` and a VaulType host at `0.9.0` are compatible. A plugin at API `1.0.0` is not compatible with a `0.x` host.
 
 ---
 
@@ -557,13 +557,13 @@ Use [Semantic Versioning](https://semver.org/) for both your plugin (`version` p
 Place your `.bundle` file in:
 
 ```
-~/Library/Application Support/HushType/Plugins/
+~/Library/Application Support/VaulType/Plugins/
 ```
 
-HushType creates this directory automatically on first launch. You can also create it manually:
+VaulType creates this directory automatically on first launch. You can also create it manually:
 
 ```bash
-mkdir -p "$HOME/Library/Application Support/HushType/Plugins"
+mkdir -p "$HOME/Library/Application Support/VaulType/Plugins"
 ```
 
 ### Discovery rules
@@ -573,25 +573,25 @@ mkdir -p "$HOME/Library/Application Support/HushType/Plugins"
 1. Reads all entries in the Plugins directory.
 2. Filters for files with the `.bundle` extension.
 3. Loads each bundle, instantiates the principal class, and checks version compatibility.
-4. Skips bundles that fail to load (logged to Console.app under subsystem `com.hushtype.app`).
+4. Skips bundles that fail to load (logged to Console.app under subsystem `com.vaultype.app`).
 5. Rejects bundles with a duplicate `identifier` (only the first one found is loaded).
 
 ### Reloading without restarting
 
-HushType does not support hot-reload of plugins. To pick up changes to an existing plugin:
+VaulType does not support hot-reload of plugins. To pick up changes to an existing plugin:
 
-1. Quit HushType.
+1. Quit VaulType.
 2. Replace the `.bundle` file.
-3. Relaunch HushType.
+3. Relaunch VaulType.
 
 ### Per-user vs. system-wide installation
 
-Only the per-user directory (`~/Library/…`) is currently supported. System-wide installation (`/Library/Application Support/HushType/Plugins/`) is not scanned.
+Only the per-user directory (`~/Library/…`) is currently supported. System-wide installation (`/Library/Application Support/VaulType/Plugins/`) is not scanned.
 
 ### Uninstalling a plugin
 
 1. Deactivate the plugin in Settings → Plugins.
-2. Quit HushType.
+2. Quit VaulType.
 3. Delete the `.bundle` file from the Plugins directory.
 
 ---
@@ -600,7 +600,7 @@ Only the per-user directory (`~/Library/…`) is currently supported. System-wid
 
 ### Unit testing your plugin logic
 
-Because `ProcessingPlugin.process` and `CommandPlugin` handlers are plain Swift functions, you can unit test them directly without running HushType:
+Because `ProcessingPlugin.process` and `CommandPlugin` handlers are plain Swift functions, you can unit test them directly without running VaulType:
 
 ```swift
 import XCTest
@@ -661,22 +661,22 @@ final class PluginIntegrationTests: XCTestCase {
 ### Manual testing workflow
 
 1. Build your plugin bundle in Xcode (Product → Build, or `xcodebuild -scheme MyPlugin`).
-2. Copy the `.bundle` to `~/Library/Application Support/HushType/Plugins/`.
-3. Relaunch HushType.
+2. Copy the `.bundle` to `~/Library/Application Support/VaulType/Plugins/`.
+3. Relaunch VaulType.
 4. Open Settings → Plugins and verify your plugin appears in the list.
 5. Activate the plugin.
 6. Trigger a dictation and verify the output.
-7. Check Console.app for any error messages from subsystem `com.hushtype.app`.
+7. Check Console.app for any error messages from subsystem `com.vaultype.app`.
 
 ### Debugging
 
 Plugin errors are logged to the system log. To view them:
 
 ```bash
-log stream --predicate 'subsystem == "com.hushtype.app"' --level debug
+log stream --predicate 'subsystem == "com.vaultype.app"' --level debug
 ```
 
-Or open Console.app and filter by subsystem `com.hushtype.app`.
+Or open Console.app and filter by subsystem `com.vaultype.app`.
 
 ---
 
@@ -712,7 +712,7 @@ func process(text: String, context: ProcessingContext) async throws -> String {
 ### Error handling
 
 - Prefer returning the original text over throwing from `process`. Throwing causes the error to be logged, but the pipeline continues with the unchanged input. Throwing is appropriate only when the input is genuinely unusable.
-- In `activate()`, throw `PluginError.activationFailed` if a required resource cannot be set up (missing file, permission denied, etc.). HushType will mark the plugin as inactive.
+- In `activate()`, throw `PluginError.activationFailed` if a required resource cannot be set up (missing file, permission denied, etc.). VaulType will mark the plugin as inactive.
 - In command handlers, always return a `PluginCommandResult` — do not throw. Wrap any thrown errors:
 
 ```swift
@@ -744,14 +744,14 @@ func process(text: String, context: ProcessingContext) async throws -> String {
 
 ### Privacy considerations
 
-- HushType is privacy-first. Plugins run on-device. Do not exfiltrate transcribed text to remote servers without explicit user consent and clear disclosure.
+- VaulType is privacy-first. Plugins run on-device. Do not exfiltrate transcribed text to remote servers without explicit user consent and clear disclosure.
 - If your plugin makes network requests, document this clearly in `pluginDescription` and your plugin's own documentation.
 - Transcribed text may contain sensitive information. Avoid logging full transcriptions; log only diagnostic summaries.
 - Do not store transcriptions on disk without user knowledge.
 
 ### Resource cleanup
 
-Always pair resources created in `activate()` with cleanup in `deactivate()`. HushType calls `deactivate()` when the user disables the plugin, when a new plugin version is installed, and when the app quits.
+Always pair resources created in `activate()` with cleanup in `deactivate()`. VaulType calls `deactivate()` when the user disables the plugin, when a new plugin version is installed, and when the app quits.
 
 ```swift
 private var observation: NSObjectProtocol?
@@ -782,13 +782,13 @@ Use a reverse-DNS identifier that you control, e.g. `com.yourname.plugin-name`. 
 
 ## API Reference
 
-### HushTypePlugin
+### VaulTypePlugin
 
 ```swift
 /// Current plugin API version. Plugins must declare a compatible version.
-let kHushTypePluginAPIVersion = "0.5.0"
+let kVaulTypePluginAPIVersion = "0.5.0"
 
-protocol HushTypePlugin: AnyObject {
+protocol VaulTypePlugin: AnyObject {
     /// Reverse-DNS identifier unique to this plugin (e.g., "com.example.my-plugin").
     var identifier: String { get }
 
@@ -799,8 +799,8 @@ protocol HushTypePlugin: AnyObject {
     var version: String { get }
 
     /// Plugin API version this plugin was built against.
-    /// Must match `kHushTypePluginAPIVersion` major version to load.
-    /// Default implementation returns `kHushTypePluginAPIVersion`.
+    /// Must match `kVaulTypePluginAPIVersion` major version to load.
+    /// Default implementation returns `kVaulTypePluginAPIVersion`.
     var apiVersion: String { get }
 
     /// Optional description shown in the plugin manager.
@@ -820,7 +820,7 @@ protocol HushTypePlugin: AnyObject {
 ### ProcessingPlugin
 
 ```swift
-protocol ProcessingPlugin: HushTypePlugin {
+protocol ProcessingPlugin: VaulTypePlugin {
     /// Transform text in the dictation pipeline.
     /// - Parameters:
     ///   - text: Input text (raw transcription or output from previous plugin).
@@ -876,7 +876,7 @@ enum ProcessingMode: String, Codable, CaseIterable, Identifiable {
 ### CommandPlugin
 
 ```swift
-protocol CommandPlugin: HushTypePlugin {
+protocol CommandPlugin: VaulTypePlugin {
     /// The voice commands this plugin provides.
     var commands: [PluginCommand] { get }
 }
@@ -931,7 +931,7 @@ enum PluginError: LocalizedError {
     /// Plugin's deactivate() failed.
     case deactivationFailed(identifier: String, reason: String)
 
-    /// Plugin's apiVersion major component does not match HushType's.
+    /// Plugin's apiVersion major component does not match VaulType's.
     case incompatibleVersion(identifier: String, required: String, found: String)
 
     /// A plugin with this identifier is already registered.
@@ -948,7 +948,7 @@ enum PluginError: LocalizedError {
 @Observable
 final class PluginManager {
     /// All successfully loaded plugins (active and inactive).
-    private(set) var loadedPlugins: [any HushTypePlugin]
+    private(set) var loadedPlugins: [any VaulTypePlugin]
 
     /// Active processing plugins, sorted by priority (lower = runs first).
     private(set) var activeProcessingPlugins: [any ProcessingPlugin]
@@ -992,4 +992,4 @@ final class PluginManager {
 
 ---
 
-*HushType Plugin API v0.5.0 — for HushType v0.5.0-alpha and later.*
+*VaulType Plugin API v0.5.0 — for VaulType v0.5.0-alpha and later.*

@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Model Management
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
 > This document covers the complete model lifecycle: discovery, download, verification, storage, usage tracking, updates, and cleanup for both Whisper (STT) and LLM (text processing) models.
 
 ---
@@ -64,11 +64,11 @@ Last Updated: 2026-02-13
 
 ## 1. Model Types and Formats
 
-HushType uses two distinct families of ML models, each served by a dedicated inference engine. Understanding the format differences is essential for model management, storage, and compatibility.
+VaulType uses two distinct families of ML models, each served by a dedicated inference engine. Understanding the format differences is essential for model management, storage, and compatibility.
 
 ### 1.1 Whisper GGML Models (Speech-to-Text)
 
-Whisper models convert spoken audio into text. HushType uses the [whisper.cpp](https://github.com/ggerganov/whisper.cpp) inference engine, which requires models in the **GGML binary format**.
+Whisper models convert spoken audio into text. VaulType uses the [whisper.cpp](https://github.com/ggerganov/whisper.cpp) inference engine, which requires models in the **GGML binary format**.
 
 | Property | Details |
 |---|---|
@@ -85,11 +85,11 @@ Whisper models convert spoken audio into text. HushType uses the [whisper.cpp](h
 - **Multilingual models** (`*.bin`, without `.en`) — Support 99+ languages with automatic language detection. Slightly larger due to expanded vocabulary.
 - **Turbo variants** (`*-turbo.bin`) — Distilled versions that trade minimal accuracy for significantly faster inference. Ideal for real-time dictation.
 
-> ℹ️ **Info**: English-only models are recommended for most HushType users. They are smaller, faster, and more accurate for English transcription. Multilingual models are only necessary if you regularly dictate in non-English languages. See [SPEECH_RECOGNITION.md](SPEECH_RECOGNITION.md) for language-specific configuration.
+> ℹ️ **Info**: English-only models are recommended for most VaulType users. They are smaller, faster, and more accurate for English transcription. Multilingual models are only necessary if you regularly dictate in non-English languages. See [SPEECH_RECOGNITION.md](SPEECH_RECOGNITION.md) for language-specific configuration.
 
 ### 1.2 LLM GGUF Models (Text Processing)
 
-LLM models handle post-transcription text processing — grammar correction, formatting, summarization, and style transformation. HushType uses [llama.cpp](https://github.com/ggerganov/llama.cpp) as the inference engine, which requires models in the **GGUF format**.
+LLM models handle post-transcription text processing — grammar correction, formatting, summarization, and style transformation. VaulType uses [llama.cpp](https://github.com/ggerganov/llama.cpp) as the inference engine, which requires models in the **GGUF format**.
 
 | Property | Details |
 |---|---|
@@ -112,7 +112,7 @@ LLM models handle post-transcription text processing — grammar correction, for
 | `Q8_0` | 8-bit | Near-perfect | Slow | 1.0x | Maximum quality |
 | `F16` | 16-bit | Reference | Slowest | 2.0x | Benchmarking only |
 
-> 💡 **Tip**: For HushType's text post-processing tasks (grammar correction, formatting), `Q4_K_M` quantization provides the best balance of quality and performance. Text cleanup tasks are less sensitive to quantization than creative writing or complex reasoning.
+> 💡 **Tip**: For VaulType's text post-processing tasks (grammar correction, formatting), `Q4_K_M` quantization provides the best balance of quality and performance. Text cleanup tasks are less sensitive to quantization than creative writing or complex reasoning.
 
 ### 1.3 Format Differences and Compatibility
 
@@ -125,9 +125,9 @@ LLM models handle post-transcription text processing — grammar correction, for
 | **Extensibility** | Fixed structure | Key-value metadata, arbitrary extensions |
 | **Inference engine** | whisper.cpp only | llama.cpp, ollama, LM Studio, etc. |
 | **Memory mapping** | Supported | Supported |
-| **File sizes** | 75 MB - 3.1 GB | 1 GB - 8+ GB (for HushType's target models) |
+| **File sizes** | 75 MB - 3.1 GB | 1 GB - 8+ GB (for VaulType's target models) |
 
-> ⚠️ **Warning**: GGML and GGUF are **not interchangeable**. A GGUF file cannot be loaded by whisper.cpp, and a GGML file cannot be loaded by llama.cpp. HushType enforces this separation through the `ModelType` enum and separate storage directories.
+> ⚠️ **Warning**: GGML and GGUF are **not interchangeable**. A GGUF file cannot be loaded by whisper.cpp, and a GGML file cannot be loaded by llama.cpp. VaulType enforces this separation through the `ModelType` enum and separate storage directories.
 
 ---
 
@@ -138,7 +138,7 @@ LLM models handle post-transcription text processing — grammar correction, for
 All model files are stored under the macOS Application Support directory, organized by model type:
 
 ```
-~/Library/Application Support/HushType/
+~/Library/Application Support/VaulType/
 ├── Models/
 │   ├── whisper-models/              # Whisper GGML models for STT
 │   │   ├── ggml-tiny.en.bin         # 74 MB  — Bundled with app
@@ -156,8 +156,8 @@ All model files are stored under the macOS Application Support directory, organi
 │       ├── ggml-small.en.bin.part   # Partial download file
 │       └── ggml-small.en.bin.resume # URLSession resume data
 │
-├── HushType.store                   # SwiftData database
-└── HushType.store-shm               # SQLite shared memory
+├── VaulType.store                   # SwiftData database
+└── VaulType.store-shm               # SQLite shared memory
 ```
 
 > 🔒 **Security**: Model files are stored in the user's Application Support directory, which is protected by macOS sandbox (if enabled) and FileVault encryption. No model data is ever transmitted off-device after the initial download.
@@ -176,19 +176,19 @@ All model files are stored under the macOS Application Support directory, organi
 
 ### 2.3 Storage Path Resolution
 
-HushType constructs model file paths programmatically based on the `ModelType` and filename:
+VaulType constructs model file paths programmatically based on the `ModelType` and filename:
 
 ```swift
 import Foundation
 
 enum ModelStoragePaths {
-    /// Root directory for all HushType data.
+    /// Root directory for all VaulType data.
     static var applicationSupport: URL {
         FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first!
-        .appendingPathComponent("HushType", isDirectory: true)
+        .appendingPathComponent("VaulType", isDirectory: true)
     }
 
     /// Root directory for all model files.
@@ -334,7 +334,7 @@ final class ModelManager: ObservableObject {
     private let huggingFaceClient: HuggingFaceClient
 
     private let logger = Logger(
-        subsystem: "com.hushtype.app",
+        subsystem: "com.vaultype.app",
         category: "ModelManager"
     )
 
@@ -609,7 +609,7 @@ actor ModelDownloadManager: NSObject {
     }()
 
     private let logger = Logger(
-        subsystem: "com.hushtype.app",
+        subsystem: "com.vaultype.app",
         category: "ModelDownloadManager"
     )
 
@@ -637,7 +637,7 @@ actor ModelDownloadManager: NSObject {
                 } else {
                     var request = URLRequest(url: url)
                     request.setValue(
-                        "HushType/1.0 (macOS; privacy-first STT)",
+                        "VaulType/1.0 (macOS; privacy-first STT)",
                         forHTTPHeaderField: "User-Agent"
                     )
                     task = urlSession.downloadTask(with: request)
@@ -896,13 +896,13 @@ extension ModelDownloadManager {
 }
 ```
 
-> ℹ️ **Info**: `URLSession` resume data contains internal HTTP range headers and server tokens. Not all servers support resumption — Hugging Face Hub does support HTTP Range requests, so resume works reliably for all HushType model downloads.
+> ℹ️ **Info**: `URLSession` resume data contains internal HTTP range headers and server tokens. Not all servers support resumption — Hugging Face Hub does support HTTP Range requests, so resume works reliably for all VaulType model downloads.
 
 ---
 
 ## 6. Hugging Face Hub Integration
 
-HushType downloads models from Hugging Face Hub, the largest open-source model hosting platform. This section covers model discovery, URL construction, and metadata parsing.
+VaulType downloads models from Hugging Face Hub, the largest open-source model hosting platform. This section covers model discovery, URL construction, and metadata parsing.
 
 ### 6.1 API for Model Discovery
 
@@ -941,7 +941,7 @@ actor HuggingFaceClient {
     private let urlSession: URLSession
 
     private let logger = Logger(
-        subsystem: "com.hushtype.app",
+        subsystem: "com.vaultype.app",
         category: "HuggingFaceClient"
     )
 
@@ -951,7 +951,7 @@ actor HuggingFaceClient {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 15
         config.httpAdditionalHeaders = [
-            "User-Agent": "HushType/1.0 (macOS; privacy-first STT)"
+            "User-Agent": "VaulType/1.0 (macOS; privacy-first STT)"
         ]
         self.urlSession = URLSession(configuration: config)
     }
@@ -1061,14 +1061,14 @@ bartowski/Qwen2.5-3B-Instruct-GGUF/
 ├── config.json
 ├── Qwen2.5-3B-Instruct-Q2_K.gguf
 ├── Qwen2.5-3B-Instruct-Q3_K_M.gguf
-├── Qwen2.5-3B-Instruct-Q4_K_M.gguf      ← HushType default
+├── Qwen2.5-3B-Instruct-Q4_K_M.gguf      ← VaulType default
 ├── Qwen2.5-3B-Instruct-Q5_K_M.gguf
 ├── Qwen2.5-3B-Instruct-Q6_K.gguf
 ├── Qwen2.5-3B-Instruct-Q8_0.gguf
 └── Qwen2.5-3B-Instruct-f16.gguf
 ```
 
-> 🔒 **Security**: HushType only downloads from `huggingface.co` URLs. It validates the hostname before initiating any download. The download manager rejects redirects to other domains to prevent model supply-chain attacks. See [SECURITY.md](../security/SECURITY.md) for the full threat model.
+> 🔒 **Security**: VaulType only downloads from `huggingface.co` URLs. It validates the hostname before initiating any download. The download manager rejects redirects to other domains to prevent model supply-chain attacks. See [SECURITY.md](../security/SECURITY.md) for the full threat model.
 
 ### 6.3 URL Construction and Metadata Parsing
 
@@ -1123,7 +1123,7 @@ extension HuggingFaceClient {
 
 ### 6.4 Recommended Repositories
 
-HushType maintains a curated list of recommended model repositories:
+VaulType maintains a curated list of recommended model repositories:
 
 **Whisper Models:**
 
@@ -1141,7 +1141,7 @@ HushType maintains a curated list of recommended model repositories:
 | `bartowski/gemma-2-2b-it-GGUF` | Gemma 2 2B IT | Smallest viable model, low RAM |
 
 ```swift
-/// Curated list of recommended model sources for HushType.
+/// Curated list of recommended model sources for VaulType.
 enum RecommendedModels {
     struct RecommendedRepo {
         let repoId: String
@@ -1215,7 +1215,7 @@ enum RecommendedModels {
 }
 ```
 
-> ⚠️ **Warning**: These repository URLs point to third-party hosted content on Hugging Face. While the models are open-weight, HushType verifies SHA256 checksums after every download to ensure file integrity. See [Section 7](#7-model-verification) for the verification process.
+> ⚠️ **Warning**: These repository URLs point to third-party hosted content on Hugging Face. While the models are open-weight, VaulType verifies SHA256 checksums after every download to ensure file integrity. See [Section 7](#7-model-verification) for the verification process.
 
 ---
 
@@ -1233,7 +1233,7 @@ import os.log
 /// Verifies the integrity of downloaded model files.
 struct ModelVerifier {
     private let logger = Logger(
-        subsystem: "com.hushtype.app",
+        subsystem: "com.vaultype.app",
         category: "ModelVerifier"
     )
 
@@ -1394,7 +1394,7 @@ enum FileIntegrityResult {
 
 ### 7.2 File Integrity Checks
 
-HushType performs integrity checks at three points in the model lifecycle:
+VaulType performs integrity checks at three points in the model lifecycle:
 
 | Check Point | What Is Verified | Action on Failure |
 |---|---|---|
@@ -1591,7 +1591,7 @@ Performance benchmarks measured on Apple Silicon Macs using 30-second audio clip
 | Multilingual dictation | **Large v3 Turbo** | Only multilingual option with turbo speed |
 | Batch transcription (offline) | **Medium (EN)** | Highest English accuracy without turbo trade-offs |
 
-> ✅ **Default**: HushType ships with **Whisper Tiny (EN)** bundled in the app and downloads **Whisper Base (EN)** during first-run setup. See [Section 11](#11-bundled-vs-downloadable-models-strategy) for the full bundling strategy.
+> ✅ **Default**: VaulType ships with **Whisper Tiny (EN)** bundled in the app and downloads **Whisper Base (EN)** during first-run setup. See [Section 11](#11-bundled-vs-downloadable-models-strategy) for the full bundling strategy.
 
 ### 8.2 LLM Model Comparison
 
@@ -1604,7 +1604,7 @@ Performance benchmarks for text post-processing tasks (grammar correction, forma
 | **Qwen 2.5 3B** | 1.9 GB | 1.9 GB | ~2.6 GB | ~38 tok/s | ~25 tok/s | **Excellent** | Text cleanup, multilingual |
 | **Phi 3.5 Mini 3.8B** | 2.2 GB | 2.2 GB | ~3.0 GB | ~32 tok/s | ~20 tok/s | **Excellent** | Instruction following |
 
-> ℹ️ **Info**: For HushType's text processing tasks (grammar correction, punctuation, formatting), even the "Good" quality rating produces results that are virtually indistinguishable from higher-rated models. The differences become noticeable primarily in creative writing or complex reasoning tasks, which are not part of HushType's scope. See [LLM_PROCESSING.md](LLM_PROCESSING.md) for prompt engineering and processing mode details.
+> ℹ️ **Info**: For VaulType's text processing tasks (grammar correction, punctuation, formatting), even the "Good" quality rating produces results that are virtually indistinguishable from higher-rated models. The differences become noticeable primarily in creative writing or complex reasoning tasks, which are not part of VaulType's scope. See [LLM_PROCESSING.md](LLM_PROCESSING.md) for prompt engineering and processing mode details.
 
 **Recommended LLM models by use case:**
 
@@ -1627,7 +1627,7 @@ Total RAM usage is the sum of Whisper + LLM models loaded simultaneously, plus t
 | **32+ GB RAM** (M2 Max/Ultra) | Large v3 Turbo | Phi 3.5 Mini | ~4.8 GB | ✅ Yes, ample room |
 | **Intel Mac** (any) | Tiny or Base (EN) | Gemma 2 2B | ~2.3 GB | ⚠️ Slower inference, CPU only |
 
-> ⚠️ **Warning**: Intel Macs lack Metal GPU acceleration for ML inference. whisper.cpp and llama.cpp will fall back to CPU-only mode, resulting in approximately 3-5x slower inference compared to Apple Silicon. HushType is functional on Intel but the experience is significantly degraded for larger models.
+> ⚠️ **Warning**: Intel Macs lack Metal GPU acceleration for ML inference. whisper.cpp and llama.cpp will fall back to CPU-only mode, resulting in approximately 3-5x slower inference compared to Apple Silicon. VaulType is functional on Intel but the experience is significantly degraded for larger models.
 
 ---
 
@@ -1879,7 +1879,7 @@ struct CleanupReport {
 
 ### 10.1 Checking for Newer Versions
 
-HushType periodically checks for updated model files by comparing local file metadata against Hugging Face repository metadata. Checks are performed at most once per day and only when the Mac is connected to the internet.
+VaulType periodically checks for updated model files by comparing local file metadata against Hugging Face repository metadata. Checks are performed at most once per day and only when the Mac is connected to the internet.
 
 ```swift
 extension ModelManager {
@@ -2043,7 +2043,7 @@ extension ModelManager {
 }
 ```
 
-> ℹ️ **Info**: Model updates are never applied automatically. HushType notifies the user that an update is available and allows them to choose when to download it. This respects the user's bandwidth and disk space constraints. The update check itself is a lightweight metadata-only API call (no model data is transferred).
+> ℹ️ **Info**: Model updates are never applied automatically. VaulType notifies the user that an update is available and allows them to choose when to download it. This respects the user's bandwidth and disk space constraints. The update check itself is a lightweight metadata-only API call (no model data is transferred).
 
 ---
 
@@ -2051,7 +2051,7 @@ extension ModelManager {
 
 ### 11.1 Bundled Model Selection
 
-HushType ships with a single bundled model to ensure the app is functional immediately after installation, even without an internet connection.
+VaulType ships with a single bundled model to ensure the app is functional immediately after installation, even without an internet connection.
 
 | Decision | Choice | Rationale |
 |---|---|---|
@@ -2115,7 +2115,7 @@ enum BundledModels {
 
 ### 11.2 First-Run Experience
 
-On first launch, HushType guides the user through an onboarding flow that includes model setup:
+On first launch, VaulType guides the user through an onboarding flow that includes model setup:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -2221,7 +2221,7 @@ final class FirstRunModelSetup: ObservableObject {
 
 ### 11.3 Recommended Model Sets
 
-HushType offers three pre-defined model configurations based on the user's hardware and preferences:
+VaulType offers three pre-defined model configurations based on the user's hardware and preferences:
 
 | Configuration | STT Model | LLM Model | Total Size | Target Hardware |
 |---|---|---|---|---|
@@ -2957,4 +2957,4 @@ struct CleanupSheetView: View {
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/vaultype).*

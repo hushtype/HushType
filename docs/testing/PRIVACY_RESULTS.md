@@ -1,10 +1,10 @@
-# HushType Privacy Verification Protocol
+# VaulType Privacy Verification Protocol
 
 ## Overview
 
 ### Purpose
 
-This document defines a reproducible test protocol for verifying HushType's core privacy claim: **all speech-to-text transcription, LLM post-processing, voice command execution, and text injection happen 100% on-device with zero outbound network connections.**
+This document defines a reproducible test protocol for verifying VaulType's core privacy claim: **all speech-to-text transcription, LLM post-processing, voice command execution, and text injection happen 100% on-device with zero outbound network connections.**
 
 The protocol is designed to be run before each release and by any contributor who modifies the audio pipeline, model inference code, or any service that touches user speech or transcribed text.
 
@@ -19,14 +19,14 @@ The protocol is designed to be run before each release and by any contributor wh
 
 ### Privacy Architecture Summary
 
-HushType uses two local C libraries bridged into Swift:
+VaulType uses two local C libraries bridged into Swift:
 
-- **whisper.cpp** (`HushType/Services/Speech/WhisperContext.swift`) — performs speech-to-text inference entirely in-process using loaded GGUF/GGML model files
-- **llama.cpp** (`HushType/Services/LLM/LlamaContext.swift`) — performs LLM text post-processing entirely in-process using loaded GGUF model files
+- **whisper.cpp** (`VaulType/Services/Speech/WhisperContext.swift`) — performs speech-to-text inference entirely in-process using loaded GGUF/GGML model files
+- **llama.cpp** (`VaulType/Services/LLM/LlamaContext.swift`) — performs LLM text post-processing entirely in-process using loaded GGUF model files
 
 Neither library opens network sockets. Both operate exclusively on memory buffers and local files.
 
-The entitlements file (`HushType/HushType.entitlements`) grants the following capabilities:
+The entitlements file (`VaulType/VaulType.entitlements`) grants the following capabilities:
 
 - `com.apple.security.device.audio-input` — microphone access
 - `com.apple.security.device.gpu` — Metal GPU acceleration
@@ -41,14 +41,14 @@ Notably absent: `com.apple.security.network.client` and `com.apple.security.netw
 
 ## Expected Network Connections
 
-The following network connections are explicitly expected and must be the **only** connections HushType ever makes. Any connection not on this list is a privacy violation.
+The following network connections are explicitly expected and must be the **only** connections VaulType ever makes. Any connection not on this list is a privacy violation.
 
 | Connection | Host | Trigger | Frequency | User-Initiated |
 |---|---|---|---|---|
 | Model file download | `huggingface.co` | User taps Download in Settings → Models | On demand only | Yes |
 | Model file download (mirror) | Mirror URLs defined in model manifest | Fallback if primary fails | On demand only | Yes |
-| Model registry manifest | `raw.githubusercontent.com` (repo: `hushtype/HushType`, path: `registry/models.json`) | App launch (once per `Constants.Registry.refreshIntervalSeconds`) | Periodic, configurable | No (background) |
-| Sparkle update check | `harungungorer.github.io` (path: `/HushType/appcast.xml`) | Configured by `SUEnableAutomaticChecks` in `Info.plist` | Periodic (Sparkle default: 24 hours) | No (background) |
+| Model registry manifest | `raw.githubusercontent.com` (repo: `vaultype/VaulType`, path: `registry/models.json`) | App launch (once per `Constants.Registry.refreshIntervalSeconds`) | Periodic, configurable | No (background) |
+| Sparkle update check | `harungungorer.github.io` (path: `/VaulType/appcast.xml`) | Configured by `SUEnableAutomaticChecks` in `Info.plist` | Periodic (Sparkle default: 24 hours) | No (background) |
 | Sparkle delta/release download | GitHub Releases CDN | User approves an update | On demand only | Yes |
 
 ### Connections That Must Never Occur
@@ -66,28 +66,28 @@ The following network connections are explicitly expected and must be the **only
 ### Prerequisites
 
 - macOS 14.0 or later (Sonoma)
-- HushType built in Debug or Release configuration
+- VaulType built in Debug or Release configuration
 - At least one whisper model downloaded and loaded
 - At least one LLM model downloaded and loaded (for LLM processing tests)
 - Terminal access with administrator privileges (for `tcpdump`)
 
 ### Option A: nettop (Recommended for Quick Checks)
 
-`nettop` provides a live, process-filtered view of network activity. Run it in a dedicated terminal window before launching HushType.
+`nettop` provides a live, process-filtered view of network activity. Run it in a dedicated terminal window before launching VaulType.
 
 ```bash
-# Monitor HushType network connections in real time.
-# Replace PID with the actual HushType process ID after launch.
+# Monitor VaulType network connections in real time.
+# Replace PID with the actual VaulType process ID after launch.
 sudo nettop -p <PID> -m tcp -d
 
 # Or filter by process name (requires nettop 1.6+, macOS 14+):
-sudo nettop -n HushType -m tcp
+sudo nettop -n VaulType -m tcp
 ```
 
 To find the PID after launch:
 
 ```bash
-pgrep -x HushType
+pgrep -x VaulType
 ```
 
 **Reading nettop output:** Each row is a connection. Columns show bytes in/out, state, and remote host. During core dictation, the list must be empty or show only loopback (127.0.0.1) entries.
@@ -97,30 +97,30 @@ pgrep -x HushType
 `tcpdump` captures all packets at the network interface level, producing evidence suitable for audit.
 
 ```bash
-# Capture all traffic from HushType to a pcap file.
-# Run this before launching HushType.
-sudo tcpdump -i en0 -w /tmp/hushtype-capture.pcap &
+# Capture all traffic from VaulType to a pcap file.
+# Run this before launching VaulType.
+sudo tcpdump -i en0 -w /tmp/vaultype-capture.pcap &
 TCPDUMP_PID=$!
 
 # ... run test scenario ...
 
 # Stop capture and inspect.
 kill $TCPDUMP_PID
-tcpdump -r /tmp/hushtype-capture.pcap -nn | grep -v "127.0.0.1"
+tcpdump -r /tmp/vaultype-capture.pcap -nn | grep -v "127.0.0.1"
 ```
 
 To filter by PID (requires macOS tcpdump with -E flag or `nettop` instead):
 
 ```bash
-# List sockets owned by HushType:
-lsof -i -n -P -p $(pgrep -x HushType)
+# List sockets owned by VaulType:
+lsof -i -n -P -p $(pgrep -x VaulType)
 ```
 
 ### Option C: Little Snitch or Lulu (Recommended for Extended Monitoring)
 
 For extended monitoring sessions or privacy audits, a third-party firewall provides the most comprehensive visibility:
 
-- **Little Snitch** (paid): Rules-based firewall with per-process network logging. Create a "monitor-only" rule for HushType and inspect the connection log.
+- **Little Snitch** (paid): Rules-based firewall with per-process network logging. Create a "monitor-only" rule for VaulType and inspect the connection log.
 - **Lulu** (free, open source): Block-by-default firewall. Any unexpected connection attempt triggers a user alert.
 
 Both tools can export connection logs for audit purposes.
@@ -143,11 +143,11 @@ networksetup -setairportpower en0 on
 
 ## Monitoring Script
 
-Save this script as `scripts/monitor-privacy.sh` and run it alongside any test scenario. It polls active HushType connections every 2 seconds and logs any non-loopback entries.
+Save this script as `scripts/monitor-privacy.sh` and run it alongside any test scenario. It polls active VaulType connections every 2 seconds and logs any non-loopback entries.
 
 ```bash
 #!/usr/bin/env bash
-# monitor-privacy.sh — Log all HushType network connections to stdout and a file.
+# monitor-privacy.sh — Log all VaulType network connections to stdout and a file.
 # Usage: ./scripts/monitor-privacy.sh [output_file]
 #
 # Run this in a separate terminal while executing test scenarios.
@@ -156,26 +156,26 @@ Save this script as `scripts/monitor-privacy.sh` and run it alongside any test s
 
 set -euo pipefail
 
-OUTPUT_FILE="${1:-/tmp/hushtype-privacy-$(date +%Y%m%d-%H%M%S).log}"
+OUTPUT_FILE="${1:-/tmp/vaultype-privacy-$(date +%Y%m%d-%H%M%S).log}"
 POLL_INTERVAL=2
 
-echo "HushType Privacy Monitor"
+echo "VaulType Privacy Monitor"
 echo "Output: $OUTPUT_FILE"
 echo "Started: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo "---"
 
 {
-  echo "# HushType Privacy Monitor Log"
+  echo "# VaulType Privacy Monitor Log"
   echo "# Started: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "# Format: TIMESTAMP | PID | PROTO | LOCAL_ADDR | REMOTE_ADDR | STATE"
   echo ""
 } > "$OUTPUT_FILE"
 
 while true; do
-  PID=$(pgrep -x HushType 2>/dev/null || true)
+  PID=$(pgrep -x VaulType 2>/dev/null || true)
 
   if [ -z "$PID" ]; then
-    echo "[$(date +%H:%M:%S)] HushType not running — waiting..."
+    echo "[$(date +%H:%M:%S)] VaulType not running — waiting..."
     sleep "$POLL_INTERVAL"
     continue
   fi
@@ -209,7 +209,7 @@ chmod +x scripts/monitor-privacy.sh
 Run it before each test scenario:
 
 ```bash
-./scripts/monitor-privacy.sh /tmp/hushtype-test-$(date +%Y%m%d).log
+./scripts/monitor-privacy.sh /tmp/vaultype-test-$(date +%Y%m%d).log
 ```
 
 ---
@@ -228,7 +228,7 @@ Each scenario includes: setup steps, monitoring commands, expected result, and a
 1. Disable WiFi: `networksetup -setairportpower en0 off`
 2. Disconnect Ethernet if present.
 3. Start the monitoring script in a separate terminal.
-4. Launch HushType. Confirm the menu bar icon appears.
+4. Launch VaulType. Confirm the menu bar icon appears.
 5. Confirm a whisper model is loaded (Settings → Models shows a model with a checkmark).
 
 **Steps:**
@@ -239,7 +239,7 @@ Each scenario includes: setup steps, monitoring commands, expected result, and a
 **Monitoring command:**
 ```bash
 # After the 5 dictations, inspect lsof output:
-lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
+lsof -i -n -P -p $(pgrep -x VaulType) | grep -v "127.0.0.1"
 
 # Expected output: empty (no entries)
 ```
@@ -248,7 +248,7 @@ lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
 - All 5 dictations complete successfully.
 - Transcribed text is injected into the target application.
 - `lsof` output is empty (no active sockets).
-- Console.app shows no network-related errors (filter by process: HushType).
+- Console.app shows no network-related errors (filter by process: VaulType).
 - The monitoring script log contains no entries.
 
 **Pass Criteria:**
@@ -281,7 +281,7 @@ lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
 **Monitoring command:**
 ```bash
 # After all 6 modes tested:
-lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
+lsof -i -n -P -p $(pgrep -x VaulType) | grep -v "127.0.0.1"
 ```
 
 **Expected Result:**
@@ -310,17 +310,17 @@ lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
 Execute at least 5 of the following command categories:
 
 ```
-"hey hushtype open safari"              # App management
-"hey hushtype switch to finder"         # App switching
-"hey hushtype maximize window"          # Window management
-"hey hushtype set volume to 50"         # System control (AppleScript)
-"hey hushtype new tab"                  # Workflow shortcut
-"hey hushtype type hello world"         # Direct injection
+"hey vaultype open safari"              # App management
+"hey vaultype switch to finder"         # App switching
+"hey vaultype maximize window"          # Window management
+"hey vaultype set volume to 50"         # System control (AppleScript)
+"hey vaultype new tab"                  # Workflow shortcut
+"hey vaultype type hello world"         # Direct injection
 ```
 
 **Monitoring command:**
 ```bash
-lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
+lsof -i -n -P -p $(pgrep -x VaulType) | grep -v "127.0.0.1"
 ```
 
 **Expected Result:**
@@ -337,28 +337,28 @@ lsof -i -n -P -p $(pgrep -x HushType) | grep -v "127.0.0.1"
 
 ### Scenario 4: Application Startup — No Network
 
-**Purpose:** Verify that HushType starts cleanly and reaches a fully operational state with no network available.
+**Purpose:** Verify that VaulType starts cleanly and reaches a fully operational state with no network available.
 
 **Setup:**
 1. Disable WiFi before launching the app.
-2. Quit HushType if already running.
+2. Quit VaulType if already running.
 3. Start `tcpdump` capture.
 
 **Steps:**
-1. Launch HushType.
+1. Launch VaulType.
 2. Wait 30 seconds for all startup services to initialize.
 3. Confirm the menu bar icon is visible and interactive.
 4. Open Settings and confirm all tabs render without loading spinners or errors.
-5. Quit HushType normally.
+5. Quit VaulType normally.
 
 **Monitoring command:**
 ```bash
 # Start capture before launch:
-sudo tcpdump -i en0 -w /tmp/hushtype-startup.pcap &
+sudo tcpdump -i en0 -w /tmp/vaultype-startup.pcap &
 
 # After quit:
 kill %1
-tcpdump -r /tmp/hushtype-startup.pcap -nn | grep -v "127.0.0.1"
+tcpdump -r /tmp/vaultype-startup.pcap -nn | grep -v "127.0.0.1"
 ```
 
 **Expected Result:**
@@ -389,7 +389,7 @@ tcpdump -r /tmp/hushtype-startup.pcap -nn | grep -v "127.0.0.1"
 **Steps:**
 1. Start the packet capture:
    ```bash
-   sudo tcpdump -i en0 -w /tmp/hushtype-download.pcap &
+   sudo tcpdump -i en0 -w /tmp/vaultype-download.pcap &
    ```
 2. Initiate a model download from Settings → Models.
 3. Wait for the download to complete (progress bar reaches 100%).
@@ -401,12 +401,12 @@ tcpdump -r /tmp/hushtype-startup.pcap -nn | grep -v "127.0.0.1"
 kill %1
 
 # Extract unique remote hosts contacted:
-tcpdump -r /tmp/hushtype-download.pcap -nn \
+tcpdump -r /tmp/vaultype-download.pcap -nn \
   | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' \
   | sort -u
 
 # Resolve those IPs to hostnames:
-tcpdump -r /tmp/hushtype-download.pcap -n \
+tcpdump -r /tmp/vaultype-download.pcap -n \
   | awk '{print $3}' \
   | sort -u
 ```
@@ -439,7 +439,7 @@ tcpdump -r /tmp/hushtype-download.pcap -n \
 `Info.plist` declares:
 ```xml
 <key>SUFeedURL</key>
-<string>https://harungungorer.github.io/HushType/appcast.xml</string>
+<string>https://harungungorer.github.io/VaulType/appcast.xml</string>
 <key>SUEnableAutomaticChecks</key>
 <true/>
 ```
@@ -450,10 +450,10 @@ Sparkle checks this URL periodically (default interval: 24 hours). The check mus
 1. Enable WiFi.
 2. Reset Sparkle's last-check timestamp to force an immediate check:
    ```bash
-   defaults delete com.hushtype.app SULastCheckTime 2>/dev/null || true
+   defaults delete com.vaultype.app SULastCheckTime 2>/dev/null || true
    ```
 3. Start `tcpdump` or the monitoring script.
-4. Quit and relaunch HushType.
+4. Quit and relaunch VaulType.
 
 **Monitoring command:**
 ```bash
@@ -465,8 +465,8 @@ tcpdump -r /tmp/sparkle-check.pcap -A | grep -E "Host:|GET |User-Agent:"
 ```
 
 **Expected Result:**
-- One HTTPS GET request to `harungungorer.github.io/HushType/appcast.xml`
-- Standard Sparkle user-agent (contains `HushType/` and macOS version)
+- One HTTPS GET request to `harungungorer.github.io/VaulType/appcast.xml`
+- Standard Sparkle user-agent (contains `VaulType/` and macOS version)
 - No request body (GET request carries no audio or text payload)
 - No connections to any host other than `harungungorer.github.io` and its CDN
 
@@ -480,10 +480,10 @@ tcpdump -r /tmp/sparkle-check.pcap -A | grep -E "Host:|GET |User-Agent:"
 
 ### Scenario 7: DNS Leak Check
 
-**Purpose:** Verify that HushType does not trigger unexpected DNS queries that could reveal user behavior to DNS resolvers.
+**Purpose:** Verify that VaulType does not trigger unexpected DNS queries that could reveal user behavior to DNS resolvers.
 
 **Background:**
-Even if TCP connections are blocked or fail, DNS queries for unexpected hostnames indicate that HushType is attempting connections to undeclared hosts. DNS queries are a common privacy leak vector.
+Even if TCP connections are blocked or fail, DNS queries for unexpected hostnames indicate that VaulType is attempting connections to undeclared hosts. DNS queries are a common privacy leak vector.
 
 **Setup:**
 1. Enable WiFi.
@@ -492,10 +492,10 @@ Even if TCP connections are blocked or fail, DNS queries for unexpected hostname
 **Monitoring command:**
 ```bash
 # Capture all DNS queries from the machine during the test:
-sudo tcpdump -i en0 -n port 53 -w /tmp/hushtype-dns.pcap &
+sudo tcpdump -i en0 -n port 53 -w /tmp/vaultype-dns.pcap &
 DNS_PID=$!
 
-# Use HushType normally for 10 minutes:
+# Use VaulType normally for 10 minutes:
 # - 3 dictations
 # - 2 LLM processing sessions
 # - 3 voice commands
@@ -504,7 +504,7 @@ DNS_PID=$!
 kill $DNS_PID
 
 # Extract queried hostnames:
-tcpdump -r /tmp/hushtype-dns.pcap -vv \
+tcpdump -r /tmp/vaultype-dns.pcap -vv \
   | grep -oE '"[^"]+"' \
   | sort -u
 ```
@@ -538,13 +538,13 @@ Any hostname not in the allowed list above, especially:
 **Setup:**
 1. Disable WiFi.
 2. Start the monitoring script with output to a timestamped log file.
-3. Start Console.app filtered to process "HushType".
+3. Start Console.app filtered to process "VaulType".
 
 **Steps (30-minute session):**
 
 | Time | Activity |
 |---|---|
-| 0:00 | Launch HushType |
+| 0:00 | Launch VaulType |
 | 0:01 | Perform 3 dictations in Raw mode |
 | 0:05 | Switch to Clean mode, perform 3 dictations |
 | 0:10 | Switch to Code mode, perform 2 dictations |
@@ -553,7 +553,7 @@ Any hostname not in the allowed list above, especially:
 | 0:22 | Perform 3 more dictations while reviewing history tab |
 | 0:25 | Leave app idle (no input) |
 | 0:28 | Perform 2 final dictations |
-| 0:30 | Quit HushType |
+| 0:30 | Quit VaulType |
 
 **Pass Criteria:**
 - [ ] All dictations complete without error across the session
@@ -570,7 +570,7 @@ The privacy verification protocol **passes** when all of the following are true:
 
 ### Mandatory Pass Conditions
 
-1. **Zero unexpected outbound connections** — During any scenario that does not explicitly test model downloads or Sparkle, `lsof` and `tcpdump` show no non-loopback connections from HushType.
+1. **Zero unexpected outbound connections** — During any scenario that does not explicitly test model downloads or Sparkle, `lsof` and `tcpdump` show no non-loopback connections from VaulType.
 
 2. **Core pipeline is fully offline** — Scenarios 1, 2, and 3 (dictation, LLM processing, voice commands) pass 100% with WiFi disabled.
 
@@ -588,7 +588,7 @@ The privacy verification protocol **passes** when all of the following are true:
 
 Any of the following constitutes an automatic failure of the entire protocol:
 
-- A connection from HushType to any host carrying audio or transcribed text
+- A connection from VaulType to any host carrying audio or transcribed text
 - A connection to any LLM cloud API (`openai.com`, `anthropic.com`, `cohere.ai`, etc.)
 - A connection to any analytics, telemetry, or crash-reporting service
 - The app crashing or hanging when network is unavailable
@@ -606,7 +606,7 @@ Copy this table for each test run. Fill in all fields.
 |---|---|
 | Date | |
 | Tester | |
-| HushType Version | |
+| VaulType Version | |
 | macOS Version | |
 | Hardware | (e.g., MacBook Pro M3, 16GB) |
 | Whisper Model Loaded | |

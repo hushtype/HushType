@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Database Schema & Local Persistence
 
-> Complete specification of HushType's local data persistence layer — SwiftData models, UserDefaults keys, Keychain items, migration strategy, and data lifecycle management.
+> Complete specification of VaulType's local data persistence layer — SwiftData models, UserDefaults keys, Keychain items, migration strategy, and data lifecycle management.
 
 ## Table of Contents
 
@@ -28,11 +28,11 @@ Last Updated: 2026-02-13
 
 ## Storage Architecture Overview
 
-HushType uses a three-tier local storage architecture. Every byte of user data remains on-device — there are no network calls, no cloud sync, and no telemetry of any kind.
+VaulType uses a three-tier local storage architecture. Every byte of user data remains on-device — there are no network calls, no cloud sync, and no telemetry of any kind.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        HushType Application                        │
+│                        VaulType Application                        │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -54,8 +54,8 @@ HushType uses a three-tier local storage architecture. Every byte of user data r
 │  │  │ & config     │  │ download state│  │ (global/per-app) │   │  │
 │  │  └──────────────┘  └───────────────┘  └──────────────────┘   │  │
 │  │                                                               │  │
-│  │  Location: ~/Library/Application Support/HushType/            │  │
-│  │  File:     HushType.store (SQLite)                            │  │
+│  │  Location: ~/Library/Application Support/VaulType/            │  │
+│  │  File:     VaulType.store (SQLite)                            │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                     │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -66,7 +66,7 @@ HushType uses a three-tier local storage architecture. Every byte of user data r
 │  │  • UI preferences          • Cache timestamps                │  │
 │  │                                                               │  │
 │  │  Location: ~/Library/Preferences/                             │  │
-│  │  File:     com.hushtype.app.plist                             │  │
+│  │  File:     com.vaultype.app.plist                             │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                     │
 │  ┌───────────────────────────────────────────────────────────────┐  │
@@ -105,7 +105,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct HushTypeApp: App {
+struct VaulTypeApp: App {
     let modelContainer: ModelContainer
 
     init() {
@@ -119,7 +119,7 @@ struct HushTypeApp: App {
         ])
 
         let configuration = ModelConfiguration(
-            "HushType",
+            "VaulType",
             schema: schema,
             isStoredInMemoryOnly: false,
             allowsSave: true
@@ -128,7 +128,7 @@ struct HushTypeApp: App {
         do {
             modelContainer = try ModelContainer(
                 for: schema,
-                migrationPlan: HushTypeMigrationPlan.self,
+                migrationPlan: VaulTypeMigrationPlan.self,
                 configurations: [configuration]
             )
         } catch {
@@ -137,7 +137,7 @@ struct HushTypeApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: "mic.fill") {
+        MenuBarExtra("VaulType", systemImage: "mic.fill") {
             MenuBarView()
         }
         .modelContainer(modelContainer)
@@ -218,7 +218,7 @@ enum ProcessingMode: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - Model Type
 
-/// Categorizes ML models used by HushType.
+/// Categorizes ML models used by VaulType.
 enum ModelType: String, Codable, CaseIterable, Identifiable {
     /// Whisper speech-to-text model (whisper.cpp compatible).
     case whisper
@@ -631,7 +631,7 @@ extension PromptTemplate {
 
 ### AppProfile
 
-Per-application configuration that allows HushType to behave differently depending on which app is focused.
+Per-application configuration that allows VaulType to behave differently depending on which app is focused.
 
 ```swift
 import Foundation
@@ -717,7 +717,7 @@ final class AppProfile {
 | `isEnabled` | `Bool` | Yes | `true` | Profile active flag |
 | `vocabularyEntries` | `[VocabularyEntry]` | Yes | `[]` | Related vocabulary entries (cascade delete) |
 
-> 🍎 **macOS-specific**: The `bundleIdentifier` is obtained at runtime from `NSWorkspace.shared.frontmostApplication?.bundleIdentifier`. HushType auto-creates AppProfile records the first time a user dictates into an unrecognized application, populating `appName` from the running app's `localizedName`.
+> 🍎 **macOS-specific**: The `bundleIdentifier` is obtained at runtime from `NSWorkspace.shared.frontmostApplication?.bundleIdentifier`. VaulType auto-creates AppProfile records the first time a user dictates into an unrecognized application, populating `appName` from the running app's `localizedName`.
 
 ```swift
 // Example: Auto-create profile for the current app
@@ -862,7 +862,7 @@ let globalEntries: [VocabularyEntry] = [
     VocabularyEntry(spokenForm: "swift you eye", replacement: "SwiftUI"),
     VocabularyEntry(spokenForm: "gee p t", replacement: "GPT"),
     VocabularyEntry(spokenForm: "git hub", replacement: "GitHub"),
-    VocabularyEntry(spokenForm: "hush type", replacement: "HushType"),
+    VocabularyEntry(spokenForm: "hush type", replacement: "VaulType"),
 ]
 
 // App-specific entry for Xcode
@@ -926,10 +926,10 @@ final class UserSettings {
 
     // MARK: - UI Preferences
 
-    /// Launch HushType at macOS login.
+    /// Launch VaulType at macOS login.
     var launchAtLogin: Bool
 
-    /// Show the HushType icon in the menu bar.
+    /// Show the VaulType icon in the menu bar.
     var showMenuBarIcon: Bool
 
     /// Show a floating indicator while recording.
@@ -1163,7 +1163,7 @@ final class ModelInfo {
         ).first!
 
         return appSupport
-            .appendingPathComponent("HushType", isDirectory: true)
+            .appendingPathComponent("VaulType", isDirectory: true)
             .appendingPathComponent(type.storageDirectory, isDirectory: true)
             .appendingPathComponent(fileName)
     }
@@ -1305,44 +1305,44 @@ extension ModelInfo {
 
 ## UserDefaults Keys
 
-UserDefaults stores lightweight, non-sensitive state that does not require the relational capabilities of SwiftData. All keys use the `com.hushtype` prefix to avoid collisions.
+UserDefaults stores lightweight, non-sensitive state that does not require the relational capabilities of SwiftData. All keys use the `com.vaultype` prefix to avoid collisions.
 
 ```swift
 import Foundation
 
 enum UserDefaultsKey {
     // MARK: - Onboarding
-    static let hasCompletedOnboarding = "com.hushtype.hasCompletedOnboarding"
-    static let onboardingVersion = "com.hushtype.onboardingVersion"
+    static let hasCompletedOnboarding = "com.vaultype.hasCompletedOnboarding"
+    static let onboardingVersion = "com.vaultype.onboardingVersion"
 
     // MARK: - Feature Flags
-    static let experimentalFeaturesEnabled = "com.hushtype.experimentalFeaturesEnabled"
-    static let betaUpdatesEnabled = "com.hushtype.betaUpdatesEnabled"
+    static let experimentalFeaturesEnabled = "com.vaultype.experimentalFeaturesEnabled"
+    static let betaUpdatesEnabled = "com.vaultype.betaUpdatesEnabled"
 
     // MARK: - Window State
-    static let settingsWindowFrame = "com.hushtype.settingsWindowFrame"
-    static let historyWindowFrame = "com.hushtype.historyWindowFrame"
-    static let lastActiveSettingsTab = "com.hushtype.lastActiveSettingsTab"
+    static let settingsWindowFrame = "com.vaultype.settingsWindowFrame"
+    static let historyWindowFrame = "com.vaultype.historyWindowFrame"
+    static let lastActiveSettingsTab = "com.vaultype.lastActiveSettingsTab"
 
     // MARK: - Cache & Timestamps
-    static let lastModelRegistryUpdate = "com.hushtype.lastModelRegistryUpdate"
-    static let lastHistoryCleanup = "com.hushtype.lastHistoryCleanup"
-    static let lastVocabularySync = "com.hushtype.lastVocabularySync"
+    static let lastModelRegistryUpdate = "com.vaultype.lastModelRegistryUpdate"
+    static let lastHistoryCleanup = "com.vaultype.lastHistoryCleanup"
+    static let lastVocabularySync = "com.vaultype.lastVocabularySync"
 
     // MARK: - Usage State
-    static let totalDictationCount = "com.hushtype.totalDictationCount"
-    static let totalAudioDuration = "com.hushtype.totalAudioDuration"
-    static let lastUsedLanguage = "com.hushtype.lastUsedLanguage"
-    static let lastUsedMode = "com.hushtype.lastUsedMode"
+    static let totalDictationCount = "com.vaultype.totalDictationCount"
+    static let totalAudioDuration = "com.vaultype.totalAudioDuration"
+    static let lastUsedLanguage = "com.vaultype.lastUsedLanguage"
+    static let lastUsedMode = "com.vaultype.lastUsedMode"
 
     // MARK: - Permissions
-    static let hasRequestedAccessibility = "com.hushtype.hasRequestedAccessibility"
-    static let hasRequestedMicrophone = "com.hushtype.hasRequestedMicrophone"
+    static let hasRequestedAccessibility = "com.vaultype.hasRequestedAccessibility"
+    static let hasRequestedMicrophone = "com.vaultype.hasRequestedMicrophone"
 
     // MARK: - UI State
-    static let menuBarIconStyle = "com.hushtype.menuBarIconStyle"
-    static let recordingIndicatorPosition = "com.hushtype.recordingIndicatorPosition"
-    static let historySearchScope = "com.hushtype.historySearchScope"
+    static let menuBarIconStyle = "com.vaultype.menuBarIconStyle"
+    static let recordingIndicatorPosition = "com.vaultype.recordingIndicatorPosition"
+    static let historySearchScope = "com.vaultype.historySearchScope"
 }
 ```
 
@@ -1431,7 +1431,7 @@ final class AppState {
 
 ## Keychain Items
 
-The macOS Keychain is used exclusively for data that requires hardware-backed encryption and must persist across app reinstalls. HushType's local-first architecture means Keychain usage is minimal.
+The macOS Keychain is used exclusively for data that requires hardware-backed encryption and must persist across app reinstalls. VaulType's local-first architecture means Keychain usage is minimal.
 
 ```swift
 import Foundation
@@ -1439,13 +1439,13 @@ import Security
 
 enum KeychainKey {
     /// API key for a remote Ollama instance (if user configures remote LLM).
-    static let ollamaAPIKey = "com.hushtype.ollamaAPIKey"
+    static let ollamaAPIKey = "com.vaultype.ollamaAPIKey"
 
     /// License key for future premium features.
-    static let licenseKey = "com.hushtype.licenseKey"
+    static let licenseKey = "com.vaultype.licenseKey"
 
     /// Encryption key for exported data files.
-    static let exportEncryptionKey = "com.hushtype.exportEncryptionKey"
+    static let exportEncryptionKey = "com.vaultype.exportEncryptionKey"
 }
 ```
 
@@ -1477,7 +1477,7 @@ enum KeychainError: Error {
 }
 
 struct KeychainManager {
-    private static let service = "com.hushtype.app"
+    private static let service = "com.vaultype.app"
 
     /// Save a string value to the Keychain.
     static func save(key: String, value: String) throws {
@@ -1547,21 +1547,21 @@ struct KeychainManager {
 }
 ```
 
-> ℹ️ **Info**: In the default local-only configuration, HushType stores nothing in the Keychain. Keychain usage is triggered only when a user explicitly configures a remote Ollama endpoint, which is an optional power-user feature.
+> ℹ️ **Info**: In the default local-only configuration, VaulType stores nothing in the Keychain. Keychain usage is triggered only when a user explicitly configures a remote Ollama endpoint, which is an optional power-user feature.
 
 ---
 
 ## Migration Strategy
 
-SwiftData provides a schema versioning and migration system via `SchemaMigrationPlan`. HushType uses staged migrations to evolve the database schema safely across app updates.
+SwiftData provides a schema versioning and migration system via `SchemaMigrationPlan`. VaulType uses staged migrations to evolve the database schema safely across app updates.
 
 ### Version History
 
 | Schema Version | App Version | Description |
 |---|---|---|
-| `HushTypeSchemaV1` | 1.0.0 | Initial release schema |
-| `HushTypeSchemaV2` | 1.1.0 | Added `autoDetectLanguage` to UserSettings, added `lastUsed` to ModelInfo |
-| `HushTypeSchemaV3` | 1.2.0 | Added `VocabularyEntry.caseSensitive`, added `AppProfile.customVocabulary` |
+| `VaulTypeSchemaV1` | 1.0.0 | Initial release schema |
+| `VaulTypeSchemaV2` | 1.1.0 | Added `autoDetectLanguage` to UserSettings, added `lastUsed` to ModelInfo |
+| `VaulTypeSchemaV3` | 1.2.0 | Added `VocabularyEntry.caseSensitive`, added `AppProfile.customVocabulary` |
 
 ### Migration Plan
 
@@ -1570,7 +1570,7 @@ import SwiftData
 
 // MARK: - Schema Versions
 
-enum HushTypeSchemaV1: VersionedSchema {
+enum VaulTypeSchemaV1: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 0, 0)
     static var models: [any PersistentModel.Type] {
         [
@@ -1584,7 +1584,7 @@ enum HushTypeSchemaV1: VersionedSchema {
     }
 }
 
-enum HushTypeSchemaV2: VersionedSchema {
+enum VaulTypeSchemaV2: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 1, 0)
     static var models: [any PersistentModel.Type] {
         [
@@ -1598,7 +1598,7 @@ enum HushTypeSchemaV2: VersionedSchema {
     }
 }
 
-enum HushTypeSchemaV3: VersionedSchema {
+enum VaulTypeSchemaV3: VersionedSchema {
     static var versionIdentifier = Schema.Version(1, 2, 0)
     static var models: [any PersistentModel.Type] {
         [
@@ -1614,12 +1614,12 @@ enum HushTypeSchemaV3: VersionedSchema {
 
 // MARK: - Migration Plan
 
-enum HushTypeMigrationPlan: SchemaMigrationPlan {
+enum VaulTypeMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [
-            HushTypeSchemaV1.self,
-            HushTypeSchemaV2.self,
-            HushTypeSchemaV3.self
+            VaulTypeSchemaV1.self,
+            VaulTypeSchemaV2.self,
+            VaulTypeSchemaV3.self
         ]
     }
 
@@ -1633,15 +1633,15 @@ enum HushTypeMigrationPlan: SchemaMigrationPlan {
     // MARK: - V1 → V2
 
     static let migrateV1toV2 = MigrationStage.lightweight(
-        fromVersion: HushTypeSchemaV1.self,
-        toVersion: HushTypeSchemaV2.self
+        fromVersion: VaulTypeSchemaV1.self,
+        toVersion: VaulTypeSchemaV2.self
     )
 
     // MARK: - V2 → V3
 
     static let migrateV2toV3 = MigrationStage.custom(
-        fromVersion: HushTypeSchemaV2.self,
-        toVersion: HushTypeSchemaV3.self,
+        fromVersion: VaulTypeSchemaV2.self,
+        toVersion: VaulTypeSchemaV3.self,
         willMigrate: nil,
         didMigrate: { context in
             // Set default values for new fields on existing records.
@@ -1687,7 +1687,7 @@ struct DatabaseBackup {
             for: .applicationSupportDirectory,
             in: .userDomainMask
         ).first!
-        return appSupport.appendingPathComponent("HushType", isDirectory: true)
+        return appSupport.appendingPathComponent("VaulType", isDirectory: true)
     }()
 
     /// Creates a timestamped backup of the SwiftData store before migration.
@@ -1703,9 +1703,9 @@ struct DatabaseBackup {
             withIntermediateDirectories: true
         )
 
-        let storeFile = storePath.appendingPathComponent("HushType.store")
+        let storeFile = storePath.appendingPathComponent("VaulType.store")
         let backupFile = backupDir
-            .appendingPathComponent("HushType_\(timestamp).store")
+            .appendingPathComponent("VaulType_\(timestamp).store")
 
         try FileManager.default.copyItem(at: storeFile, to: backupFile)
         return backupFile
@@ -1740,14 +1740,14 @@ struct DatabaseBackup {
 
 ## Data Export/Import Format
 
-HushType supports exporting and importing user data in a structured JSON format. This enables backup, migration between machines, and sharing templates with other users.
+VaulType supports exporting and importing user data in a structured JSON format. This enables backup, migration between machines, and sharing templates with other users.
 
 ### Export Format (JSON Schema)
 
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "HushType Data Export",
+  "title": "VaulType Data Export",
   "type": "object",
   "required": ["version", "exportDate", "appVersion"],
   "properties": {
@@ -1763,7 +1763,7 @@ HushType supports exporting and importing user data in a structured JSON format.
     },
     "appVersion": {
       "type": "string",
-      "description": "HushType app version that created this export"
+      "description": "VaulType app version that created this export"
     },
     "dictationHistory": {
       "type": "array",
@@ -1857,7 +1857,7 @@ HushType supports exporting and importing user data in a structured JSON format.
 import Foundation
 import SwiftData
 
-struct HushTypeExport: Codable {
+struct VaulTypeExport: Codable {
     let version: Int
     let exportDate: Date
     let appVersion: String
@@ -1945,7 +1945,7 @@ actor DataExportService {
         includeVocabulary: Bool = true,
         includeSettings: Bool = true
     ) throws -> Data {
-        var export = HushTypeExport(
+        var export = VaulTypeExport(
             version: 1,
             exportDate: .now,
             appVersion: Bundle.main.appVersion
@@ -2001,7 +2001,7 @@ actor DataExportService {
     ) throws -> ImportResult {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        let export = try decoder.decode(HushTypeExport.self, from: data)
+        let export = try decoder.decode(VaulTypeExport.self, from: data)
 
         var result = ImportResult()
 
@@ -2067,7 +2067,7 @@ struct ImportResult {
 }
 ```
 
-> 💡 **Tip**: The export file is plain JSON with no encryption by default. For users who want encrypted exports, HushType can optionally encrypt the JSON payload with a passphrase-derived key (AES-256-GCM) stored in the Keychain. The encrypted format wraps the JSON in a binary envelope with a format header.
+> 💡 **Tip**: The export file is plain JSON with no encryption by default. For users who want encrypted exports, VaulType can optionally encrypt the JSON payload with a passphrase-derived key (AES-256-GCM) stored in the Keychain. The encrypted format wraps the JSON in a binary envelope with a format header.
 
 ---
 
@@ -2075,7 +2075,7 @@ struct ImportResult {
 
 ### Auto-Deletion Policies
 
-HushType manages data growth through configurable retention policies in `UserSettings`.
+VaulType manages data growth through configurable retention policies in `UserSettings`.
 
 ```swift
 import Foundation
@@ -2260,17 +2260,17 @@ extension HistoryCleanupService {
 
 ## Privacy Considerations
 
-HushType's data persistence layer is designed around a core principle: **all user data stays on the user's machine, under the user's control, at all times.**
+VaulType's data persistence layer is designed around a core principle: **all user data stays on the user's machine, under the user's control, at all times.**
 
 ### Data Residency
 
 | Storage Layer | Location on Disk | Encrypted at Rest |
 |---|---|---|
-| SwiftData | `~/Library/Application Support/HushType/HushType.store` | FileVault (if enabled) |
-| UserDefaults | `~/Library/Preferences/com.hushtype.app.plist` | FileVault (if enabled) |
+| SwiftData | `~/Library/Application Support/VaulType/VaulType.store` | FileVault (if enabled) |
+| UserDefaults | `~/Library/Preferences/com.vaultype.app.plist` | FileVault (if enabled) |
 | Keychain | macOS Keychain database | Always (Secure Enclave on Apple Silicon) |
-| ML Models | `~/Library/Application Support/HushType/{whisper,llm}-models/` | FileVault (if enabled) |
-| Audio (temporary) | `/tmp/hushtype/` | No (ephemeral, auto-deleted) |
+| ML Models | `~/Library/Application Support/VaulType/{whisper,llm}-models/` | FileVault (if enabled) |
+| Audio (temporary) | `/tmp/vaultype/` | No (ephemeral, auto-deleted) |
 
 ### Privacy Guarantees
 
@@ -2280,7 +2280,7 @@ HushType's data persistence layer is designed around a core principle: **all use
 - **Text injection privacy**: Text injected via CGEvent or clipboard is not logged beyond the `DictationEntry` stored in SwiftData. The user can disable text storage entirely via `storeTranscriptionText = false`.
 - **Export control**: Data export produces a local JSON file. The user decides where to save it. No export is ever triggered automatically.
 
-> 🔒 **Security**: We strongly recommend users enable **FileVault** (macOS full-disk encryption) for maximum protection. While HushType does not store audio recordings permanently, the SwiftData store does contain transcription text which may be sensitive. FileVault ensures this data is encrypted at rest with the user's login credentials.
+> 🔒 **Security**: We strongly recommend users enable **FileVault** (macOS full-disk encryption) for maximum protection. While VaulType does not store audio recordings permanently, the SwiftData store does contain transcription text which may be sensitive. FileVault ensures this data is encrypted at rest with the user's login credentials.
 
 ### Data the App Never Stores
 
@@ -2294,7 +2294,7 @@ HushType's data persistence layer is designed around a core principle: **all use
 | Location data | Never | Not needed for functionality |
 | Contact or calendar data | Never | Not needed for functionality |
 
-> 🍎 **macOS-specific**: HushType requests only two macOS permissions — **Microphone** (for audio capture) and **Accessibility** (for CGEvent text injection). Both are requested explicitly with user consent and are revocable at any time in System Settings → Privacy & Security. The app functions in degraded mode without either permission (no recording without Microphone, clipboard-only injection without Accessibility).
+> 🍎 **macOS-specific**: VaulType requests only two macOS permissions — **Microphone** (for audio capture) and **Accessibility** (for CGEvent text injection). Both are requested explicitly with user consent and are revocable at any time in System Settings → Privacy & Security. The app functions in degraded mode without either permission (no recording without Microphone, clipboard-only injection without Accessibility).
 
 ---
 

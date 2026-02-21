@@ -2,7 +2,7 @@ Last Updated: 2026-02-20
 
 # Deployment Guide
 
-> Building, signing, notarizing, and distributing HushType for macOS.
+> Building, signing, notarizing, and distributing VaulType for macOS.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Last Updated: 2026-02-20
 
 ## Overview
 
-HushType is distributed as a native macOS application through multiple channels:
+VaulType is distributed as a native macOS application through multiple channels:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -56,7 +56,7 @@ HushType is distributed as a native macOS application through multiple channels:
 |---------|--------|--------|
 | GitHub Releases | Signed, notarized DMG | Active (Phase 6) |
 | Sparkle Auto-Update | In-app updater with EdDSA signatures | Integrated (Sparkle 2.x) |
-| Homebrew Cask | `brew install --cask hushtype` | Planned |
+| Homebrew Cask | `brew install --cask vaultype` | Planned |
 | Mac App Store | App Store submission | Future (requires sandbox adjustments) |
 
 ---
@@ -70,10 +70,10 @@ Configure these in Xcode's Release build configuration or via `xcodebuild`:
 ```bash
 # Build for Release
 xcodebuild \
-    -project HushType.xcodeproj \
-    -scheme HushType \
+    -project VaulType.xcodeproj \
+    -scheme VaulType \
     -configuration Release \
-    -archivePath build/HushType.xcarchive \
+    -archivePath build/VaulType.xcarchive \
     archive
 ```
 
@@ -101,10 +101,10 @@ Both are built with Metal GPU acceleration (`GGML_METAL_EMBED_LIBRARY=ON`) and l
 
 ### Entitlements
 
-The hardened runtime requires specific entitlements for HushType's features:
+The hardened runtime requires specific entitlements for VaulType's features:
 
 ```xml
-<!-- HushType.entitlements -->
+<!-- VaulType.entitlements -->
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "...">
 <plist version="1.0">
@@ -136,7 +136,7 @@ The hardened runtime requires specific entitlements for HushType's features:
 </plist>
 ```
 
-> ⚠️ These entitlements are necessary for HushType's local AI features. Each one is documented for Apple's notarization review.
+> ⚠️ These entitlements are necessary for VaulType's local AI features. Each one is documented for Apple's notarization review.
 
 ---
 
@@ -165,7 +165,7 @@ security find-identity -v -p codesigning
 # Export the archive with code signing
 xcodebuild \
     -exportArchive \
-    -archivePath build/HushType.xcarchive \
+    -archivePath build/VaulType.xcarchive \
     -exportOptionsPlist ExportOptions.plist \
     -exportPath build/export
 ```
@@ -193,13 +193,13 @@ xcodebuild \
 
 ```bash
 # Verify code signature
-codesign --verify --deep --strict --verbose=2 build/export/HushType.app
+codesign --verify --deep --strict --verbose=2 build/export/VaulType.app
 
 # Check entitlements
-codesign -d --entitlements :- build/export/HushType.app
+codesign -d --entitlements :- build/export/VaulType.app
 
 # Verify Gatekeeper approval
-spctl --assess --type execute --verbose build/export/HushType.app
+spctl --assess --type execute --verbose build/export/VaulType.app
 ```
 
 > 🔒 **Security Note:** Never commit signing certificates or provisioning profiles to the repository. Use CI/CD secrets for automated signing.
@@ -216,7 +216,7 @@ The `scripts/notarize.sh` script is included in the repository and handles submi
 
 ```bash
 ./scripts/notarize.sh <path-to-dmg>
-# Example: ./scripts/notarize.sh build/HushType-0.5.0-universal.dmg
+# Example: ./scripts/notarize.sh build/VaulType-0.5.0-universal.dmg
 ```
 
 It requires `APPLE_ID`, `APPLE_TEAM_ID`, and `APPLE_APP_PASSWORD` to be set (either as environment variables or in a local `.env` file — never committed). Internally it uses:
@@ -256,26 +256,26 @@ brew install create-dmg
 
 # Create the DMG
 create-dmg \
-    --volname "HushType" \
+    --volname "VaulType" \
     --volicon "assets/dmg-icon.icns" \
     --window-pos 200 120 \
     --window-size 600 400 \
     --icon-size 100 \
-    --icon "HushType.app" 150 190 \
-    --hide-extension "HushType.app" \
+    --icon "VaulType.app" 150 190 \
+    --hide-extension "VaulType.app" \
     --app-drop-link 450 190 \
     --background "assets/dmg-background.png" \
     --no-internet-enable \
-    "build/HushType-${VERSION}-universal.dmg" \
-    "build/export/HushType.app"
+    "build/VaulType-${VERSION}-universal.dmg" \
+    "build/export/VaulType.app"
 ```
 
 ### DMG Naming Convention
 
 ```
-HushType-0.1.0-universal.dmg      # Universal binary (arm64 + x86_64)
-HushType-0.1.0-arm64.dmg          # Apple Silicon only (future, if needed)
-HushType-0.1.0-x86_64.dmg         # Intel only (future, if needed)
+VaulType-0.1.0-universal.dmg      # Universal binary (arm64 + x86_64)
+VaulType-0.1.0-arm64.dmg          # Apple Silicon only (future, if needed)
+VaulType-0.1.0-x86_64.dmg         # Intel only (future, if needed)
 ```
 
 ### Automated DMG Script
@@ -290,14 +290,14 @@ The `scripts/create-dmg.sh` script is included in the repository. Run it with:
 The script uses `create-dmg` (install with `brew install create-dmg`) to produce:
 
 ```
-build/HushType-<version>-universal.dmg
+build/VaulType-<version>-universal.dmg
 ```
 
 ---
 
 ## Universal Binary Packaging
 
-HushType builds as a universal binary supporting both Apple Silicon (arm64) and Intel (x86_64) Macs.
+VaulType builds as a universal binary supporting both Apple Silicon (arm64) and Intel (x86_64) Macs.
 
 ### Building Universal Binary
 
@@ -305,20 +305,20 @@ Xcode handles this automatically when `ARCHS` is set to `arm64 x86_64`. For manu
 
 ```bash
 # Build for Apple Silicon
-xcodebuild -scheme HushType -configuration Release \
+xcodebuild -scheme VaulType -configuration Release \
     -arch arm64 \
     -derivedDataPath build/arm64
 
 # Build for Intel
-xcodebuild -scheme HushType -configuration Release \
+xcodebuild -scheme VaulType -configuration Release \
     -arch x86_64 \
     -derivedDataPath build/x86_64
 
 # Create universal binary with lipo
 lipo -create \
-    build/arm64/Build/Products/Release/HushType.app/Contents/MacOS/HushType \
-    build/x86_64/Build/Products/Release/HushType.app/Contents/MacOS/HushType \
-    -output build/universal/HushType
+    build/arm64/Build/Products/Release/VaulType.app/Contents/MacOS/VaulType \
+    build/x86_64/Build/Products/Release/VaulType.app/Contents/MacOS/VaulType \
+    -output build/universal/VaulType
 ```
 
 ### C Library Universal Builds
@@ -355,12 +355,12 @@ lipo -create \
 
 ## Sparkle Auto-Update
 
-HushType uses [Sparkle](https://sparkle-project.org/) for in-app auto-updates.
+VaulType uses [Sparkle](https://sparkle-project.org/) for in-app auto-updates.
 
 ### Integration
 
 ```swift
-// HushType/App/AppDelegate.swift
+// VaulType/App/AppDelegate.swift
 
 import Sparkle
 
@@ -386,7 +386,7 @@ Host an `appcast.xml` file that Sparkle checks for updates:
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
-    <title>HushType Updates</title>
+    <title>VaulType Updates</title>
     <language>en</language>
     <item>
       <title>Version 0.1.0</title>
@@ -395,7 +395,7 @@ Host an `appcast.xml` file that Sparkle checks for updates:
       <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <description><![CDATA[
-        <h2>HushType 0.1.0 — Initial Release</h2>
+        <h2>VaulType 0.1.0 — Initial Release</h2>
         <ul>
           <li>Menu bar app with global hotkey dictation</li>
           <li>Local speech recognition via whisper.cpp</li>
@@ -404,7 +404,7 @@ Host an `appcast.xml` file that Sparkle checks for updates:
         </ul>
       ]]></description>
       <enclosure
-        url="https://github.com/hushtype/hushtype/releases/download/v0.1.0/HushType-0.1.0-universal.dmg"
+        url="https://github.com/vaultype/vaultype/releases/download/v0.1.0/VaulType-0.1.0-universal.dmg"
         type="application/octet-stream"
         sparkle:edSignature="BASE64_ED_SIGNATURE"
         length="45678900"
@@ -423,7 +423,7 @@ Sparkle 2 uses EdDSA (Ed25519) signatures:
 ./bin/generate_keys
 
 # Sign a DMG
-./bin/sign_update build/HushType-0.1.0-universal.dmg
+./bin/sign_update build/VaulType-0.1.0-universal.dmg
 
 # Output: sparkle:edSignature="..." length="..."
 ```
@@ -435,7 +435,7 @@ Sparkle 2 uses EdDSA (Ed25519) signatures:
 ```xml
 <!-- Info.plist -->
 <key>SUFeedURL</key>
-<string>https://hushtype.app/appcast.xml</string>
+<string>https://vaultype.app/appcast.xml</string>
 <key>SUPublicEDKey</key>
 <string>YOUR_ED25519_PUBLIC_KEY</string>
 <key>SUEnableAutomaticChecks</key>
@@ -457,20 +457,20 @@ set -euo pipefail
 VERSION="${1:?Usage: release.sh <version>}"
 TAG="v${VERSION}"
 
-echo "=== HushType Release ${TAG} ==="
+echo "=== VaulType Release ${TAG} ==="
 
 # 1. Build
 echo "Building..."
-xcodebuild -project HushType.xcodeproj \
-    -scheme HushType \
+xcodebuild -project VaulType.xcodeproj \
+    -scheme VaulType \
     -configuration Release \
-    -archivePath "build/HushType.xcarchive" \
+    -archivePath "build/VaulType.xcarchive" \
     archive
 
 # 2. Export
 echo "Exporting..."
 xcodebuild -exportArchive \
-    -archivePath "build/HushType.xcarchive" \
+    -archivePath "build/VaulType.xcarchive" \
     -exportOptionsPlist ExportOptions.plist \
     -exportPath "build/export"
 
@@ -480,31 +480,31 @@ echo "Creating DMG..."
 
 # 4. Notarize
 echo "Notarizing..."
-xcrun notarytool submit "build/HushType-${VERSION}-universal.dmg" \
+xcrun notarytool submit "build/VaulType-${VERSION}-universal.dmg" \
     --keychain-profile "AC_PASSWORD" \
     --wait
 
 # 5. Staple
 echo "Stapling..."
-xcrun stapler staple "build/HushType-${VERSION}-universal.dmg"
+xcrun stapler staple "build/VaulType-${VERSION}-universal.dmg"
 
 # 6. Create GitHub Release
 echo "Creating GitHub Release..."
 gh release create "$TAG" \
-    "build/HushType-${VERSION}-universal.dmg" \
-    --title "HushType ${TAG}" \
+    "build/VaulType-${VERSION}-universal.dmg" \
+    --title "VaulType ${TAG}" \
     --notes-file "release-notes/${VERSION}.md" \
     --draft
 
 echo "=== Release ${TAG} created as draft ==="
-echo "Review at: https://github.com/hushtype/hushtype/releases"
+echo "Review at: https://github.com/vaultype/vaultype/releases"
 ```
 
 ### GitHub Release Notes Template
 
 ```markdown
 <!-- release-notes/0.1.0.md -->
-## HushType v0.1.0 — MVP Release
+## VaulType v0.1.0 — MVP Release
 
 ### What's New
 - Menu bar app with status indicator
@@ -522,12 +522,12 @@ echo "Review at: https://github.com/hushtype/hushtype/releases"
 - 2GB free disk space for models
 
 ### Installation
-- **Homebrew:** `brew install --cask hushtype`
+- **Homebrew:** `brew install --cask vaultype`
 - **DMG:** Download from the link below
 
 ### Checksums
 ```
-SHA256: <checksum> HushType-0.1.0-universal.dmg
+SHA256: <checksum> VaulType-0.1.0-universal.dmg
 ```
 ```
 
@@ -538,16 +538,16 @@ SHA256: <checksum> HushType-0.1.0-universal.dmg
 ### Creating the Cask Formula
 
 ```ruby
-# Casks/hushtype.rb
+# Casks/vaultype.rb
 
-cask "hushtype" do
+cask "vaultype" do
   version "0.1.0"
   sha256 "COMPUTED_SHA256_HASH"
 
-  url "https://github.com/hushtype/hushtype/releases/download/v#{version}/HushType-#{version}-universal.dmg"
-  name "HushType"
+  url "https://github.com/vaultype/vaultype/releases/download/v#{version}/VaulType-#{version}-universal.dmg"
+  name "VaulType"
   desc "Privacy-first, offline speech-to-text for macOS with local AI"
-  homepage "https://hushtype.app"
+  homepage "https://vaultype.app"
 
   livecheck do
     url :url
@@ -556,13 +556,13 @@ cask "hushtype" do
 
   depends_on macos: ">= :sonoma"
 
-  app "HushType.app"
+  app "VaulType.app"
 
   zap trash: [
-    "~/Library/Application Support/HushType",
-    "~/Library/Caches/com.hushtype.app",
-    "~/Library/Preferences/com.hushtype.app.plist",
-    "~/Library/Saved Application State/com.hushtype.app.savedState",
+    "~/Library/Application Support/VaulType",
+    "~/Library/Caches/com.vaultype.app",
+    "~/Library/Preferences/com.vaultype.app.plist",
+    "~/Library/Saved Application State/com.vaultype.app.savedState",
   ]
 end
 ```
@@ -575,11 +575,11 @@ brew tap homebrew/cask
 cd "$(brew --repository homebrew/cask)"
 
 # Create/update the formula
-cp /path/to/hushtype.rb Casks/h/hushtype.rb
+cp /path/to/vaultype.rb Casks/h/vaultype.rb
 
 # Test locally
-brew audit --cask hushtype
-brew install --cask hushtype
+brew audit --cask vaultype
+brew install --cask vaultype
 
 # Submit PR to homebrew/homebrew-cask
 ```
@@ -591,11 +591,11 @@ Include in CI/CD to auto-submit Homebrew Cask PR on each release:
 ```bash
 # scripts/update-homebrew.sh
 VERSION="${1}"
-SHA256=$(shasum -a 256 "build/HushType-${VERSION}-universal.dmg" | awk '{print $1}')
+SHA256=$(shasum -a 256 "build/VaulType-${VERSION}-universal.dmg" | awk '{print $1}')
 
 # Update the cask formula
-sed -i '' "s/version \".*\"/version \"${VERSION}\"/" Casks/hushtype.rb
-sed -i '' "s/sha256 \".*\"/sha256 \"${SHA256}\"/" Casks/hushtype.rb
+sed -i '' "s/version \".*\"/version \"${VERSION}\"/" Casks/vaultype.rb
+sed -i '' "s/sha256 \".*\"/sha256 \"${SHA256}\"/" Casks/vaultype.rb
 ```
 
 ---
@@ -606,7 +606,7 @@ Use this checklist before every release:
 
 ### Pre-Release
 
-- [ ] All tests pass (`xcodebuild test -scheme HushType`)
+- [ ] All tests pass (`xcodebuild test -scheme VaulType`)
 - [ ] No critical bugs in issue tracker
 - [ ] CHANGELOG.md updated with release notes
 - [ ] Version number bumped in Xcode (CFBundleShortVersionString + CFBundleVersion)

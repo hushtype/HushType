@@ -1,8 +1,8 @@
 Last Updated: 2026-02-13
 
-# Contributing to HushType
+# Contributing to VaulType
 
-> How to contribute to HushType — code, documentation, bug reports, and feature requests.
+> How to contribute to VaulType — code, documentation, bug reports, and feature requests.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ Last Updated: 2026-02-13
 
 ## Code of Conduct
 
-HushType follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). By participating, you agree to:
+VaulType follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/). By participating, you agree to:
 
 - **Be respectful** — Treat everyone with kindness and empathy
 - **Be constructive** — Focus on what's best for the project and community
@@ -61,7 +61,7 @@ Report violations to the maintainers via email or GitHub issues.
 | Core features | New major features | Usually no |
 | C bridging | whisper.cpp/llama.cpp updates | No |
 
-Look for issues labeled [`good first issue`](https://github.com/hushtype/hushtype/labels/good%20first%20issue) to get started.
+Look for issues labeled [`good first issue`](https://github.com/vaultype/vaultype/labels/good%20first%20issue) to get started.
 
 ---
 
@@ -82,11 +82,11 @@ Look for issues labeled [`good first issue`](https://github.com/hushtype/hushtyp
 
 ```bash
 # Fork on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/hushtype.git
-cd hushtype
+git clone https://github.com/YOUR_USERNAME/vaultype.git
+cd vaultype
 
 # Add upstream remote
-git remote add upstream https://github.com/hushtype/hushtype.git
+git remote add upstream https://github.com/vaultype/vaultype.git
 
 # Install build tools
 brew install cmake swiftlint
@@ -95,7 +95,7 @@ brew install cmake swiftlint
 ./scripts/build-deps.sh
 
 # Open in Xcode
-open HushType.xcodeproj
+open VaulType.xcodeproj
 
 # Build and run (⌘R)
 ```
@@ -118,7 +118,7 @@ open HushType.xcodeproj
 
 ### Swift Style Guide
 
-HushType follows the [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/) with these project conventions:
+VaulType follows the [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/) with these project conventions:
 
 **Enforced via SwiftLint:**
 
@@ -270,12 +270,12 @@ chore(deps): bump whisper.cpp to v1.7.3
 2. **Run the full lint and test suite:**
    ```bash
    swiftlint lint --strict
-   xcodebuild test -scheme HushType -destination "platform=macOS,arch=arm64"
+   xcodebuild test -scheme VaulType -destination "platform=macOS,arch=arm64"
    ```
 
 3. **Check that your changes build in Release configuration:**
    ```bash
-   xcodebuild build -scheme HushType -configuration Release \
+   xcodebuild build -scheme VaulType -configuration Release \
        CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
    ```
 
@@ -359,7 +359,7 @@ What you expected to happen.
 What actually happened.
 
 **Environment**
-- HushType version: [e.g., 0.1.0]
+- VaulType version: [e.g., 0.1.0]
 - macOS version: [e.g., 15.2]
 - Mac model: [e.g., MacBook Pro M3, 16GB]
 - Whisper model: [e.g., small]
@@ -377,7 +377,7 @@ Any other context about the problem.
 
 ### Security Vulnerabilities
 
-> 🔒 **Do not report security vulnerabilities via public GitHub issues.** Email security@hushtype.app with details. See [SECURITY.md](../security/SECURITY.md) for the full responsible disclosure policy.
+> 🔒 **Do not report security vulnerabilities via public GitHub issues.** Email security@vaultype.app with details. See [SECURITY.md](../security/SECURITY.md) for the full responsible disclosure policy.
 
 ---
 
@@ -431,12 +431,12 @@ Every PR must include appropriate tests:
 
 ```bash
 # Unit tests (fast, no model needed)
-xcodebuild test -scheme HushType -testPlan UnitTests \
+xcodebuild test -scheme VaulType -testPlan UnitTests \
     -destination "platform=macOS,arch=arm64" \
     CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
 # All tests including integration
-xcodebuild test -scheme HushType \
+xcodebuild test -scheme VaulType \
     -destination "platform=macOS,arch=arm64" \
     CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 ```

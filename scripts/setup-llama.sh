@@ -31,7 +31,7 @@ CLLAMA_INCLUDE="$PROJECT_ROOT/LlamaKit/Sources/CLlama/include"
 LLAMA_REPO="https://github.com/ggerganov/llama.cpp.git"
 LLAMA_TAG="b8059"
 
-echo "=== HushType: llama.cpp Setup ==="
+echo "=== VaulType: llama.cpp Setup ==="
 echo ""
 
 # Step 1: Clone llama.cpp (check for CMakeLists.txt, not just directory existence)

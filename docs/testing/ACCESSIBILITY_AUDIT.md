@@ -1,9 +1,9 @@
-# HushType Accessibility Audit — WCAG 2.1 Level AA
+# VaulType Accessibility Audit — WCAG 2.1 Level AA
 
 ## Overview
 
 This document is the official WCAG 2.1 Level AA compliance audit checklist for every user-facing
-surface in HushType. It is intended to be executed manually before each public release and
+surface in VaulType. It is intended to be executed manually before each public release and
 whenever a UI component is added or substantially changed.
 
 **Standard targeted:** WCAG 2.1 Level AA (W3C Recommendation 5 June 2018)
@@ -17,7 +17,7 @@ whenever a UI component is added or substantially changed.
 | Accessibility Inspector (Xcode) | Accessibility tree inspection, label/hint auditing |
 | Color Contrast Analyser (macOS) | Foreground/background contrast ratio verification |
 | Xcode Accessibility Audit API | Automated element auditing in `XCUITest` |
-| `HushTypeTests/AccessibilityAuditTests.swift` | Unit-level announcement and preference tests |
+| `VaulTypeTests/AccessibilityAuditTests.swift` | Unit-level announcement and preference tests |
 
 **Scope — UI surfaces covered:**
 
@@ -58,7 +58,7 @@ Navigate to **System Settings > Accessibility** and configure the following for 
 ### Accessibility Inspector Setup
 
 1. Open Xcode > Open Developer Tool > Accessibility Inspector.
-2. Choose the HushType process from the target picker.
+2. Choose the VaulType process from the target picker.
 3. Enable **Audit** tab to run automated checks per-window.
 4. Enable **Inspection** mode (crosshair icon) to click-inspect any element.
 
@@ -66,9 +66,9 @@ Navigate to **System Settings > Accessibility** and configure the following for 
 
 ```bash
 xcodebuild test \
-  -scheme HushType \
+  -scheme VaulType \
   -destination 'platform=macOS' \
-  -only-testing:HushTypeTests/AccessibilityAuditTests
+  -only-testing:VaulTypeTests/AccessibilityAuditTests
 ```
 
 All tests in `AccessibilityAuditTests` must pass before a release is considered audited.
@@ -82,7 +82,7 @@ All tests in `AccessibilityAuditTests` must pass before a release is considered 
 Every non-text element (icon, image, graphic, progress indicator) must have a text alternative
 conveying the same information, or be marked decorative so screen readers skip it.
 
-**General rule applied in HushType codebase:**
+**General rule applied in VaulType codebase:**
 - Decorative SF Symbols use `.accessibilityHidden(true)`.
 - Combined elements use `.accessibilityElement(children: .combine)` + `.accessibilityLabel(...)`.
 - Interactive controls use `.accessibilityLabel(...)` + `.accessibilityHint(...)`.
@@ -97,7 +97,7 @@ conveying the same information, or be marked decorative so screen readers skip i
 | Error triangle icon | `.accessibilityHidden(true)` — parent combines to "Error: <message>" | | | | |
 | History button clock icon | Decorative within button; button label "History" sufficient | | | | |
 | Settings gear icon | Decorative within button; button label "Settings" sufficient | | | | |
-| Quit power icon | Decorative within button; button label "Quit HushType" sufficient | | | | |
+| Quit power icon | Decorative within button; button label "Quit VaulType" sufficient | | | | |
 
 #### Overlay Window — Icon Alternatives
 
@@ -251,7 +251,7 @@ must pass in both states.
 
 | Criterion | Checklist Item | Pass | Fail | N/A | Notes |
 |-----------|---------------|------|------|-----|-------|
-| 1.4.4 | All text in HushType respects macOS "Larger Text" setting (System Settings > Accessibility > Display > Larger Text) | | | | |
+| 1.4.4 | All text in VaulType respects macOS "Larger Text" setting (System Settings > Accessibility > Display > Larger Text) | | | | |
 | 1.4.4 | Layout does not break or clip at larger text sizes | | | | |
 | 1.4.4 | Overlay window height adjusts or scrolls when content grows with larger text | | | | |
 | 1.4.4 | Settings tabs remain readable; no horizontal clipping of labels | | | | |
@@ -445,7 +445,7 @@ activate. Verify each element is reached, described correctly, and activatable.
 
 ### 5.1 — Menu Bar Popover (`MenuBarView`)
 
-**Pre-condition:** App is running. VoiceOver active. Activate the HushType menu bar item.
+**Pre-condition:** App is running. VoiceOver active. Activate the VaulType menu bar item.
 
 | Step | Action | Expected VoiceOver Output | Pass | Fail | Notes |
 |------|--------|--------------------------|------|------|-------|
@@ -459,9 +459,9 @@ activate. Verify each element is reached, described correctly, and activatable.
 | 5a | Read History button hint | "Opens the dictation history window" | | | |
 | 5b | Activate History button | History window opens | | | |
 | 6 | Navigate to Settings link | "Settings, button" | | | |
-| 6a | Read Settings hint | "Opens the HushType settings window" | | | |
+| 6a | Read Settings hint | "Opens the VaulType settings window" | | | |
 | 6b | Activate Settings link | Settings window opens | | | |
-| 7 | Navigate to Quit button | "Quit HushType, button" | | | |
+| 7 | Navigate to Quit button | "Quit VaulType, button" | | | |
 | 7a | Read Quit hint | "Exits the application" | | | |
 | 8 | Verify no orphaned/unlabeled elements remain after step 7 | No unlabeled element announced | | | |
 
@@ -627,7 +627,7 @@ VoiceOver active.
 | Step | Expected VoiceOver Output | Pass | Fail | Notes |
 |------|--------------------------|------|------|-------|
 | Progress indicator | "Setup progress: step 1 of 5" | | | |
-| Step heading | "Welcome to HushType" (or similar) | | | |
+| Step heading | "Welcome to VaulType" (or similar) | | | |
 | Step body | Description text read | | | |
 | Next button | "Next, button" | | | |
 
@@ -727,7 +727,7 @@ Enable **Full Keyboard Access** in System Settings > Keyboard before testing.
 |----------|--------|---------|------|------|-------|
 | `Cmd+,` | Open Settings | App-wide | | | |
 | `Cmd+H` | Open History window | Menu Bar Popover | | | |
-| `Cmd+Q` | Quit HushType | Menu Bar Popover | | | |
+| `Cmd+Q` | Quit VaulType | Menu Bar Popover | | | |
 | `Cmd+E` | Enter edit mode | Overlay | | | |
 | `Return` | Confirm inject | Overlay (edit mode) | | | |
 | `Escape` | Cancel edit / close overlay | Overlay | | | |
@@ -753,7 +753,7 @@ Enable **Full Keyboard Access** in System Settings > Keyboard before testing.
 
 Verify that each app state change is announced to assistive technology via
 `NSAccessibility.post(element:notification:)` in `AppState`. Reference implementation:
-`HushTypeTests/AccessibilityAuditTests.swift`.
+`VaulTypeTests/AccessibilityAuditTests.swift`.
 
 | State Change | Announcement Method | Expected Spoken Text (approximate) | Automated Test | Pass | Fail |
 |-------------|--------------------|------------------------------------|---------------|------|------|

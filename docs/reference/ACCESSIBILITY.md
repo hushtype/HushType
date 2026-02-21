@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Accessibility Reference
 
-HushType is, at its core, an accessibility tool — it gives voice-to-text capability to every user on macOS. The UI that wraps this capability must hold itself to the highest accessibility standard. This document defines the patterns, techniques, and compliance requirements that govern every HushType interface element.
+VaulType is, at its core, an accessibility tool — it gives voice-to-text capability to every user on macOS. The UI that wraps this capability must hold itself to the highest accessibility standard. This document defines the patterns, techniques, and compliance requirements that govern every VaulType interface element.
 
 ---
 
@@ -48,9 +48,9 @@ HushType is, at its core, an accessibility tool — it gives voice-to-text capab
 
 ## Accessibility Philosophy
 
-HushType converts speech to text for anyone who benefits from hands-free input — users with motor impairments, repetitive strain injuries, situational disabilities, or simple preference. An app that exists to serve accessibility **must not itself be inaccessible**.
+VaulType converts speech to text for anyone who benefits from hands-free input — users with motor impairments, repetitive strain injuries, situational disabilities, or simple preference. An app that exists to serve accessibility **must not itself be inaccessible**.
 
-Every interface element in HushType follows three principles:
+Every interface element in VaulType follows three principles:
 
 | Principle | Meaning |
 |---|---|
@@ -58,15 +58,15 @@ Every interface element in HushType follows three principles:
 | **Operable** | Every action can be performed via mouse, keyboard, VoiceOver, or Switch Control |
 | **Understandable** | Labels, states, and feedback are clear and consistent — no ambiguity in any interaction mode |
 
-> ℹ️ **WCAG Alignment** — HushType targets WCAG 2.1 AA compliance as a baseline. Where feasible, AAA criteria are met (e.g., contrast ratios of 7:1 or higher in high-contrast mode).
+> ℹ️ **WCAG Alignment** — VaulType targets WCAG 2.1 AA compliance as a baseline. Where feasible, AAA criteria are met (e.g., contrast ratios of 7:1 or higher in high-contrast mode).
 
-> 🍎 **Platform Integration** — HushType relies on macOS system accessibility APIs rather than custom reimplementations. This ensures compatibility with assistive technologies Apple ships and updates.
+> 🍎 **Platform Integration** — VaulType relies on macOS system accessibility APIs rather than custom reimplementations. This ensures compatibility with assistive technologies Apple ships and updates.
 
 ---
 
 ## VoiceOver Compatibility
 
-VoiceOver is the primary screen reader on macOS. Every HushType view must be fully navigable and comprehensible through VoiceOver alone.
+VoiceOver is the primary screen reader on macOS. Every VaulType view must be fully navigable and comprehensible through VoiceOver alone.
 
 ### Accessibility Labels
 
@@ -188,7 +188,7 @@ struct TranscriptionRow: View {
 
 ### Rotor Support
 
-The VoiceOver rotor lets users navigate by category. HushType registers custom rotor entries where they improve navigation efficiency.
+The VoiceOver rotor lets users navigate by category. VaulType registers custom rotor entries where they improve navigation efficiency.
 
 ```swift
 // MARK: - Settings Window with Rotor
@@ -251,7 +251,7 @@ struct StatusSection: View {
 
 ## Keyboard Navigation
 
-Every action in HushType must be reachable without a pointing device. The settings window, popover, and any modal must support full keyboard operation.
+Every action in VaulType must be reachable without a pointing device. The settings window, popover, and any modal must support full keyboard operation.
 
 ### Tab Order and Focus Management
 
@@ -317,7 +317,7 @@ struct GeneralSettingsView: View {
 
 ### Keyboard Shortcuts
 
-HushType defines global and local keyboard shortcuts for all primary actions.
+VaulType defines global and local keyboard shortcuts for all primary actions.
 
 | Action | Shortcut | Scope |
 |---|---|---|
@@ -425,7 +425,7 @@ struct ModelCard: View {
 
 ## High Contrast Mode
 
-macOS provides a system-wide "Increase Contrast" setting. HushType must respond to it by strengthening all visual boundaries.
+macOS provides a system-wide "Increase Contrast" setting. VaulType must respond to it by strengthening all visual boundaries.
 
 ### Detecting High Contrast
 
@@ -476,11 +476,11 @@ final class AccessibilityMonitor: ObservableObject {
 // MARK: - Injecting into Environment
 
 @main
-struct HushTypeApp: App {
+struct VaulTypeApp: App {
     @StateObject private var accessibilityMonitor = AccessibilityMonitor()
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: "mic") {
+        MenuBarExtra("VaulType", systemImage: "mic") {
             ContentView()
                 .environment(\.isHighContrast, accessibilityMonitor.isHighContrastEnabled)
         }
@@ -497,9 +497,9 @@ struct HushTypeApp: App {
 Always use semantic system colors. They automatically adapt to appearance settings including high-contrast mode.
 
 ```swift
-// MARK: - HushType Color Tokens
+// MARK: - VaulType Color Tokens
 
-enum HushTypeColors {
+enum VaulTypeColors {
     // Primary UI colors — all semantic
     static let primaryText = Color.primary          // Adapts to light/dark/high-contrast
     static let secondaryText = Color.secondary
@@ -541,7 +541,7 @@ struct StatusBadge: View {
             .overlay(
                 Capsule()
                     .stroke(
-                        HushTypeColors.border(highContrast: isHighContrast),
+                        VaulTypeColors.border(highContrast: isHighContrast),
                         lineWidth: isHighContrast ? 1.5 : 0
                     )
             )
@@ -567,7 +567,7 @@ All text and interactive elements must meet minimum contrast ratios.
 
 ## Dynamic Type Support
 
-HushType respects the system font size configured in **System Settings > Accessibility > Display > Text Size** and **System Settings > Appearance > Text Size**.
+VaulType respects the system font size configured in **System Settings > Accessibility > Display > Text Size** and **System Settings > Appearance > Text Size**.
 
 ### System Font Preferences
 
@@ -667,7 +667,7 @@ struct ShortcutConfigRow: View {
 
 ### Testing at All Sizes
 
-Dynamic Type defines the following size categories. Test HushType at every level marked with a checkmark:
+Dynamic Type defines the following size categories. Test VaulType at every level marked with a checkmark:
 
 | Size Category | Scale Factor | Test Required |
 |---|---|---|
@@ -697,7 +697,7 @@ Dynamic Type defines the following size categories. Test HushType at every level
 
 ## Reduced Motion Support
 
-Users who experience motion sensitivity enable **System Settings > Accessibility > Display > Reduce motion**. HushType must respect this preference.
+Users who experience motion sensitivity enable **System Settings > Accessibility > Display > Reduce motion**. VaulType must respect this preference.
 
 ### Detecting Reduced Motion
 
@@ -820,7 +820,7 @@ extension AnyTransition {
 
 ## Audio Feedback Alternatives
 
-HushType uses audio cues to signal recording start, recording stop, and transcription completion. Every audio cue must have an equivalent visual (and, where supported, haptic) alternative.
+VaulType uses audio cues to signal recording start, recording stop, and transcription completion. Every audio cue must have an equivalent visual (and, where supported, haptic) alternative.
 
 ### Visual Indicators for Audio Cues
 
@@ -954,7 +954,7 @@ final class HapticManager {
 
 ## Color Independence
 
-HushType never uses color as the only means of conveying information. Every color-coded element has a secondary indicator — shape, icon, label, or pattern.
+VaulType never uses color as the only means of conveying information. Every color-coded element has a secondary indicator — shape, icon, label, or pattern.
 
 ### Multi-Channel Communication
 
@@ -1102,7 +1102,7 @@ Run this checklist before every release. Every item must pass.
 
 ## SwiftUI Accessibility Patterns
 
-Reusable patterns and modifiers used throughout the HushType codebase.
+Reusable patterns and modifiers used throughout the VaulType codebase.
 
 ### Reusable View Modifiers
 
@@ -1180,7 +1180,7 @@ StatusIndicator(state: recordingState)
 
 ### Accessible Component Templates
 
-Use these templates when building new UI components for HushType.
+Use these templates when building new UI components for VaulType.
 
 ```swift
 // MARK: - Accessible Settings Row Template
@@ -1260,7 +1260,7 @@ struct AccessibleErrorBanner: View {
 
 ### Environment-Driven Accessibility
 
-HushType provides a unified accessibility environment that components can read from to adapt their behavior.
+VaulType provides a unified accessibility environment that components can read from to adapt their behavior.
 
 ```swift
 // MARK: - Unified Accessibility Environment

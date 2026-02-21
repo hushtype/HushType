@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Technology Stack
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
 > Every technology was chosen to maximize privacy, performance, and native macOS integration.
 
 ---
@@ -60,7 +60,7 @@ Last Updated: 2026-02-13
 
 ### Why Swift/SwiftUI Over Electron or Cross-Platform
 
-HushType is a macOS-only application by design. This single-platform commitment allows us to use the best tools for the job without compromise.
+VaulType is a macOS-only application by design. This single-platform commitment allows us to use the best tools for the job without compromise.
 
 | Criteria | Swift/SwiftUI | Electron | Tauri | Qt |
 |---|---|---|---|---|
@@ -78,7 +78,7 @@ HushType is a macOS-only application by design. This single-platform commitment 
 >
 > ❌ **Don't**: Introduce cross-platform abstractions that compromise native macOS behavior.
 
-**Key advantages of Swift/SwiftUI for HushType:**
+**Key advantages of Swift/SwiftUI for VaulType:**
 
 1. **Direct Metal access** — whisper.cpp and llama.cpp use Metal Performance Shaders via Apple's GPU framework. Swift calls these APIs with zero overhead.
 
@@ -88,11 +88,11 @@ HushType is a macOS-only application by design. This single-platform commitment 
 
 ```swift
 @main
-struct HushTypeApp: App {
+struct VaulTypeApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: appState.isRecording ? "mic.fill" : "mic") {
+        MenuBarExtra("VaulType", systemImage: appState.isRecording ? "mic.fill" : "mic") {
             MenuBarView()
                 .environmentObject(appState)
         }
@@ -118,7 +118,7 @@ struct HushTypeApp: App {
 
 ### Why whisper.cpp Over Apple Speech Framework
 
-This is the most critical technology decision in HushType. The choice of whisper.cpp is driven by our core privacy guarantee: **no audio data ever leaves the device**.
+This is the most critical technology decision in VaulType. The choice of whisper.cpp is driven by our core privacy guarantee: **no audio data ever leaves the device**.
 
 | Criteria | whisper.cpp | Apple Speech (SFSpeechRecognizer) | Google Speech API | Deepgram |
 |---|---|---|---|---|
@@ -133,7 +133,7 @@ This is the most critical technology decision in HushType. The choice of whisper
 | **Cost** | Free | Free | Pay-per-use | Pay-per-use |
 | **Latency (local)** | ~0.3-1.5s depending on model | ~0.5-2s | 0.3-1s (network-dependent) | 0.2-0.8s (network-dependent) |
 
-> 🔒 **Security**: Apple's `SFSpeechRecognizer` with on-device mode (`requiresOnDeviceRecognition = true`) is limited to a small set of languages and lacks the model flexibility HushType requires. More critically, Apple's privacy policy for Speech APIs allows aggregated data collection, which conflicts with our zero-telemetry guarantee.
+> 🔒 **Security**: Apple's `SFSpeechRecognizer` with on-device mode (`requiresOnDeviceRecognition = true`) is limited to a small set of languages and lacks the model flexibility VaulType requires. More critically, Apple's privacy policy for Speech APIs allows aggregated data collection, which conflicts with our zero-telemetry guarantee.
 
 **whisper.cpp integration architecture:**
 
@@ -216,7 +216,7 @@ func createWhisperParams(for quality: TranscriptionQuality) -> whisper_full_para
 
 ### Why llama.cpp vs Ollama vs MLX
 
-HushType uses a local LLM for post-processing tasks: punctuation correction, formatting, grammar fixes, command interpretation, and text transformation. The choice of engine is critical for both integration simplicity and runtime performance.
+VaulType uses a local LLM for post-processing tasks: punctuation correction, formatting, grammar fixes, command interpretation, and text transformation. The choice of engine is critical for both integration simplicity and runtime performance.
 
 | Criteria | llama.cpp (direct) | Ollama | MLX (Apple) | Core ML |
 |---|---|---|---|---|
@@ -256,10 +256,10 @@ HushType uses a local LLM for post-processing tasks: punctuation correction, for
 
 **Why not Ollama as default:**
 
-1. **External dependency** — Users would need to install and run a separate daemon. HushType's promise is "download and it works."
+1. **External dependency** — Users would need to install and run a separate daemon. VaulType's promise is "download and it works."
 2. **Process management** — Detecting if Ollama is running, handling its lifecycle, and recovering from crashes adds significant complexity.
 3. **Latency** — Each inference call goes through HTTP, adding ~50-200ms of overhead per request.
-4. **Resource contention** — Ollama manages its own model loading/unloading, which can conflict with HushType's memory management strategy.
+4. **Resource contention** — Ollama manages its own model loading/unloading, which can conflict with VaulType's memory management strategy.
 
 **Why not MLX as default:**
 
@@ -267,7 +267,7 @@ HushType uses a local LLM for post-processing tasks: punctuation correction, for
 2. **Apple Silicon only** — MLX has no Intel fallback; llama.cpp supports both architectures with graceful degradation.
 3. **Model ecosystem** — GGUF models on HuggingFace vastly outnumber MLX-format models, giving users more choice.
 
-> ℹ️ **Info**: llama.cpp is compiled directly into the HushType binary via CMake and Swift Package Manager. No external processes, no HTTP APIs, no daemons. The LLM runs in the same address space as the app.
+> ℹ️ **Info**: llama.cpp is compiled directly into the VaulType binary via CMake and Swift Package Manager. No external processes, no HTTP APIs, no daemons. The LLM runs in the same address space as the app.
 
 **LLM provider protocol for extensibility:**
 
@@ -334,7 +334,7 @@ final class OllamaProvider: LLMProvider {
 }
 ```
 
-> ⚠️ **Warning**: When using the Ollama provider, network calls are made to `localhost:11434` only. HushType's App Transport Security (ATS) configuration explicitly allows only loopback addresses. No data is sent to external servers.
+> ⚠️ **Warning**: When using the Ollama provider, network calls are made to `localhost:11434` only. VaulType's App Transport Security (ATS) configuration explicitly allows only loopback addresses. No data is sent to external servers.
 
 ---
 
@@ -353,7 +353,7 @@ final class OllamaProvider: LLMProvider {
 | **Complexity** | Moderate | High | Low |
 | **Recommended by Apple** | Yes (current) | Legacy | Simple recording only |
 
-> 🍎 **macOS-specific**: `AVAudioEngine` on macOS supports input device selection, aggregate devices, and system audio capture when combined with Audio Units. This is essential for HushType's microphone selection feature.
+> 🍎 **macOS-specific**: `AVAudioEngine` on macOS supports input device selection, aggregate devices, and system audio capture when combined with Audio Units. This is essential for VaulType's microphone selection feature.
 
 **AVAudioEngine setup for whisper.cpp integration:**
 
@@ -457,7 +457,7 @@ final class AudioCaptureManager: @unchecked Sendable {
 
 ### Why CGEvent Over Accessibility API for Text Injection
 
-HushType needs to type transcribed text into any application the user is focused on. There are two primary approaches on macOS:
+VaulType needs to type transcribed text into any application the user is focused on. There are two primary approaches on macOS:
 
 | Criteria | CGEvent (Keystroke Simulation) | Accessibility API (AXUIElement) |
 |---|---|---|
@@ -472,7 +472,7 @@ HushType needs to type transcribed text into any application the user is focused
 | **Speed (long text)** | Slow for long text (keystroke-by-keystroke) | Fast (set entire string) |
 | **Reliability** | Very high | App-dependent |
 
-**HushType's dual-mode approach:**
+**VaulType's dual-mode approach:**
 
 ```
 ┌─────────────────────────────────────────┐
@@ -562,9 +562,9 @@ final class TextInjector {
 }
 ```
 
-> 🔒 **Security**: CGEvent posting requires the Accessibility permission (`kAXTrustedCheckOptionPrompt`). HushType requests this permission on first launch and guides the user through System Settings > Privacy & Security > Accessibility.
+> 🔒 **Security**: CGEvent posting requires the Accessibility permission (`kAXTrustedCheckOptionPrompt`). VaulType requests this permission on first launch and guides the user through System Settings > Privacy & Security > Accessibility.
 
-> ⚠️ **Warning**: The clipboard-paste fallback temporarily modifies the system clipboard. HushType preserves and restores the previous clipboard contents, but there is a brief window (~150ms) where the clipboard contains the transcribed text. This is an inherent limitation of the paste approach.
+> ⚠️ **Warning**: The clipboard-paste fallback temporarily modifies the system clipboard. VaulType preserves and restores the previous clipboard contents, but there is a brief window (~150ms) where the clipboard contains the transcribed text. This is an inherent limitation of the paste approach.
 
 ---
 
@@ -578,12 +578,12 @@ final class TextInjector {
 | **Schema definition** | `@Model` macro on Swift class | `.xcdatamodeld` file | SQL DDL | Object subclass |
 | **SwiftUI integration** | `@Query` property wrapper | `@FetchRequest` | Manual | Manual |
 | **Migration** | Automatic lightweight migration | Manual migration mapping | Manual SQL | Automatic |
-| **CloudKit sync** | Built-in (disabled for HushType) | Built-in | Not available | Realm Sync (cloud) |
+| **CloudKit sync** | Built-in (disabled for VaulType) | Built-in | Not available | Realm Sync (cloud) |
 | **Thread safety** | `ModelActor` for background | `NSManagedObjectContext` per thread | Manual locking | Thread-confined |
 | **Swift concurrency** | Full async/await support | Partial (performBlock) | Manual | Partial |
 | **Minimum macOS** | 14.0 (Sonoma) | 10.4+ | Any | 10.0+ |
 
-> ℹ️ **Info**: SwiftData's CloudKit sync capability is explicitly disabled in HushType. We configure `ModelConfiguration` with `cloudKitDatabase: .none` to ensure zero network activity. This is a deliberate privacy decision, not a limitation.
+> ℹ️ **Info**: SwiftData's CloudKit sync capability is explicitly disabled in VaulType. We configure `ModelConfiguration` with `cloudKitDatabase: .none` to ensure zero network activity. This is a deliberate privacy decision, not a limitation.
 
 **SwiftData model example:**
 
@@ -633,7 +633,7 @@ final class TranscriptionRecord {
 import SwiftData
 
 extension ModelContainer {
-    static func createHushTypeContainer() throws -> ModelContainer {
+    static func createVaulTypeContainer() throws -> ModelContainer {
         let schema = Schema([
             TranscriptionRecord.self,
             UserPromptTemplate.self,
@@ -641,7 +641,7 @@ extension ModelContainer {
         ])
 
         let configuration = ModelConfiguration(
-            "HushTypeStore",
+            "VaulTypeStore",
             schema: schema,
             isStoredInMemoryOnly: false,
             allowsSave: true,
@@ -657,7 +657,7 @@ extension ModelContainer {
 }
 ```
 
-> 🔒 **Security**: HushType stores transcription history in a local SwiftData database. Users can configure automatic deletion (after 24 hours, 7 days, 30 days, or never) in Settings. The database file is stored in the app's sandboxed container at `~/Library/Application Support/HushType/`.
+> 🔒 **Security**: VaulType stores transcription history in a local SwiftData database. Users can configure automatic deletion (after 24 hours, 7 days, 30 days, or never) in Settings. The database file is stored in the app's sandboxed container at `~/Library/Application Support/VaulType/`.
 
 ---
 
@@ -680,8 +680,8 @@ extension ModelContainer {
 
 ```bash
 # 1. Clone with submodules (whisper.cpp, llama.cpp)
-git clone --recursive https://github.com/user/hushtype.git
-cd hushtype
+git clone --recursive https://github.com/user/vaultype.git
+cd vaultype
 
 # 2. Build C/C++ dependencies with Metal support
 cmake -B build/whisper -S vendor/whisper.cpp \
@@ -698,15 +698,15 @@ cmake -B build/llama -S vendor/llama.cpp \
 cmake --build build/llama --config Release
 
 # 3. Build the Swift app
-xcodebuild -project HushType.xcodeproj \
-    -scheme HushType \
+xcodebuild -project VaulType.xcodeproj \
+    -scheme VaulType \
     -configuration Release \
-    -archivePath build/HushType.xcarchive \
+    -archivePath build/VaulType.xcarchive \
     archive
 
 # 4. Export for distribution
 xcodebuild -exportArchive \
-    -archivePath build/HushType.xcarchive \
+    -archivePath build/VaulType.xcarchive \
     -exportPath build/export \
     -exportOptionsPlist ExportOptions.plist
 ```
@@ -716,7 +716,7 @@ xcodebuild -exportArchive \
 | Channel | Format | Auto-Update | User Action |
 |---|---|---|---|
 | **GitHub Releases** | `.dmg` | Via Sparkle | Download and drag to /Applications |
-| **Homebrew Cask** | Formula | Via `brew upgrade` | `brew install --cask hushtype` |
+| **Homebrew Cask** | Formula | Via `brew upgrade` | `brew install --cask vaultype` |
 | **Sparkle** | `.zip` (appcast) | Automatic background updates | Prompted in-app |
 
 ### CI/CD Pipeline (GitHub Actions)
@@ -796,7 +796,7 @@ The following benchmarks were measured on representative hardware. Actual perfor
 | ~3 GB (large-v3) | **~0.8s** | ~3.5s | ~15.0s |
 | ~2 GB (LLM 3B Q4) | **~0.6s** | ~2.5s | ~10.0s |
 
-> 💡 **Tip**: HushType keeps models loaded in memory between transcriptions to avoid reload latency. Use `mmap` (memory-mapped I/O) for models that exceed available RAM — the OS will page sections in and out efficiently.
+> 💡 **Tip**: VaulType keeps models loaded in memory between transcriptions to avoid reload latency. Use `mmap` (memory-mapped I/O) for models that exceed available RAM — the OS will page sections in and out efficiently.
 
 ---
 
@@ -823,7 +823,7 @@ Memory requirements depend on which Whisper model and LLM model are loaded simul
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                  HushType Memory Layout                   │
+│                  VaulType Memory Layout                   │
 │                  (small + Llama-3.2-3B)                   │
 │                                                          │
 │  ┌────────────────────────────────────────┐  ~500 MB     │
@@ -849,7 +849,7 @@ Memory requirements depend on which Whisper model and LLM model are loaded simul
 └──────────────────────────────────────────────────────────┘
 ```
 
-> ⚠️ **Warning**: On systems with 8 GB RAM, using `whisper-large-v3` with a 3B+ LLM will cause significant memory pressure and potential swapping. HushType displays a warning in Settings when the selected model combination exceeds 60% of system RAM.
+> ⚠️ **Warning**: On systems with 8 GB RAM, using `whisper-large-v3` with a 3B+ LLM will cause significant memory pressure and potential swapping. VaulType displays a warning in Settings when the selected model combination exceeds 60% of system RAM.
 
 > 💡 **Tip**: Memory-mapped I/O (`mmap`) means the OS only loads model pages that are actively needed. Reported "memory usage" in Activity Monitor may show high numbers, but actual physical RAM pressure is lower. Check "Memory Pressure" in Activity Monitor for true system impact.
 
@@ -859,7 +859,7 @@ Memory requirements depend on which Whisper model and LLM model are loaded simul
 
 ### End-to-End Flow: Audio Capture to Text Injection
 
-The following example shows how HushType's core technologies integrate in the main transcription pipeline:
+The following example shows how VaulType's core technologies integrate in the main transcription pipeline:
 
 ```swift
 import AVFoundation
@@ -957,10 +957,10 @@ final class TranscriptionPipeline: ObservableObject {
 To use whisper.cpp from Swift, a C bridging header exposes the necessary functions:
 
 ```c
-// HushType-Bridging-Header.h
+// VaulType-Bridging-Header.h
 
-#ifndef HushType_Bridging_Header_h
-#define HushType_Bridging_Header_h
+#ifndef VaulType_Bridging_Header_h
+#define VaulType_Bridging_Header_h
 
 // whisper.cpp C API
 #include "whisper.h"
@@ -971,7 +971,7 @@ To use whisper.cpp from Swift, a C bridging header exposes the necessary functio
 // Common GGML utilities
 #include "ggml.h"
 
-#endif /* HushType_Bridging_Header_h */
+#endif /* VaulType_Bridging_Header_h */
 ```
 
 This bridging header makes all whisper.cpp and llama.cpp C functions available directly in Swift:
@@ -1073,10 +1073,10 @@ final class WhisperContext {
 - [Security Model](../security/SECURITY.md) — Privacy guarantees, threat model, and security architecture
 - [Deployment Guide](../deployment/DEPLOYMENT.md) — Build, sign, notarize, and distribute
 - [API Reference](../api/API_REFERENCE.md) — Internal module APIs and interfaces
-- [Contributing Guide](../contributing/CONTRIBUTING.md) — How to contribute to HushType
+- [Contributing Guide](../contributing/CONTRIBUTING.md) — How to contribute to VaulType
 - [Testing Guide](../testing/TESTING.md) — Unit, integration, and UI testing strategy
 - [Feature Documentation](../features/FEATURES.md) — Detailed feature specifications
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/vaultype).*

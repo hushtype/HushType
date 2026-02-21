@@ -2,8 +2,8 @@ Last Updated: 2026-02-13
 
 # Internal API Documentation
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
-> This document is the definitive internal Swift API reference for all HushType services, protocols, and extension points.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> This document is the definitive internal Swift API reference for all VaulType services, protocols, and extension points.
 
 ---
 
@@ -74,7 +74,7 @@ Last Updated: 2026-02-13
 
 ## Architecture Overview
 
-All HushType services follow a protocol-oriented design with concrete implementations injected at the application layer. Every service is designed for Swift 5.9+ structured concurrency with `async/await` and `Sendable` conformance.
+All VaulType services follow a protocol-oriented design with concrete implementations injected at the application layer. Every service is designed for Swift 5.9+ structured concurrency with `async/await` and `Sendable` conformance.
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
@@ -97,7 +97,7 @@ All HushType services follow a protocol-oriented design with concrete implementa
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-> ℹ️ **Info**: All service protocols reside in the `HushType/Protocols/` directory. Concrete implementations live in `HushType/Services/`. This separation allows mock injection for unit testing and future alternative implementations.
+> ℹ️ **Info**: All service protocols reside in the `VaulType/Protocols/` directory. Concrete implementations live in `VaulType/Services/`. This separation allows mock injection for unit testing and future alternative implementations.
 
 ---
 
@@ -525,7 +525,7 @@ struct WhisperModelInfo: Sendable, Identifiable {
 
 ### Transcription Modes
 
-HushType supports multiple transcription quality presets that map to whisper.cpp parameter combinations:
+VaulType supports multiple transcription quality presets that map to whisper.cpp parameter combinations:
 
 ```swift
 /// Preset quality levels that configure WhisperTranscriptionParameters.
@@ -871,7 +871,7 @@ struct LLMModelInfo: Sendable, Identifiable {
 
 ### Processing Modes
 
-HushType defines six built-in processing modes. Each mode uses a specialized prompt template to transform the raw transcription.
+VaulType defines six built-in processing modes. Each mode uses a specialized prompt template to transform the raw transcription.
 
 ```swift
 /// Processing modes available for LLM post-processing.
@@ -1261,7 +1261,7 @@ protocol TextInjectionService: AnyObject, Sendable {
     /// - Returns: An `ActiveFieldInfo` describing the focused element, or nil if none is focused.
     func detectActiveField() async -> ActiveFieldInfo?
 
-    /// Check whether HushType has the required Accessibility permission.
+    /// Check whether VaulType has the required Accessibility permission.
     /// - Returns: True if accessibility access is granted.
     func hasAccessibilityPermission() -> Bool
 
@@ -1357,7 +1357,7 @@ enum TextInjectionError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .accessibilityPermissionDenied:
-            return "Accessibility permission is required. Enable HushType in System Settings > Privacy & Security > Accessibility."
+            return "Accessibility permission is required. Enable VaulType in System Settings > Privacy & Security > Accessibility."
         case .fieldNotEditable:
             return "The focused field is not editable."
         case .eventCreationFailed:
@@ -1412,7 +1412,7 @@ func injectCodeBlock(
 }
 ```
 
-> 🔒 **Security**: CGEvent posting requires the Accessibility permission (`kAXTrustedCheckOptionPrompt`). HushType checks this permission at startup and guides the user through System Settings > Privacy & Security > Accessibility if it is not yet granted.
+> 🔒 **Security**: CGEvent posting requires the Accessibility permission (`kAXTrustedCheckOptionPrompt`). VaulType checks this permission at startup and guides the user through System Settings > Privacy & Security > Accessibility if it is not yet granted.
 
 > ⚠️ **Warning**: The clipboard paste strategy temporarily overwrites the system clipboard. Although the previous contents are restored after a short delay (default 150ms), clipboard manager apps may capture the intermediate state. The `preserveClipboard` flag controls this behavior.
 
@@ -1420,7 +1420,7 @@ func injectCodeBlock(
 
 ## CommandParser API
 
-The `CommandParser` detects and executes voice commands embedded in transcribed text. Commands are prefixed with trigger phrases (e.g., "hushtype", "command", "hey type") and can control the application, switch modes, or trigger actions.
+The `CommandParser` detects and executes voice commands embedded in transcribed text. Commands are prefixed with trigger phrases (e.g., "vaultype", "command", "hey type") and can control the application, switch modes, or trigger actions.
 
 ### CommandParser Protocol Definition
 
@@ -1514,7 +1514,7 @@ protocol CommandParser: AnyObject, Sendable {
     func execute(_ command: ParsedCommand) async throws
 
     /// Set the trigger prefix phrase that activates command mode.
-    /// - Parameter prefix: The prefix phrase (e.g., "hushtype", "command").
+    /// - Parameter prefix: The prefix phrase (e.g., "vaultype", "command").
     func setTriggerPrefix(_ prefix: String)
 
     /// Get the current trigger prefix.
@@ -1528,7 +1528,7 @@ protocol CommandParser: AnyObject, Sendable {
 
 ### Built-in Commands
 
-HushType ships with the following built-in voice commands:
+VaulType ships with the following built-in voice commands:
 
 | Command ID | Trigger Phrases | Category | Description |
 |---|---|---|---|
@@ -1542,7 +1542,7 @@ HushType ships with the following built-in voice commands:
 | `new_paragraph` | "new paragraph", "next paragraph" | editing | Insert a double newline |
 | `stop_dictation` | "stop dictation", "stop listening" | app | Stop the current dictation session |
 | `pause_dictation` | "pause", "pause dictation" | app | Pause without stopping |
-| `open_settings` | "open settings", "show settings" | app | Open the HushType settings window |
+| `open_settings` | "open settings", "show settings" | app | Open the VaulType settings window |
 
 ### Custom Command Registration
 
@@ -1709,7 +1709,7 @@ enum HotkeyAction: String, Sendable, CaseIterable, Codable {
     case switchToClean
     case switchToStructure
     case switchToCode
-    /// Open or focus the HushType overlay/menu.
+    /// Open or focus the VaulType overlay/menu.
     case openOverlay
     /// Open the settings window.
     case openSettings
@@ -1803,7 +1803,7 @@ protocol HotkeyManager: AnyObject, Sendable {
 ### Key Binding Configuration
 
 ```swift
-/// Default key bindings shipped with HushType.
+/// Default key bindings shipped with VaulType.
 extension KeyBinding {
     /// Default: Ctrl+Shift+Space for dictation toggle/push-to-talk.
     static let defaultDictation = KeyBinding(
@@ -2137,7 +2137,7 @@ struct ModelRegistry: Codable, Sendable {
 }
 
 // Default model directory location
-// ~/Library/Application Support/HushType/Models/
+// ~/Library/Application Support/VaulType/Models/
 //   ├── whisper/
 //   │   ├── ggml-base.bin
 //   │   ├── ggml-small.bin
@@ -2201,7 +2201,7 @@ enum ModelManagerError: LocalizedError, Sendable {
 }
 ```
 
-> 🔒 **Security**: Model downloads are the only network operation HushType performs, and they happen only when the user explicitly requests a model download from the Model Manager UI. Downloaded files are verified against SHA256 checksums before being used. No telemetry, analytics, or usage data is ever transmitted.
+> 🔒 **Security**: Model downloads are the only network operation VaulType performs, and they happen only when the user explicitly requests a model download from the Model Manager UI. Downloaded files are verified against SHA256 checksums before being used. No telemetry, analytics, or usage data is ever transmitted.
 
 ### ModelManager Usage Examples
 
@@ -2297,7 +2297,7 @@ func printDiskUsage(modelManager: ModelManager) async {
 
 > ℹ️ **Info**: The Plugin API is designed for future extensibility. It is not yet implemented in the current release but the protocol contracts are defined here to guide future development and allow early adopters to prototype extensions.
 
-The Plugin API allows third-party extensions to add new processing modes, voice commands, text transformers, and model backends to HushType.
+The Plugin API allows third-party extensions to add new processing modes, voice commands, text transformers, and model backends to VaulType.
 
 ### Plugin Protocol
 
@@ -2336,7 +2336,7 @@ struct PluginCapabilities: OptionSet, Sendable {
 }
 
 /// Core protocol that all plugins must implement.
-protocol HushTypePlugin: AnyObject, Sendable {
+protocol VaulTypePlugin: AnyObject, Sendable {
     /// Unique identifier for this plugin (reverse-domain notation recommended).
     var identifier: String { get }
 
@@ -2359,7 +2359,7 @@ protocol HushTypePlugin: AnyObject, Sendable {
     var capabilities: PluginCapabilities { get }
 
     /// Called when the plugin is loaded. Use this for initialization.
-    /// - Parameter host: The plugin host providing access to HushType services.
+    /// - Parameter host: The plugin host providing access to VaulType services.
     func activate(host: PluginHost) async throws
 
     /// Called when the plugin is being unloaded. Clean up resources.
@@ -2379,7 +2379,7 @@ protocol HushTypePlugin: AnyObject, Sendable {
 │                                                               │
 │  ┌───────────┐                                                │
 │  │  Bundled   │  Plugin discovered in ~/Library/Application   │
-│  │  (.plugin) │  Support/HushType/Plugins/                    │
+│  │  (.plugin) │  Support/VaulType/Plugins/                    │
 │  └─────┬─────┘                                                │
 │        │ load                                                 │
 │        ▼                                                      │
@@ -2402,7 +2402,7 @@ protocol HushTypePlugin: AnyObject, Sendable {
 ### Extension Points
 
 ```swift
-/// The host interface exposed to plugins for interacting with HushType services.
+/// The host interface exposed to plugins for interacting with VaulType services.
 protocol PluginHost: AnyObject, Sendable {
     /// Register a custom processing mode provided by this plugin.
     func registerProcessingMode(
@@ -2425,7 +2425,7 @@ protocol PluginHost: AnyObject, Sendable {
     /// Access the current application context (frontmost app, focused field).
     func getApplicationContext() async -> ApplicationContext?
 
-    /// Log a message to HushType's plugin log.
+    /// Log a message to VaulType's plugin log.
     func log(_ message: String, level: PluginLogLevel)
 
     /// Read a value from the plugin's persistent configuration store.
@@ -2460,7 +2460,7 @@ struct PluginManifest: Codable, Sendable {
     let name: String
     /// Plugin version (semver).
     let version: String
-    /// Minimum HushType Plugin API version required.
+    /// Minimum VaulType Plugin API version required.
     let minimumAPIVersion: String
     /// Author name.
     let author: String
@@ -2468,7 +2468,7 @@ struct PluginManifest: Codable, Sendable {
     let description: String
     /// Capabilities declared by this plugin.
     let capabilities: [String]
-    /// Name of the principal class that conforms to HushTypePlugin.
+    /// Name of the principal class that conforms to VaulTypePlugin.
     let principalClass: String
     /// Permissions the plugin requires.
     let permissions: [PluginPermission]
@@ -2496,7 +2496,7 @@ Example `manifest.json`:
 ```swift
 // manifest.json (JSON, not Swift -- shown here for reference)
 // {
-//     "identifier": "com.example.hushtype-markdown-formatter",
+//     "identifier": "com.example.vaultype-markdown-formatter",
 //     "name": "Markdown Formatter",
 //     "version": "1.0.0",
 //     "minimumAPIVersion": "1.0",
@@ -2510,7 +2510,7 @@ Example `manifest.json`:
 
 ### Plugin Security Sandboxing
 
-> 🔒 **Security**: Plugins run in a restricted sandbox with limited access to HushType APIs. They cannot access the file system outside their own container, cannot make network connections, and cannot access raw audio data. This prevents malicious plugins from exfiltrating sensitive transcription data.
+> 🔒 **Security**: Plugins run in a restricted sandbox with limited access to VaulType APIs. They cannot access the file system outside their own container, cannot make network connections, and cannot access raw audio data. This prevents malicious plugins from exfiltrating sensitive transcription data.
 
 ```swift
 /// Sandbox restrictions enforced on all plugins.
@@ -2537,7 +2537,7 @@ struct PluginSandbox {
 
 ```swift
 // Example: A plugin that formats text as Markdown
-final class MarkdownFormatterPlugin: HushTypePlugin {
+final class MarkdownFormatterPlugin: VaulTypePlugin {
     let identifier = "com.example.markdown-formatter"
     let displayName = "Markdown Formatter"
     let version = "1.0.0"
@@ -2599,7 +2599,7 @@ final class MarkdownFormatterPlugin: HushTypePlugin {
 
 ## Ollama REST API Integration
 
-HushType optionally supports Ollama as an alternative LLM backend for users who already have Ollama installed. This integration communicates exclusively with `localhost:11434` and never sends data to external servers.
+VaulType optionally supports Ollama as an alternative LLM backend for users who already have Ollama installed. This integration communicates exclusively with `localhost:11434` and never sends data to external servers.
 
 > ⚠️ **Warning**: The Ollama integration is optional. It requires the user to have Ollama installed and running separately. The default llama.cpp backend requires no external dependencies.
 
@@ -2679,7 +2679,7 @@ protocol OllamaClient: AnyObject, Sendable {
 
 ### Endpoint Reference
 
-| Endpoint | Method | Purpose | HushType Usage |
+| Endpoint | Method | Purpose | VaulType Usage |
 |---|---|---|---|
 | `GET /` | GET | Health check | Connection status monitoring |
 | `POST /api/generate` | POST | Generate completion | LLM post-processing |
@@ -2984,13 +2984,13 @@ final class OllamaLLMProvider: LLMProvider {
 }
 ```
 
-> 🔒 **Security**: The Ollama client is configured to communicate only with loopback addresses (`localhost` / `127.0.0.1`). HushType's App Transport Security (ATS) configuration explicitly blocks any requests to non-loopback addresses from the Ollama client. No transcription data is ever sent to remote servers.
+> 🔒 **Security**: The Ollama client is configured to communicate only with loopback addresses (`localhost` / `127.0.0.1`). VaulType's App Transport Security (ATS) configuration explicitly blocks any requests to non-loopback addresses from the Ollama client. No transcription data is ever sent to remote servers.
 
 ---
 
 ## Common Types and Protocols
 
-These types are shared across multiple services and form the foundation of the HushType API.
+These types are shared across multiple services and form the foundation of the VaulType API.
 
 ```swift
 import Foundation
@@ -3057,7 +3057,7 @@ struct PipelineResult: Sendable {
 
 ## Thread Safety and Concurrency
 
-All HushType service protocols are designed for Swift 5.9+ structured concurrency. Key principles:
+All VaulType service protocols are designed for Swift 5.9+ structured concurrency. Key principles:
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
@@ -3122,10 +3122,10 @@ final class AudioBridge: @unchecked Sendable {
 - [Database Schema](../architecture/DATABASE_SCHEMA.md) -- SwiftData models, UserDefaults keys, and data persistence
 - [Speech Recognition](../features/SPEECH_RECOGNITION.md) -- Detailed whisper.cpp configuration and tuning guide
 - [Security Model](../security/SECURITY.md) -- Privacy guarantees, threat model, and security architecture
-- [Permissions](../features/PERMISSIONS.md) -- macOS permissions required by HushType
+- [Permissions](../features/PERMISSIONS.md) -- macOS permissions required by VaulType
 - [Accessibility](../reference/ACCESSIBILITY.md) -- Accessibility features and VoiceOver support
 - [Roadmap](../reference/ROADMAP.md) -- Future plans including Plugin API implementation timeline
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions, corrections, or API proposals, please open an issue on the [GitHub repository](https://github.com/user/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions, corrections, or API proposals, please open an issue on the [GitHub repository](https://github.com/user/vaultype).*

@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Monitoring & Logging
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
 > Complete reference for structured logging, performance metrics, crash reporting, diagnostics, and runtime monitoring — all designed with privacy as the default.
 
 ---
@@ -22,7 +22,7 @@ Last Updated: 2026-02-13
   - [3.2 Subsystem Naming Convention](#32-subsystem-naming-convention)
   - [3.3 Logger Singleton Setup](#33-logger-singleton-setup)
 - [4. Console.app Usage for Debugging](#4-consoleapp-usage-for-debugging)
-  - [4.1 Filtering HushType Logs](#41-filtering-hushtype-logs)
+  - [4.1 Filtering VaulType Logs](#41-filtering-vaultype-logs)
   - [4.2 Useful Predicates](#42-useful-predicates)
   - [4.3 Streaming Logs During Development](#43-streaming-logs-during-development)
   - [4.4 Log Export](#44-log-export)
@@ -61,20 +61,20 @@ Last Updated: 2026-02-13
 
 ### 1.1 Design Principles
 
-HushType's monitoring and logging system is built on four core principles:
+VaulType's monitoring and logging system is built on four core principles:
 
 1. **Privacy by Default** — No user content (transcriptions, audio data, injected text) is ever written to logs. All dynamic values use `%{private}` unless explicitly marked public.
 2. **Local Only** — All performance metrics are stored in SwiftData on-device. Nothing is transmitted unless the user explicitly opts in to Sentry crash reporting.
 3. **Structured and Queryable** — Apple's `os_log` provides structured, typed, efficient logging that integrates with Console.app and Instruments.
 4. **Zero Overhead in Production** — Debug-level logs are compiled out in release builds. Signposts have negligible cost when not actively profiled.
 
-> 🔒 **Security**: HushType logs never contain transcription content, audio data, clipboard contents, or any text the user has dictated. See [`../security/SECURITY.md`](../security/SECURITY.md) for the full data handling policy.
+> 🔒 **Security**: VaulType logs never contain transcription content, audio data, clipboard contents, or any text the user has dictated. See [`../security/SECURITY.md`](../security/SECURITY.md) for the full data handling policy.
 
 ### 1.2 Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          HushType Application                               │
+│                          VaulType Application                               │
 │                                                                             │
 │  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌────────────┐  │
 │  │  Audio Layer  │  │  Whisper STT  │  │  LLM Engine   │  │  Injector  │  │
@@ -125,23 +125,23 @@ HushType's monitoring and logging system is built on four core principles:
 
 ### 2.1 OSLog Subsystem and Category Setup
 
-HushType uses Apple's unified logging system (`os_log`) as the sole logging backend. The `Logger` struct (available since macOS 11) provides a type-safe, performant API with automatic privacy handling.
+VaulType uses Apple's unified logging system (`os_log`) as the sole logging backend. The `Logger` struct (available since macOS 11) provides a type-safe, performant API with automatic privacy handling.
 
 ```swift
 import OSLog
 
 // MARK: - Subsystem Constant
 
-/// The subsystem identifier for all HushType log messages.
+/// The subsystem identifier for all VaulType log messages.
 /// Follows Apple's reverse-DNS convention matching the app's bundle identifier.
 enum LogSubsystem {
-    static let main = "com.hushtype.app"
+    static let main = "com.vaultype.app"
 }
 
 // MARK: - Log Categories
 
 /// Centralized log category definitions for consistent usage across the codebase.
-/// Each category maps to a distinct pipeline or subsystem within HushType.
+/// Each category maps to a distinct pipeline or subsystem within VaulType.
 enum LogCategory {
     static let audio      = "audio"
     static let whisper    = "whisper"
@@ -157,7 +157,7 @@ enum LogCategory {
 
 // MARK: - Logger Instances
 
-/// Pre-configured Logger instances for each HushType subsystem.
+/// Pre-configured Logger instances for each VaulType subsystem.
 /// Usage: `Log.audio.info("Microphone input started")`
 enum Log {
     static let audio     = Logger(subsystem: LogSubsystem.main, category: LogCategory.audio)
@@ -177,9 +177,9 @@ enum Log {
 
 ### 2.2 Log Levels
 
-Apple's unified logging system defines five log levels. HushType uses each level with specific intent:
+Apple's unified logging system defines five log levels. VaulType uses each level with specific intent:
 
-| Level | `Logger` Method | Persistence | Purpose in HushType |
+| Level | `Logger` Method | Persistence | Purpose in VaulType |
 |-------|----------------|-------------|---------------------|
 | **Debug** | `.debug()` | Not persisted (development only) | Verbose data for active debugging — buffer sizes, sample rates, intermediate states |
 | **Info** | `.info()` | Persisted only during `log collect` | Routine operations — pipeline stage transitions, model loading steps, config changes |
@@ -213,7 +213,7 @@ func demonstrateLogLevels() {
 
 ### 2.3 Privacy-Aware Logging
 
-Apple's unified logging system provides compile-time privacy annotations. HushType enforces strict privacy rules:
+Apple's unified logging system provides compile-time privacy annotations. VaulType enforces strict privacy rules:
 
 **Privacy Rules:**
 
@@ -255,7 +255,7 @@ Log.injection.info("Text injected via \(strategy.rawValue, privacy: .public), le
 
 ### 2.4 Signposts for Performance
 
-OSSignposter provides zero-cost (when not profiling) instrumentation that integrates directly with Instruments.app. HushType uses signposts to bracket every significant operation in the pipeline.
+OSSignposter provides zero-cost (when not profiling) instrumentation that integrates directly with Instruments.app. VaulType uses signposts to bracket every significant operation in the pipeline.
 
 ```swift
 import OSLog
@@ -330,7 +330,7 @@ func emitModelLoadEvent(modelName: String, sizeBytes: Int64) {
 }
 ```
 
-> 💡 **Tip**: In Instruments.app, create a custom instrument that tracks `com.hushtype.app` signposts. This gives you a timeline view of the entire dictation pipeline: audio capture, whisper inference, LLM processing, and text injection — all in one trace.
+> 💡 **Tip**: In Instruments.app, create a custom instrument that tracks `com.vaultype.app` signposts. This gives you a timeline view of the entire dictation pipeline: audio capture, whisper inference, LLM processing, and text injection — all in one trace.
 
 ---
 
@@ -340,30 +340,30 @@ func emitModelLoadEvent(modelName: String, sizeBytes: Int64) {
 
 | Category | Logger | Subsystem | Description | Typical Log Levels |
 |----------|--------|-----------|-------------|--------------------|
-| `audio` | `Log.audio` | `com.hushtype.app` | AVAudioEngine capture, sample rate conversion, VAD, ring buffer operations | debug, info, error |
-| `whisper` | `Log.whisper` | `com.hushtype.app` | whisper.cpp inference lifecycle — model loading, segment processing, token generation | info, notice, error |
-| `llm` | `Log.llm` | `com.hushtype.app` | llama.cpp inference — prompt construction, token generation, mode selection | info, notice, error |
-| `injection` | `Log.injection` | `com.hushtype.app` | CGEvent text injection, clipboard operations, fallback strategies, target app detection | info, notice, error |
-| `commands` | `Log.commands` | `com.hushtype.app` | Voice command detection, parsing, action execution, custom command registry | info, notice, error |
-| `ui` | `Log.ui` | `com.hushtype.app` | SwiftUI view lifecycle, menu bar state, overlay presentation, settings changes | debug, info, error |
-| `models` | `Log.models` | `com.hushtype.app` | Model file management — download, verification, deletion, storage calculations | info, notice, error |
-| `system` | `Log.system` | `com.hushtype.app` | App lifecycle, permission requests, memory pressure, thermal state, global state transitions | notice, error, fault |
-| `metrics` | `Log.metrics` | `com.hushtype.app` | Performance metric recording, aggregation, export events | debug, info |
-| `sentry` | `Log.sentry` | `com.hushtype.app` | Sentry SDK lifecycle — initialization, opt-in state, event submission status | info, notice, error |
+| `audio` | `Log.audio` | `com.vaultype.app` | AVAudioEngine capture, sample rate conversion, VAD, ring buffer operations | debug, info, error |
+| `whisper` | `Log.whisper` | `com.vaultype.app` | whisper.cpp inference lifecycle — model loading, segment processing, token generation | info, notice, error |
+| `llm` | `Log.llm` | `com.vaultype.app` | llama.cpp inference — prompt construction, token generation, mode selection | info, notice, error |
+| `injection` | `Log.injection` | `com.vaultype.app` | CGEvent text injection, clipboard operations, fallback strategies, target app detection | info, notice, error |
+| `commands` | `Log.commands` | `com.vaultype.app` | Voice command detection, parsing, action execution, custom command registry | info, notice, error |
+| `ui` | `Log.ui` | `com.vaultype.app` | SwiftUI view lifecycle, menu bar state, overlay presentation, settings changes | debug, info, error |
+| `models` | `Log.models` | `com.vaultype.app` | Model file management — download, verification, deletion, storage calculations | info, notice, error |
+| `system` | `Log.system` | `com.vaultype.app` | App lifecycle, permission requests, memory pressure, thermal state, global state transitions | notice, error, fault |
+| `metrics` | `Log.metrics` | `com.vaultype.app` | Performance metric recording, aggregation, export events | debug, info |
+| `sentry` | `Log.sentry` | `com.vaultype.app` | Sentry SDK lifecycle — initialization, opt-in state, event submission status | info, notice, error |
 
 ### 3.2 Subsystem Naming Convention
 
-HushType uses a single subsystem identifier for all log categories:
+VaulType uses a single subsystem identifier for all log categories:
 
 ```
-com.hushtype.app
+com.vaultype.app
 ```
 
-This matches the application's bundle identifier and follows Apple's recommended reverse-DNS convention. A single subsystem keeps filtering simple — one predicate catches all HushType logs regardless of category.
+This matches the application's bundle identifier and follows Apple's recommended reverse-DNS convention. A single subsystem keeps filtering simple — one predicate catches all VaulType logs regardless of category.
 
 **Why one subsystem, many categories (not many subsystems)?**
 
-- Console.app's subsystem filter is the coarsest filter — one subsystem = one click to see all HushType logs
+- Console.app's subsystem filter is the coarsest filter — one subsystem = one click to see all VaulType logs
 - Categories provide the fine-grained filtering within that subsystem
 - Instruments signposts use separate category strings for visual separation in traces
 - This matches Apple's own pattern (e.g., `com.apple.network` with categories `connection`, `path`, `resolution`)
@@ -373,7 +373,7 @@ This matches the application's bundle identifier and follows Apple's recommended
 The `Log` enum from Section 2.1 is the single source of truth for all loggers in the project. Here is the complete implementation file:
 
 ```swift
-// File: Sources/HushType/Logging/Log.swift
+// File: Sources/VaulType/Logging/Log.swift
 
 import OSLog
 
@@ -381,7 +381,7 @@ import OSLog
 
 /// Central subsystem identifier. Matches the app bundle ID.
 enum LogSubsystem {
-    static let main = "com.hushtype.app"
+    static let main = "com.vaultype.app"
 }
 
 // MARK: - Log Category Constants
@@ -403,7 +403,7 @@ enum LogCategory {
 
 // MARK: - Logger Instances
 
-/// Pre-configured loggers for every HushType subsystem.
+/// Pre-configured loggers for every VaulType subsystem.
 ///
 /// Usage:
 /// ```swift
@@ -433,15 +433,15 @@ enum Log {
 
 ## 4. Console.app Usage for Debugging
 
-### 4.1 Filtering HushType Logs
+### 4.1 Filtering VaulType Logs
 
-Console.app is the primary tool for reading HushType logs during development and QA. Here is how to set up effective filters:
+Console.app is the primary tool for reading VaulType logs during development and QA. Here is how to set up effective filters:
 
 **Quick Start:**
 
 1. Open Console.app (`/Applications/Utilities/Console.app`)
 2. Select your Mac (or an attached device) in the sidebar
-3. Click the search bar and type: `subsystem:com.hushtype.app`
+3. Click the search bar and type: `subsystem:com.vaultype.app`
 4. Press Enter to begin streaming
 5. Optionally refine with a category: `category:whisper`
 
@@ -451,38 +451,38 @@ Console.app supports combining multiple predicates with AND/OR logic. Click the 
 
 | Filter Goal | Predicate |
 |-------------|-----------|
-| All HushType logs | `subsystem:com.hushtype.app` |
-| Only audio pipeline | `subsystem:com.hushtype.app AND category:audio` |
-| Errors and faults only | `subsystem:com.hushtype.app AND (messageType:error OR messageType:fault)` |
-| Whisper + LLM inference | `subsystem:com.hushtype.app AND (category:whisper OR category:llm)` |
-| Text injection issues | `subsystem:com.hushtype.app AND category:injection AND messageType:error` |
-| Model management | `subsystem:com.hushtype.app AND (category:models OR category:system)` |
+| All VaulType logs | `subsystem:com.vaultype.app` |
+| Only audio pipeline | `subsystem:com.vaultype.app AND category:audio` |
+| Errors and faults only | `subsystem:com.vaultype.app AND (messageType:error OR messageType:fault)` |
+| Whisper + LLM inference | `subsystem:com.vaultype.app AND (category:whisper OR category:llm)` |
+| Text injection issues | `subsystem:com.vaultype.app AND category:injection AND messageType:error` |
+| Model management | `subsystem:com.vaultype.app AND (category:models OR category:system)` |
 
 ### 4.2 Useful Predicates
 
 For advanced filtering, use Console.app's predicate syntax or the `log` CLI tool:
 
 ```bash
-# Stream all HushType logs at info level and above
-log stream --predicate 'subsystem == "com.hushtype.app"' --level info
+# Stream all VaulType logs at info level and above
+log stream --predicate 'subsystem == "com.vaultype.app"' --level info
 
 # Stream only whisper inference logs
-log stream --predicate 'subsystem == "com.hushtype.app" AND category == "whisper"'
+log stream --predicate 'subsystem == "com.vaultype.app" AND category == "whisper"'
 
 # Stream errors and faults across all categories
-log stream --predicate 'subsystem == "com.hushtype.app" AND (messageType == 16 OR messageType == 17)'
+log stream --predicate 'subsystem == "com.vaultype.app" AND (messageType == 16 OR messageType == 17)'
 
 # Search recent logs for model loading issues
-log show --predicate 'subsystem == "com.hushtype.app" AND category == "models"' --last 1h
+log show --predicate 'subsystem == "com.vaultype.app" AND category == "models"' --last 1h
 
 # Search for a specific error pattern
-log show --predicate 'subsystem == "com.hushtype.app" AND eventMessage CONTAINS "failed"' --last 30m
+log show --predicate 'subsystem == "com.vaultype.app" AND eventMessage CONTAINS "failed"' --last 30m
 
 # Export to a file for sharing
-log show --predicate 'subsystem == "com.hushtype.app"' --last 2h > ~/Desktop/hushtype-logs.txt
+log show --predicate 'subsystem == "com.vaultype.app"' --last 2h > ~/Desktop/vaultype-logs.txt
 ```
 
-> 💡 **Tip**: Create a saved search in Console.app for `subsystem:com.hushtype.app` — it persists across launches and provides one-click access to HushType logs.
+> 💡 **Tip**: Create a saved search in Console.app for `subsystem:com.vaultype.app` — it persists across launches and provides one-click access to VaulType logs.
 
 ### 4.3 Streaming Logs During Development
 
@@ -502,7 +502,7 @@ During active development in Xcode, logs appear in the Xcode debug console autom
 
 **Recommended development workflow:**
 
-1. Run HushType from Xcode (Debug scheme)
+1. Run VaulType from Xcode (Debug scheme)
 2. Open Console.app side-by-side
 3. Set the predicate to the category you are working on
 4. Use Xcode breakpoints for state inspection, Console.app for log flow
@@ -510,7 +510,7 @@ During active development in Xcode, logs appear in the Xcode debug console autom
 ```bash
 # Terminal-based streaming (useful for CI or headless debugging)
 log stream \
-  --predicate 'subsystem == "com.hushtype.app"' \
+  --predicate 'subsystem == "com.vaultype.app"' \
   --level debug \
   --style compact
 ```
@@ -521,23 +521,23 @@ For bug reports and diagnostics, logs can be exported using the CLI:
 
 ```bash
 # Collect a log archive (includes all system logs — can be large)
-sudo log collect --device --last 1h --output ~/Desktop/hushtype-log-archive.logarchive
+sudo log collect --device --last 1h --output ~/Desktop/vaultype-log-archive.logarchive
 
-# Export only HushType logs as human-readable text
+# Export only VaulType logs as human-readable text
 log show \
-  --predicate 'subsystem == "com.hushtype.app"' \
+  --predicate 'subsystem == "com.vaultype.app"' \
   --last 4h \
   --style json \
-  > ~/Desktop/hushtype-logs.json
+  > ~/Desktop/vaultype-logs.json
 
 # Export with timestamps and process info
 log show \
-  --predicate 'subsystem == "com.hushtype.app"' \
+  --predicate 'subsystem == "com.vaultype.app"' \
   --last 4h \
   --info \
   --debug \
   --style default \
-  > ~/Desktop/hushtype-full-logs.txt
+  > ~/Desktop/vaultype-full-logs.txt
 ```
 
 > ⚠️ **Warning**: Exported logs from development builds may contain `%{private}` values in cleartext. Never share development log exports publicly without reviewing them first. Production builds redact private values automatically.
@@ -548,10 +548,10 @@ log show \
 
 ### 5.1 Privacy-Respecting Configuration
 
-HushType offers optional crash reporting via Sentry. This feature is **disabled by default** and requires explicit user opt-in. The integration is configured to be maximally privacy-respecting:
+VaulType offers optional crash reporting via Sentry. This feature is **disabled by default** and requires explicit user opt-in. The integration is configured to be maximally privacy-respecting:
 
 ```swift
-// File: Sources/HushType/Monitoring/SentryConfiguration.swift
+// File: Sources/VaulType/Monitoring/SentryConfiguration.swift
 
 import Foundation
 import OSLog
@@ -575,7 +575,7 @@ final class SentryConfiguration {
     static let shared = SentryConfiguration()
 
     private let logger = Log.sentry
-    private let sentryOptInKey = "com.hushtype.sentry.optIn"
+    private let sentryOptInKey = "com.vaultype.sentry.optIn"
 
     /// Whether the user has explicitly opted in to crash reporting.
     var isOptedIn: Bool {
@@ -678,7 +678,7 @@ final class SentryConfiguration {
     private func loadDSN() -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: "com.hushtype.sentry",
+            kSecAttrService as String: "com.vaultype.sentry",
             kSecAttrAccount as String: "dsn",
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
@@ -734,9 +734,9 @@ final class SentryConfiguration {
         let allowedCategories: Set<String> = [
             "app.lifecycle",
             "device.orientation",
-            "hushtype.pipeline",
-            "hushtype.model",
-            "hushtype.system"
+            "vaultype.pipeline",
+            "vaultype.model",
+            "vaultype.system"
         ]
 
         guard let category = breadcrumb.category,
@@ -758,7 +758,7 @@ private extension Bundle {
     var appVersionString: String {
         let version = infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
         let build = infoDictionary?["CFBundleVersion"] as? String ?? "0"
-        return "com.hushtype.app@\(version)+\(build)"
+        return "com.vaultype.app@\(version)+\(build)"
     }
 }
 ```
@@ -768,7 +768,7 @@ private extension Bundle {
 The Sentry opt-in is presented in the Settings view under a dedicated "Privacy & Diagnostics" section. The user must take an explicit action to enable it:
 
 ```swift
-// File: Sources/HushType/Views/Settings/DiagnosticsSettingsView.swift
+// File: Sources/VaulType/Views/Settings/DiagnosticsSettingsView.swift
 
 import SwiftUI
 
@@ -824,7 +824,7 @@ func provisionSentryDSN() {
 
     let addQuery: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "com.hushtype.sentry",
+        kSecAttrService as String: "com.vaultype.sentry",
         kSecAttrAccount as String: "dsn",
         kSecValueData as String: embeddedDSN.data(using: .utf8)!,
         kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
@@ -843,7 +843,7 @@ func provisionSentryDSN() {
 
 ### 5.4 Breadcrumbs
 
-HushType adds custom breadcrumbs for pipeline events that help diagnose crashes without revealing user content:
+VaulType adds custom breadcrumbs for pipeline events that help diagnose crashes without revealing user content:
 
 ```swift
 #if canImport(Sentry)
@@ -853,19 +853,19 @@ import Sentry
 /// Only records pipeline stage transitions, never content.
 enum SentryBreadcrumbs {
     static func pipelineStageChanged(from: String, to: String) {
-        let crumb = Breadcrumb(level: .info, category: "hushtype.pipeline")
+        let crumb = Breadcrumb(level: .info, category: "vaultype.pipeline")
         crumb.message = "Pipeline: \(from) -> \(to)"
         SentrySDK.addBreadcrumb(crumb)
     }
 
     static func modelLoaded(name: String, type: String) {
-        let crumb = Breadcrumb(level: .info, category: "hushtype.model")
+        let crumb = Breadcrumb(level: .info, category: "vaultype.model")
         crumb.message = "Model loaded: \(type)/\(name)"
         SentrySDK.addBreadcrumb(crumb)
     }
 
     static func systemEvent(_ event: String) {
-        let crumb = Breadcrumb(level: .info, category: "hushtype.system")
+        let crumb = Breadcrumb(level: .info, category: "vaultype.system")
         crumb.message = event
         SentrySDK.addBreadcrumb(crumb)
     }
@@ -900,7 +900,7 @@ For absolute clarity, Sentry is configured to **never** transmit:
 Performance metrics are stored locally in SwiftData. They never leave the device unless the user explicitly exports a diagnostic bundle.
 
 ```swift
-// File: Sources/HushType/Models/PerformanceMetric.swift
+// File: Sources/VaulType/Models/PerformanceMetric.swift
 
 import Foundation
 import SwiftData
@@ -970,14 +970,14 @@ final class PerformanceMetric {
 }
 ```
 
-> ℹ️ **Info**: The `PerformanceMetric` model integrates with the existing SwiftData store described in [`../architecture/DATABASE_SCHEMA.md`](../architecture/DATABASE_SCHEMA.md). Metrics are stored in the same `HushType.store` SQLite database alongside other app data.
+> ℹ️ **Info**: The `PerformanceMetric` model integrates with the existing SwiftData store described in [`../architecture/DATABASE_SCHEMA.md`](../architecture/DATABASE_SCHEMA.md). Metrics are stored in the same `VaulType.store` SQLite database alongside other app data.
 
 ### 6.2 Metrics Collection Service
 
 The `MetricsCollectionService` is the central hub for recording and querying performance data:
 
 ```swift
-// File: Sources/HushType/Monitoring/MetricsCollectionService.swift
+// File: Sources/VaulType/Monitoring/MetricsCollectionService.swift
 
 import Foundation
 import SwiftData
@@ -1402,17 +1402,17 @@ final class AudioBufferMonitor {
 
 ### 7.1 Diagnostic Bundle Contents
 
-When a user files a bug report, HushType can generate a diagnostic bundle containing everything needed to diagnose the issue — without any user-generated content.
+When a user files a bug report, VaulType can generate a diagnostic bundle containing everything needed to diagnose the issue — without any user-generated content.
 
 **Included in the bundle:**
 
 | File | Contents | Privacy |
 |------|----------|---------|
-| `system_info.json` | macOS version, chip, RAM, disk space, HushType version | Safe |
+| `system_info.json` | macOS version, chip, RAM, disk space, VaulType version | Safe |
 | `model_info.json` | Installed models, sizes, checksums, load times | Safe |
 | `settings_sanitized.json` | Non-sensitive settings (UI prefs, model selections) — no paths, no content | Safe |
 | `performance_metrics.json` | Last 7 days of aggregated metrics (no individual entries) | Safe |
-| `recent_logs.txt` | Last 2 hours of HushType os_log entries (privacy-redacted) | Reviewed |
+| `recent_logs.txt` | Last 2 hours of VaulType os_log entries (privacy-redacted) | Reviewed |
 | `audio_config.json` | Audio device info, sample rate, buffer size — no audio data | Safe |
 | `thermal_memory.json` | Thermal state history, memory pressure events | Safe |
 | `crash_logs/` | Any recent crash logs from `~/Library/Logs/DiagnosticReports/` | Reviewed |
@@ -1431,7 +1431,7 @@ When a user files a bug report, HushType can generate a diagnostic bundle contai
 ### 7.2 Bundle Generation
 
 ```swift
-// File: Sources/HushType/Monitoring/DiagnosticExporter.swift
+// File: Sources/VaulType/Monitoring/DiagnosticExporter.swift
 
 import Foundation
 import OSLog
@@ -1461,7 +1461,7 @@ final class DiagnosticExporter {
     /// - Throws: If any step of the generation fails.
     func generateBundle() async throws -> URL {
         let bundleDir = fileManager.temporaryDirectory
-            .appendingPathComponent("HushType-Diagnostics-\(bundleTimestamp())")
+            .appendingPathComponent("VaulType-Diagnostics-\(bundleTimestamp())")
 
         try fileManager.createDirectory(at: bundleDir, withIntermediateDirectories: true)
 
@@ -1503,8 +1503,8 @@ final class DiagnosticExporter {
     private func generateSystemInfo(in directory: URL) throws {
         let processInfo = ProcessInfo.processInfo
         let systemInfo: [String: Any] = [
-            "hushtype_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "unknown",
-            "hushtype_build": Bundle.main.infoDictionary?["CFBundleVersion"] ?? "unknown",
+            "vaultype_version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "unknown",
+            "vaultype_build": Bundle.main.infoDictionary?["CFBundleVersion"] ?? "unknown",
             "macos_version": processInfo.operatingSystemVersionString,
             "macos_build": macOSBuildNumber(),
             "chip": cpuArchitecture(),
@@ -1548,16 +1548,16 @@ final class DiagnosticExporter {
         // Export only non-sensitive settings
         let defaults = UserDefaults.standard
         let safeKeys: [String] = [
-            "com.hushtype.selectedWhisperModel",
-            "com.hushtype.selectedLLMModel",
-            "com.hushtype.llmMode",
-            "com.hushtype.injectionStrategy",
-            "com.hushtype.overlayPosition",
-            "com.hushtype.overlayEnabled",
-            "com.hushtype.vadSensitivity",
-            "com.hushtype.hotkey",
-            "com.hushtype.selectedLanguage",
-            "com.hushtype.sentry.optIn"
+            "com.vaultype.selectedWhisperModel",
+            "com.vaultype.selectedLLMModel",
+            "com.vaultype.llmMode",
+            "com.vaultype.injectionStrategy",
+            "com.vaultype.overlayPosition",
+            "com.vaultype.overlayEnabled",
+            "com.vaultype.vadSensitivity",
+            "com.vaultype.hotkey",
+            "com.vaultype.selectedLanguage",
+            "com.vaultype.sentry.optIn"
         ]
 
         var settings: [String: Any] = [:]
@@ -1642,12 +1642,12 @@ final class DiagnosticExporter {
     // MARK: - Recent Logs
 
     private func collectRecentLogs(in directory: URL) async throws {
-        // Use the `log` CLI to collect recent HushType logs
+        // Use the `log` CLI to collect recent VaulType logs
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/log")
         process.arguments = [
             "show",
-            "--predicate", "subsystem == \"com.hushtype.app\"",
+            "--predicate", "subsystem == \"com.vaultype.app\"",
             "--last", "2h",
             "--style", "default"
         ]
@@ -1682,10 +1682,10 @@ final class DiagnosticExporter {
             return
         }
 
-        // Only include HushType crash logs from the last 7 days
+        // Only include VaulType crash logs from the last 7 days
         let sevenDaysAgo = Date(timeIntervalSinceNow: -7 * 24 * 60 * 60)
 
-        for file in contents where file.lastPathComponent.contains("HushType") {
+        for file in contents where file.lastPathComponent.contains("VaulType") {
             let attributes = try? fileManager.attributesOfItem(atPath: file.path)
             if let created = attributes?[.creationDate] as? Date, created > sevenDaysAgo {
                 try? fileManager.copyItem(
@@ -1700,7 +1700,7 @@ final class DiagnosticExporter {
 
     private func generatePrivacyManifest(in directory: URL) throws {
         let manifest = """
-        HushType Diagnostic Bundle - Privacy Manifest
+        VaulType Diagnostic Bundle - Privacy Manifest
         ==============================================
         Generated: \(ISO8601DateFormatter().string(from: Date()))
 
@@ -1814,10 +1814,10 @@ final class DiagnosticExporter {
 
 ### 7.3 Privacy Review Before Export
 
-Before sharing the diagnostic bundle, HushType presents a privacy review screen that lets the user inspect every file:
+Before sharing the diagnostic bundle, VaulType presents a privacy review screen that lets the user inspect every file:
 
 ```swift
-// File: Sources/HushType/Views/Diagnostics/DiagnosticReviewView.swift
+// File: Sources/VaulType/Views/Diagnostics/DiagnosticReviewView.swift
 
 import SwiftUI
 
@@ -1965,10 +1965,10 @@ struct DiagnosticsSection: View {
 
 ### 8.1 ProcessInfo-Based Monitoring
 
-HushType monitors system resources to adapt its behavior under pressure — for example, unloading the LLM model when memory is critically low or reducing audio buffer sizes under thermal throttling.
+VaulType monitors system resources to adapt its behavior under pressure — for example, unloading the LLM model when memory is critically low or reducing audio buffer sizes under thermal throttling.
 
 ```swift
-// File: Sources/HushType/Monitoring/SystemMonitor.swift
+// File: Sources/VaulType/Monitoring/SystemMonitor.swift
 
 import Foundation
 import OSLog
@@ -1989,7 +1989,7 @@ final class SystemMonitor {
 
     // MARK: - Published State
 
-    /// Current memory usage of the HushType process in MB.
+    /// Current memory usage of the VaulType process in MB.
     private(set) var currentMemoryUsageMB: Double = 0
 
     /// Current thermal state of the system.
@@ -2203,7 +2203,7 @@ enum MemoryPressureLevel: String, Sendable {
 
 ### 8.2 Memory Pressure Notifications
 
-When the system is under memory pressure, HushType responds by unloading the least-recently-used model. This is coordinated with the `TranscriptionCoordinator` described in [`../architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md):
+When the system is under memory pressure, VaulType responds by unloading the least-recently-used model. This is coordinated with the `TranscriptionCoordinator` described in [`../architecture/ARCHITECTURE.md`](../architecture/ARCHITECTURE.md):
 
 ```swift
 // In TranscriptionCoordinator or AppDelegate setup:
@@ -2238,7 +2238,7 @@ func setupMemoryPressureHandling(monitor: SystemMonitor) {
 
 ### 8.3 Thermal State Monitoring
 
-Thermal throttling on Apple Silicon can significantly impact inference performance. HushType monitors thermal state and adjusts accordingly:
+Thermal throttling on Apple Silicon can significantly impact inference performance. VaulType monitors thermal state and adjusts accordingly:
 
 ```swift
 func setupThermalHandling(monitor: SystemMonitor) {
@@ -2285,11 +2285,11 @@ func setupThermalHandling(monitor: SystemMonitor) {
 
 ### 8.4 Instruments Integration
 
-HushType is designed to work seamlessly with Apple's Instruments profiling tools. Here is how to set up effective profiling sessions:
+VaulType is designed to work seamlessly with Apple's Instruments profiling tools. Here is how to set up effective profiling sessions:
 
 **Recommended Instruments Templates:**
 
-| Template | Purpose | HushType Signpost Categories |
+| Template | Purpose | VaulType Signpost Categories |
 |----------|---------|-------------------------------|
 | **Time Profiler** | CPU hotspot identification | N/A (call stacks) |
 | **Allocations** | Memory leak detection, heap analysis | N/A (allocation events) |
@@ -2299,12 +2299,12 @@ HushType is designed to work seamlessly with Apple's Instruments profiling tools
 | **Metal System Trace** | GPU inference performance | N/A (Metal events) |
 | **Thermal State** | Thermal throttling timeline | N/A (system events) |
 
-**Creating a Custom HushType Instrument:**
+**Creating a Custom VaulType Instrument:**
 
 1. Open Instruments.app
 2. Create a new custom instrument (File > New > Custom Instrument)
 3. Add an "os_signpost" instrument
-4. Set the subsystem filter to `com.hushtype.app`
+4. Set the subsystem filter to `com.vaultype.app`
 5. Add separate lanes for each signpost category:
    - `AudioPipeline` — audio capture intervals
    - `WhisperInference` — transcription intervals
@@ -2333,16 +2333,16 @@ Instruments Timeline View (Example):
 # Record a 30-second trace from the command line
 xcrun xctrace record \
   --template 'Time Profiler' \
-  --attach "HushType" \
+  --attach "VaulType" \
   --time-limit 30s \
-  --output ~/Desktop/hushtype-profile.trace
+  --output ~/Desktop/vaultype-profile.trace
 
 # Record with signposts only (lightweight)
 xcrun xctrace record \
   --template 'os_signpost' \
-  --attach "HushType" \
+  --attach "VaulType" \
   --time-limit 60s \
-  --output ~/Desktop/hushtype-signposts.trace
+  --output ~/Desktop/vaultype-signposts.trace
 ```
 
 ---

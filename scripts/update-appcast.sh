@@ -15,7 +15,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 APPCAST="$PROJECT_ROOT/appcast.xml"
-GITHUB_REPO="harungungorer/HushType"
+GITHUB_REPO="vaultype/VaulType"
 
 # ---------------------------------------------------------------------------
 # Help
@@ -39,7 +39,7 @@ Output:
   Updates appcast.xml with the new <item> entry.
 
 Examples:
-  ./scripts/update-appcast.sh 1.0.0 build/HushType-1.0.0.dmg "BASE64_SIGNATURE"
+  ./scripts/update-appcast.sh 1.0.0 build/VaulType-1.0.0.dmg "BASE64_SIGNATURE"
 EOF
 }
 
@@ -75,10 +75,10 @@ fi
 # Compute file size and publication date
 DMG_SIZE=$(stat -f%z "$DMG_PATH")
 PUB_DATE=$(date -R)
-DOWNLOAD_URL="https://github.com/$GITHUB_REPO/releases/download/v${VERSION}/HushType-${VERSION}.dmg"
+DOWNLOAD_URL="https://github.com/$GITHUB_REPO/releases/download/v${VERSION}/VaulType-${VERSION}.dmg"
 MIN_SYSTEM_VERSION="14.0"
 
-echo "=== HushType: Appcast Update ==="
+echo "=== VaulType: Appcast Update ==="
 echo ""
 echo "Version    : $VERSION"
 echo "DMG        : $DMG_PATH"

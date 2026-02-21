@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # Troubleshooting Guide
 
-> Solutions for common issues with HushType installation, permissions, audio, models, text injection, and performance.
+> Solutions for common issues with VaulType installation, permissions, audio, models, text injection, and performance.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ Last Updated: 2026-02-13
 
 ### Accessibility Permission Denied
 
-HushType requires Accessibility permission for text injection via CGEvent and for detecting active text fields.
+VaulType requires Accessibility permission for text injection via CGEvent and for detecting active text fields.
 
 **Symptoms:**
 - Text is not injected after dictation
@@ -32,20 +32,20 @@ HushType requires Accessibility permission for text injection via CGEvent and fo
 **Solution:**
 
 1. Open **System Settings > Privacy & Security > Accessibility**
-2. Find HushType in the list
+2. Find VaulType in the list
 3. Toggle it **ON**
-4. If HushType is not in the list, click the **+** button and add it from `/Applications/HushType.app`
+4. If VaulType is not in the list, click the **+** button and add it from `/Applications/VaulType.app`
 
-> ⚠️ If you previously denied the permission, you may need to remove and re-add HushType from the list.
+> ⚠️ If you previously denied the permission, you may need to remove and re-add VaulType from the list.
 
 **If the toggle keeps resetting:**
 
 ```bash
 # Reset Accessibility permissions (requires restart)
-tccutil reset Accessibility com.hushtype.app
+tccutil reset Accessibility com.vaultype.app
 ```
 
-Then relaunch HushType and grant permission when prompted.
+Then relaunch VaulType and grant permission when prompted.
 
 **Enterprise / MDM environments:**
 
@@ -58,7 +58,7 @@ IT administrators can pre-approve Accessibility via MDM profile:
     <array>
         <dict>
             <key>Identifier</key>
-            <string>com.hushtype.app</string>
+            <string>com.vaultype.app</string>
             <key>IdentifierType</key>
             <string>bundleID</string>
             <key>Allowed</key>
@@ -80,20 +80,20 @@ IT administrators can pre-approve Accessibility via MDM profile:
 **Solution:**
 
 1. Open **System Settings > Privacy & Security > Microphone**
-2. Find HushType and toggle it **ON**
+2. Find VaulType and toggle it **ON**
 
-**If HushType doesn't appear in the list:**
+**If VaulType doesn't appear in the list:**
 
-This usually means the app hasn't attempted to access the microphone yet. Launch HushType and press the dictation hotkey — the permission dialog should appear.
+This usually means the app hasn't attempted to access the microphone yet. Launch VaulType and press the dictation hotkey — the permission dialog should appear.
 
 **If the dialog never appears:**
 
 ```bash
 # Reset Microphone permissions
-tccutil reset Microphone com.hushtype.app
+tccutil reset Microphone com.vaultype.app
 ```
 
-Relaunch HushType and try dictating again.
+Relaunch VaulType and try dictating again.
 
 ---
 
@@ -108,7 +108,7 @@ Required for voice commands that control other apps (AppleScript bridge).
 **Solution:**
 
 1. Open **System Settings > Privacy & Security > Automation**
-2. Find HushType and enable permissions for the target apps
+2. Find VaulType and enable permissions for the target apps
 
 ---
 
@@ -122,7 +122,7 @@ Required for voice commands that control other apps (AppleScript bridge).
 
 **Solution:**
 
-1. Open HushType **Settings > Audio**
+1. Open VaulType **Settings > Audio**
 2. Select the correct input device from the dropdown
 3. Watch the audio level meter to verify it's receiving signal
 4. Speak and confirm the level meter responds
@@ -148,12 +148,12 @@ system_profiler SPAudioDataType
 2. **Correct device** — Is the right input device selected in Settings?
 3. **Hardware** — Does the microphone work in other apps (Voice Memos, QuickTime)?
 4. **Mute switch** — Some external microphones have physical mute buttons
-5. **Sample rate** — HushType requires 16kHz input. Some USB microphones may need driver updates
+5. **Sample rate** — VaulType requires 16kHz input. Some USB microphones may need driver updates
 
 **Debug with Console.app:**
 
 1. Open Console.app
-2. Filter by process: `HushType`
+2. Filter by process: `VaulType`
 3. Filter by category: `audio`
 4. Look for error messages related to `AVAudioEngine` or device initialization
 
@@ -199,21 +199,21 @@ system_profiler SPAudioDataType
 
 **Solution:**
 
-1. Open HushType **Settings > Models**
+1. Open VaulType **Settings > Models**
 2. Delete the corrupted model
 3. Re-download it
 4. If the problem persists, download manually:
 
 ```bash
 # Delete corrupted model
-rm -f ~/Library/Application\ Support/HushType/Models/ggml-small.bin
+rm -f ~/Library/Application\ Support/VaulType/Models/ggml-small.bin
 
 # Re-download (example for Whisper small)
-curl -L -o ~/Library/Application\ Support/HushType/Models/ggml-small.bin \
+curl -L -o ~/Library/Application\ Support/VaulType/Models/ggml-small.bin \
     "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin"
 
 # Verify file size (should be ~466MB for small)
-ls -lh ~/Library/Application\ Support/HushType/Models/ggml-small.bin
+ls -lh ~/Library/Application\ Support/VaulType/Models/ggml-small.bin
 ```
 
 ---
@@ -262,11 +262,11 @@ vm_stat | head -5
 
 **Solution:**
 
-Models are stored in `~/Library/Application Support/HushType/Models/`. If the app can't find them:
+Models are stored in `~/Library/Application Support/VaulType/Models/`. If the app can't find them:
 
 ```bash
 # Check if models exist
-ls -la ~/Library/Application\ Support/HushType/Models/
+ls -la ~/Library/Application\ Support/VaulType/Models/
 
 # If the directory is missing or empty, models need re-download
 ```
@@ -275,10 +275,10 @@ If models exist but aren't detected, the model metadata database may be corrupte
 
 ```bash
 # Reset the model database (models stay on disk)
-rm ~/Library/Application\ Support/HushType/HushType.store
+rm ~/Library/Application\ Support/VaulType/VaulType.store
 ```
 
-Relaunch HushType — it will re-scan the Models directory.
+Relaunch VaulType — it will re-scan the Models directory.
 
 ---
 
@@ -320,7 +320,7 @@ Relaunch HushType — it will re-scan the Models directory.
 
 **Issue:** CGEvent injection doesn't work in heavily sandboxed apps.
 
-**Solution:** Use Clipboard injection. HushType automatically detects sandboxed apps and falls back to clipboard.
+**Solution:** Use Clipboard injection. VaulType automatically detects sandboxed apps and falls back to clipboard.
 
 #### Browser Text Fields
 
@@ -366,7 +366,7 @@ Relaunch HushType — it will re-scan the Models directory.
 
 ```bash
 # Look for Metal usage in logs
-log show --predicate 'process == "HushType" AND category == "whisper"' --last 5m \
+log show --predicate 'process == "VaulType" AND category == "whisper"' --last 5m \
     | grep -i metal
 ```
 
@@ -375,7 +375,7 @@ log show --predicate 'process == "HushType" AND category == "whisper"' --last 5m
 ### High CPU Usage
 
 **Symptoms:**
-- HushType using >10% CPU when idle
+- VaulType using >10% CPU when idle
 - Fan spins up during dictation and doesn't stop
 
 **Solutions:**
@@ -387,11 +387,11 @@ log show --predicate 'process == "HushType" AND category == "whisper"' --last 5m
 **Debug:**
 
 ```bash
-# Check HushType CPU usage
-ps aux | grep HushType
+# Check VaulType CPU usage
+ps aux | grep VaulType
 
 # Sample the process for 5 seconds
-sample HushType 5
+sample VaulType 5
 ```
 
 ---
@@ -399,7 +399,7 @@ sample HushType 5
 ### High Memory Usage
 
 **Symptoms:**
-- HushType using >3 GB RAM
+- VaulType using >3 GB RAM
 - System becomes sluggish during dictation
 - Memory pressure warnings
 
@@ -408,7 +408,7 @@ sample HushType 5
 1. **Use smaller models** — See [memory requirements table](#insufficient-memory-for-model)
 2. **Unload unused models** — If you're not using LLM processing, the LLM model shouldn't be loaded
 3. **Enable memory-efficient mode** — Settings > Advanced > "Unload model after processing"
-4. **Restart HushType** — Some memory may not be freed until restart
+4. **Restart VaulType** — Some memory may not be freed until restart
 
 ---
 
@@ -422,14 +422,14 @@ sample HushType 5
 
 **Solutions:**
 
-1. **Check network** — Sparkle needs to reach the appcast URL (this is the only network HushType uses)
-2. **Manual update** — Download the latest DMG from [GitHub Releases](https://github.com/hushtype/hushtype/releases)
-3. **Permission issue** — Ensure HushType.app is in `/Applications/` (not a read-only location)
+1. **Check network** — Sparkle needs to reach the appcast URL (this is the only network VaulType uses)
+2. **Manual update** — Download the latest DMG from [GitHub Releases](https://github.com/vaultype/vaultype/releases)
+3. **Permission issue** — Ensure VaulType.app is in `/Applications/` (not a read-only location)
 4. **Clear Sparkle cache:**
 
 ```bash
-rm -rf ~/Library/Caches/com.hushtype.app/
-defaults delete com.hushtype.app SULastCheckTime
+rm -rf ~/Library/Caches/com.vaultype.app/
+defaults delete com.vaultype.app SULastCheckTime
 ```
 
 ---
@@ -439,11 +439,11 @@ defaults delete com.hushtype.app SULastCheckTime
 ```bash
 # Update Homebrew and retry
 brew update
-brew upgrade --cask hushtype
+brew upgrade --cask vaultype
 
 # If that fails, reinstall
-brew uninstall --cask hushtype
-brew install --cask hushtype
+brew uninstall --cask vaultype
+brew install --cask vaultype
 ```
 
 ---
@@ -469,7 +469,7 @@ When reporting a bug, export diagnostics to include with your report:
 
 ### From the App
 
-1. Open HushType **Settings > Advanced**
+1. Open VaulType **Settings > Advanced**
 2. Click **Export Diagnostics**
 3. Save the `.zip` file and attach to your bug report
 
@@ -477,26 +477,26 @@ When reporting a bug, export diagnostics to include with your report:
 
 ```bash
 # Collect logs from the last hour
-log show --predicate 'process == "HushType"' --last 1h > ~/Desktop/hushtype-logs.txt
+log show --predicate 'process == "VaulType"' --last 1h > ~/Desktop/vaultype-logs.txt
 
 # Collect system info
-system_profiler SPHardwareDataType SPSoftwareDataType > ~/Desktop/hushtype-system.txt
+system_profiler SPHardwareDataType SPSoftwareDataType > ~/Desktop/vaultype-system.txt
 
 # Check model files
-ls -la ~/Library/Application\ Support/HushType/Models/ >> ~/Desktop/hushtype-system.txt
+ls -la ~/Library/Application\ Support/VaulType/Models/ >> ~/Desktop/vaultype-system.txt
 
 # Check permissions
-tccutil list com.hushtype.app 2>&1 >> ~/Desktop/hushtype-system.txt
+tccutil list com.vaultype.app 2>&1 >> ~/Desktop/vaultype-system.txt
 
 # Package
-zip ~/Desktop/hushtype-diagnostics.zip \
-    ~/Desktop/hushtype-logs.txt \
-    ~/Desktop/hushtype-system.txt
+zip ~/Desktop/vaultype-diagnostics.zip \
+    ~/Desktop/vaultype-logs.txt \
+    ~/Desktop/vaultype-system.txt
 ```
 
 ### What to Include in Bug Reports
 
-1. **HushType version** (Settings > About or menu bar > About HushType)
+1. **VaulType version** (Settings > About or menu bar > About VaulType)
 2. **macOS version** (Apple menu >  About This Mac)
 3. **Mac model** (Apple Silicon or Intel, RAM amount)
 4. **Whisper model** in use
@@ -514,4 +514,4 @@ zip ~/Desktop/hushtype-diagnostics.zip \
 - [Permissions Guide](../features/PERMISSIONS.md) — macOS permissions deep dive
 - [Performance Optimization](../reference/PERFORMANCE_OPTIMIZATION.md) — Tuning for speed
 - [FAQ](../reference/FAQ.md) — Frequently asked questions
-- [Report a Bug](https://github.com/hushtype/hushtype/issues/new?template=bug_report.md) — File an issue on GitHub
+- [Report a Bug](https://github.com/vaultype/vaultype/issues/new?template=bug_report.md) — File an issue on GitHub

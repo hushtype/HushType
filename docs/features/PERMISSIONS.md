@@ -2,7 +2,7 @@ Last Updated: 2026-02-13
 
 # macOS Permissions Guide
 
-> **HushType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always. Since HushType is a local-only app with no user accounts, no authentication, and no cloud services, this document replaces a traditional authentication guide. Instead of managing user identity, HushType manages **system permissions** — the macOS-native trust model that governs access to the microphone, keyboard simulation, and inter-app communication.
+> **VaulType** — Privacy-first, macOS-native speech-to-text. Your voice stays on your device. Always. Since VaulType is a local-only app with no user accounts, no authentication, and no cloud services, this document replaces a traditional authentication guide. Instead of managing user identity, VaulType manages **system permissions** — the macOS-native trust model that governs access to the microphone, keyboard simulation, and inter-app communication.
 
 ---
 
@@ -63,28 +63,28 @@ Last Updated: 2026-02-13
 
 ### 1.1 Required Permissions Summary
 
-HushType requires three macOS permissions to deliver its full feature set. Each permission is gated by Apple's Transparency, Consent, and Control (TCC) framework and requires explicit user approval.
+VaulType requires three macOS permissions to deliver its full feature set. Each permission is gated by Apple's Transparency, Consent, and Control (TCC) framework and requires explicit user approval.
 
 | Permission | TCC Service | What It Enables | Why It Is Needed | Without It |
 |------------|-------------|-----------------|------------------|------------|
 | **Accessibility** | `kTCCServiceAccessibility` | CGEvent-based text injection into any application | Simulates keystrokes to type transcribed text at the cursor position in the frontmost app | Text injection falls back to clipboard-only mode (Cmd+V paste). Less reliable, briefly overwrites clipboard contents. |
-| **Microphone** | `kTCCServiceMicrophone` | Audio capture via AVAudioEngine | Captures speech for on-device transcription by whisper.cpp | Core functionality is completely disabled. HushType cannot record or transcribe speech. |
+| **Microphone** | `kTCCServiceMicrophone` | Audio capture via AVAudioEngine | Captures speech for on-device transcription by whisper.cpp | Core functionality is completely disabled. VaulType cannot record or transcribe speech. |
 | **Automation** | `kTCCServiceAppleEvents` | AppleScript execution for voice commands | Enables voice commands like "open Safari", "switch to Xcode", "play music" | Voice commands are disabled. Core dictation and text injection remain fully functional. |
 
-> :lock: **Security**: HushType requests only the permissions strictly necessary for its functionality. It never requests Full Disk Access, Screen Recording, Camera, Contacts, Calendar, Location, or any other macOS permission. See [Security: Principle of Least Privilege](../security/SECURITY.md#63-principle-of-least-privilege) for details.
+> :lock: **Security**: VaulType requests only the permissions strictly necessary for its functionality. It never requests Full Disk Access, Screen Recording, Camera, Contacts, Calendar, Location, or any other macOS permission. See [Security: Principle of Least Privilege](../security/SECURITY.md#63-principle-of-least-privilege) for details.
 
 ### 1.2 Why No Authentication
 
-Traditional applications use authentication (usernames, passwords, OAuth tokens) to verify user identity and control access to resources. HushType has none of these because:
+Traditional applications use authentication (usernames, passwords, OAuth tokens) to verify user identity and control access to resources. VaulType has none of these because:
 
 - **No server component** — There is no backend to authenticate against.
-- **No user accounts** — There is no concept of a user identity in HushType's data model.
+- **No user accounts** — There is no concept of a user identity in VaulType's data model.
 - **No cloud data** — All processing is local; there is nothing to protect behind a login wall.
-- **No API keys** — HushType does not call external APIs for its core functionality.
+- **No API keys** — VaulType does not call external APIs for its core functionality.
 
-Instead of authenticating users, HushType authenticates itself to the operating system through macOS permissions. The user grants trust to the HushType process, and macOS enforces those trust boundaries at the kernel level via TCC.
+Instead of authenticating users, VaulType authenticates itself to the operating system through macOS permissions. The user grants trust to the VaulType process, and macOS enforces those trust boundaries at the kernel level via TCC.
 
-> :information_source: **Info**: For a detailed discussion of HushType's privacy architecture and why no authentication is needed, see [Legal Compliance: User Accounts and Authentication](../security/LEGAL_COMPLIANCE.md#45-user-accounts-and-authentication).
+> :information_source: **Info**: For a detailed discussion of VaulType's privacy architecture and why no authentication is needed, see [Legal Compliance: User Accounts and Authentication](../security/LEGAL_COMPLIANCE.md#45-user-accounts-and-authentication).
 
 ### 1.3 The TCC Framework
 
@@ -106,9 +106,9 @@ Apple's **Transparency, Consent, and Control (TCC)** framework is the system-lev
 |  +-----------------------------------------------------+ |
 |  | Service          | Client        | Allowed | Auth'd  | |
 |  |------------------+---------------+---------+---------| |
-|  | kTCCServiceMic   | com.hushtype  |    1    | user    | |
-|  | kTCCServiceAcces | com.hushtype  |    1    | user    | |
-|  | kTCCServiceApple | com.hushtype  |    1    | user    | |
+|  | kTCCServiceMic   | com.vaultype  |    1    | user    | |
+|  | kTCCServiceAcces | com.vaultype  |    1    | user    | |
+|  | kTCCServiceApple | com.vaultype  |    1    | user    | |
 |  +-----------------------------------------------------+ |
 |                                                           |
 |  System-Level TCC Database (MDM-managed)                  |
@@ -116,7 +116,7 @@ Apple's **Transparency, Consent, and Control (TCC)** framework is the system-lev
 |  +-----------------------------------------------------+ |
 |  | Service          | Client        | Allowed | Auth'd  | |
 |  |------------------+---------------+---------+---------| |
-|  | kTCCServiceAcces | com.hushtype  |    1    | mdm     | |
+|  | kTCCServiceAcces | com.vaultype  |    1    | mdm     | |
 |  +-----------------------------------------------------+ |
 |                                                           |
 +-----------------------------------------------------------+
@@ -130,7 +130,7 @@ Apple's **Transparency, Consent, and Control (TCC)** framework is the system-lev
 
 ### 2.1 First-Launch Experience
 
-When HushType launches for the first time, it guides the user through a permission onboarding flow. Permissions are requested sequentially, not simultaneously, to avoid overwhelming the user and to provide clear context for each request.
+When VaulType launches for the first time, it guides the user through a permission onboarding flow. Permissions are requested sequentially, not simultaneously, to avoid overwhelming the user and to provide clear context for each request.
 
 ```
 +------------------------------------------------------------------+
@@ -138,12 +138,12 @@ When HushType launches for the first time, it guides the user through a permissi
 +------------------------------------------------------------------+
 |                                                                  |
 |  [1] Welcome Screen                                              |
-|      "HushType needs a few permissions to work."                 |
+|      "VaulType needs a few permissions to work."                 |
 |      [Continue]                                                  |
 |          |                                                       |
 |          v                                                       |
 |  [2] Microphone Permission                                       |
-|      "HushType needs your microphone to hear your voice."        |
+|      "VaulType needs your microphone to hear your voice."        |
 |      "Audio never leaves your device."                           |
 |      [Grant Microphone Access]                                   |
 |          |                                                       |
@@ -152,9 +152,9 @@ When HushType launches for the first time, it guides the user through a permissi
 |          |                                                       |
 |          v                                                       |
 |  [3] Accessibility Permission                                    |
-|      "HushType needs Accessibility access to type text           |
+|      "VaulType needs Accessibility access to type text           |
 |       into other apps."                                          |
-|      "This opens System Settings. Toggle HushType on."           |
+|      "This opens System Settings. Toggle VaulType on."           |
 |      [Open System Settings]                                      |
 |          |                                                       |
 |          +--- Granted --> [4]                                    |
@@ -164,7 +164,7 @@ When HushType launches for the first time, it guides the user through a permissi
 |  [4] Setup Complete                                              |
 |      "You're all set! Press Cmd+Shift+Space to start             |
 |       dictating."                                                |
-|      [Start Using HushType]                                      |
+|      [Start Using VaulType]                                      |
 |                                                                  |
 |  Note: Automation permission is NOT requested during             |
 |  onboarding. It is requested on-demand when the user first       |
@@ -172,7 +172,7 @@ When HushType launches for the first time, it guides the user through a permissi
 +------------------------------------------------------------------+
 ```
 
-> :bulb: **Tip**: The onboarding flow runs only once. HushType tracks completion via `UserDefaults.hasCompletedOnboarding`. Users can re-visit permission status at any time in Settings > Permissions.
+> :bulb: **Tip**: The onboarding flow runs only once. VaulType tracks completion via `UserDefaults.hasCompletedOnboarding`. Users can re-visit permission status at any time in Settings > Permissions.
 
 ### 2.2 Permission Request Sequence
 
@@ -259,7 +259,7 @@ final class PermissionManager: ObservableObject {
         microphoneStatus = granted ? .granted : .denied
         UserDefaults.standard.set(
             true,
-            forKey: "com.hushtype.hasRequestedMicrophone"
+            forKey: "com.vaultype.hasRequestedMicrophone"
         )
         return granted
     }
@@ -283,13 +283,13 @@ final class PermissionManager: ObservableObject {
         accessibilityStatus = trusted ? .granted : .denied
         UserDefaults.standard.set(
             true,
-            forKey: "com.hushtype.hasRequestedAccessibility"
+            forKey: "com.vaultype.hasRequestedAccessibility"
         )
     }
 
     // MARK: - Automation
 
-    /// Checks whether HushType can send Apple Events to a target app.
+    /// Checks whether VaulType can send Apple Events to a target app.
     /// This check is per-target-app.
     func checkAutomationStatus(
         targetBundleIdentifier: String
@@ -398,7 +398,7 @@ enum PermissionStatus: String, Codable {
 
 ### 3.1 Why Accessibility Is Required
 
-HushType's primary text injection mechanism uses the macOS Accessibility API via `CGEvent` to simulate keystrokes in the frontmost application. This is the same mechanism used by text expanders (TextExpander, Raycast), keyboard macro tools (Keyboard Maestro), and other automation utilities.
+VaulType's primary text injection mechanism uses the macOS Accessibility API via `CGEvent` to simulate keystrokes in the frontmost application. This is the same mechanism used by text expanders (TextExpander, Raycast), keyboard macro tools (Keyboard Maestro), and other automation utilities.
 
 **What CGEvent text injection does:**
 
@@ -435,9 +435,9 @@ func injectText(_ text: String) {
 }
 ```
 
-**Without Accessibility permission**, calling `CGEvent.post(tap:)` silently fails. No error is thrown, no exception is raised -- the events are simply dropped by the system. HushType detects this and falls back to clipboard-based injection.
+**Without Accessibility permission**, calling `CGEvent.post(tap:)` silently fails. No error is thrown, no exception is raised -- the events are simply dropped by the system. VaulType detects this and falls back to clipboard-based injection.
 
-> :lock: **Security**: The Accessibility permission is one of the most powerful permissions on macOS. Any app with this permission can simulate keystrokes, read UI element attributes, and observe events in other applications. HushType uses only the keystroke simulation capability. For a full security analysis, see [Security: Text Injection Security](../security/SECURITY.md#5-text-injection-security).
+> :lock: **Security**: The Accessibility permission is one of the most powerful permissions on macOS. Any app with this permission can simulate keystrokes, read UI element attributes, and observe events in other applications. VaulType uses only the keystroke simulation capability. For a full security analysis, see [Security: Text Injection Security](../security/SECURITY.md#5-text-injection-security).
 
 ### 3.2 Checking Accessibility Status
 
@@ -446,7 +446,7 @@ The `AXIsProcessTrusted()` function is the canonical way to check whether the cu
 ```swift
 import ApplicationServices
 
-/// Check if HushType has Accessibility permission.
+/// Check if VaulType has Accessibility permission.
 /// Returns true if the app is listed and enabled in
 /// System Settings > Privacy & Security > Accessibility.
 func isAccessibilityGranted() -> Bool {
@@ -475,7 +475,7 @@ import ApplicationServices
 
 /// Request Accessibility permission. This shows a system alert
 /// that offers to open System Settings > Privacy & Security >
-/// Accessibility. The user must manually toggle HushType on.
+/// Accessibility. The user must manually toggle VaulType on.
 ///
 /// Returns true if permission is already granted (the alert
 /// is not shown in this case).
@@ -492,10 +492,10 @@ func requestAccessibilityPermission() -> Bool {
 
 1. If the app already has Accessibility permission, the function returns `true` and no dialog is shown.
 2. If the app does not have permission, macOS displays a system alert:
-   - Title: *"HushType" would like to control this computer using accessibility features.*
+   - Title: *"VaulType" would like to control this computer using accessibility features.*
    - Buttons: **Deny** | **Open System Settings**
-3. If the user clicks "Open System Settings", the Accessibility pane opens with HushType listed (but not yet enabled).
-4. The user must toggle the switch next to HushType to **on**.
+3. If the user clicks "Open System Settings", the Accessibility pane opens with VaulType listed (but not yet enabled).
+4. The user must toggle the switch next to VaulType to **on**.
 5. macOS may require the user to authenticate (Touch ID or password) to modify the Accessibility list.
 
 > :warning: **Warning**: `AXIsProcessTrustedWithOptions` shows the system alert only once per app launch session. Subsequent calls in the same session return `false` without showing the alert. To show the alert again, the app must be relaunched or use the custom guidance approach described in [Section 3.5](#35-programmatic-guidance).
@@ -508,7 +508,7 @@ The exact navigation path for granting Accessibility permission:
 System Settings
   > Privacy & Security
     > Accessibility
-      > [Toggle] HushType  -->  ON
+      > [Toggle] VaulType  -->  ON
 ```
 
 On macOS 14+ (Sonoma), the direct URL scheme to open this pane is:
@@ -519,7 +519,7 @@ x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility
 
 ### 3.5 Programmatic Guidance
 
-When the built-in system alert has already been shown, HushType provides its own in-app guidance panel with a button to open the correct System Settings pane:
+When the built-in system alert has already been shown, VaulType provides its own in-app guidance panel with a button to open the correct System Settings pane:
 
 ```swift
 import SwiftUI
@@ -533,7 +533,7 @@ struct AccessibilityPermissionGuideView: View {
                 .font(.headline)
 
             Text("""
-                HushType needs Accessibility access to type transcribed \
+                VaulType needs Accessibility access to type transcribed \
                 text directly into your apps. Without it, text will be \
                 pasted via the clipboard instead.
                 """)
@@ -543,7 +543,7 @@ struct AccessibilityPermissionGuideView: View {
             GroupBox {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("1. Click \"Open System Settings\" below", systemImage: "1.circle")
-                    Label("2. Find \"HushType\" in the list", systemImage: "2.circle")
+                    Label("2. Find \"VaulType\" in the list", systemImage: "2.circle")
                     Label("3. Toggle the switch to ON", systemImage: "3.circle")
                     Label("4. Authenticate if prompted (Touch ID or password)", systemImage: "4.circle")
                 }
@@ -577,7 +577,7 @@ struct AccessibilityPermissionGuideView: View {
 
 ### 3.6 Code Signature Invalidation
 
-A critical gotcha with Accessibility permission: **the permission is bound to the app's code signature**, not its file path. When HushType is updated and the new version has a different code signature (e.g., different signing certificate, modified binary), macOS may revoke the Accessibility permission.
+A critical gotcha with Accessibility permission: **the permission is bound to the app's code signature**, not its file path. When VaulType is updated and the new version has a different code signature (e.g., different signing certificate, modified binary), macOS may revoke the Accessibility permission.
 
 **When this happens:**
 
@@ -593,7 +593,7 @@ A critical gotcha with Accessibility permission: **the permission is bound to th
 ```swift
 func checkForSignatureInvalidation() {
     let wasGranted = UserDefaults.standard.bool(
-        forKey: "com.hushtype.accessibilityWasGranted"
+        forKey: "com.vaultype.accessibilityWasGranted"
     )
     let isGranted = AXIsProcessTrusted()
 
@@ -604,7 +604,7 @@ func checkForSignatureInvalidation() {
 
     UserDefaults.standard.set(
         isGranted,
-        forKey: "com.hushtype.accessibilityWasGranted"
+        forKey: "com.vaultype.accessibilityWasGranted"
     )
 }
 
@@ -612,8 +612,8 @@ func showSignatureInvalidationAlert() {
     let alert = NSAlert()
     alert.messageText = "Accessibility Permission Needs Re-authorization"
     alert.informativeText = """
-        HushType was updated and macOS requires you to re-authorize \
-        Accessibility access. Please open System Settings, find HushType \
+        VaulType was updated and macOS requires you to re-authorize \
+        Accessibility access. Please open System Settings, find VaulType \
         in the Accessibility list, toggle it off and back on.
         """
     alert.addButton(withTitle: "Open System Settings")
@@ -628,7 +628,7 @@ func showSignatureInvalidationAlert() {
 }
 ```
 
-> :apple: **macOS-specific**: Sparkle (HushType's update framework) preserves the code signature when replacing the app bundle, which typically avoids this issue. However, manual reinstallation (dragging a new .app to /Applications) may trigger it.
+> :apple: **macOS-specific**: Sparkle (VaulType's update framework) preserves the code signature when replacing the app bundle, which typically avoids this issue. However, manual reinstallation (dragging a new .app to /Applications) may trigger it.
 
 ---
 
@@ -636,7 +636,7 @@ func showSignatureInvalidationAlert() {
 
 ### 4.1 Why Microphone Is Required
 
-HushType captures audio through Apple's `AVAudioEngine` framework for real-time speech-to-text transcription via whisper.cpp. Without microphone access, the entire speech capture pipeline is non-functional.
+VaulType captures audio through Apple's `AVAudioEngine` framework for real-time speech-to-text transcription via whisper.cpp. Without microphone access, the entire speech capture pipeline is non-functional.
 
 **Audio capture flow:**
 
@@ -666,7 +666,7 @@ Microphone permission uses the standard `AVCaptureDevice` API, which triggers a 
 import AVFoundation
 
 /// Request microphone access. This shows the standard macOS system dialog:
-/// "HushType would like to access the microphone."
+/// "VaulType would like to access the microphone."
 ///
 /// - Returns: true if permission was granted, false if denied.
 func requestMicrophonePermission() async -> Bool {
@@ -700,11 +700,11 @@ func requestMicrophonePermission() async -> Bool {
 | 2nd+ | `.authorized` | No | Returns `true` immediately |
 | 2nd+ | `.denied` | No -- must go to System Settings | Returns `false` immediately |
 
-> :information_source: **Info**: Unlike Accessibility, the Microphone permission dialog is shown by macOS automatically. HushType does not need to implement custom UI for the initial request. Custom UI is only needed for the denied/re-request flow.
+> :information_source: **Info**: Unlike Accessibility, the Microphone permission dialog is shown by macOS automatically. VaulType does not need to implement custom UI for the initial request. Custom UI is only needed for the denied/re-request flow.
 
 ### 4.3 Handling Microphone Denial
 
-When the user denies microphone access, `AVCaptureDevice.requestAccess(for: .audio)` returns `false` and will never show the dialog again. HushType must guide the user to System Settings:
+When the user denies microphone access, `AVCaptureDevice.requestAccess(for: .audio)` returns `false` and will never show the dialog again. VaulType must guide the user to System Settings:
 
 ```swift
 import AVFoundation
@@ -716,17 +716,17 @@ func handleMicrophoneDenial() {
     alert.alertStyle = .warning
     alert.messageText = "Microphone Access Required"
     alert.informativeText = """
-        HushType cannot record speech without microphone access. \
+        VaulType cannot record speech without microphone access. \
         To enable it:
 
         1. Open System Settings
         2. Go to Privacy & Security > Microphone
-        3. Toggle HushType to ON
+        3. Toggle VaulType to ON
 
-        Without microphone access, HushType cannot function.
+        Without microphone access, VaulType cannot function.
         """
     alert.addButton(withTitle: "Open System Settings")
-    alert.addButton(withTitle: "Quit HushType")
+    alert.addButton(withTitle: "Quit VaulType")
 
     let response = alert.runModal()
     if response == .alertFirstButtonReturn {
@@ -747,7 +747,7 @@ func openMicrophoneSettings() {
 
 ### 4.4 Audio Session Configuration
 
-After microphone permission is granted, HushType configures the audio session for optimal speech capture:
+After microphone permission is granted, VaulType configures the audio session for optimal speech capture:
 
 ```swift
 import AVFoundation
@@ -796,7 +796,7 @@ func configureAudioSession() throws {
 }
 ```
 
-> :apple: **macOS-specific**: On macOS, `AVAudioEngine` uses shared microphone access by default. Multiple apps can capture audio simultaneously. HushType does not monopolize the microphone.
+> :apple: **macOS-specific**: On macOS, `AVAudioEngine` uses shared microphone access by default. Multiple apps can capture audio simultaneously. VaulType does not monopolize the microphone.
 
 ---
 
@@ -804,7 +804,7 @@ func configureAudioSession() throws {
 
 ### 5.1 Why Automation Is Optional
 
-Automation permission enables HushType's **voice command** feature, which uses AppleScript to control other applications. Unlike Accessibility and Microphone, Automation is entirely optional -- the core dictation pipeline works without it.
+Automation permission enables VaulType's **voice command** feature, which uses AppleScript to control other applications. Unlike Accessibility and Microphone, Automation is entirely optional -- the core dictation pipeline works without it.
 
 **Voice commands powered by Automation:**
 
@@ -818,23 +818,23 @@ Automation permission enables HushType's **voice command** feature, which uses A
 
 ### 5.2 Per-App Consent Model
 
-Automation permission is unique because it is **per-target-application**. HushType must obtain separate consent to send Apple Events to each application it wants to control.
+Automation permission is unique because it is **per-target-application**. VaulType must obtain separate consent to send Apple Events to each application it wants to control.
 
 ```
 +------------------------------------------------------------+
 |              Automation Permission Model                    |
 +------------------------------------------------------------+
 |                                                            |
-|  HushType --> Safari       [Consent needed for Safari]     |
-|  HushType --> Xcode        [Consent needed for Xcode]      |
-|  HushType --> Music        [Consent needed for Music]      |
-|  HushType --> Finder       [Consent needed for Finder]     |
-|  HushType --> Terminal     [Consent needed for Terminal]    |
+|  VaulType --> Safari       [Consent needed for Safari]     |
+|  VaulType --> Xcode        [Consent needed for Xcode]      |
+|  VaulType --> Music        [Consent needed for Music]      |
+|  VaulType --> Finder       [Consent needed for Finder]     |
+|  VaulType --> Terminal     [Consent needed for Terminal]    |
 |                                                            |
 |  Each arrow requires a SEPARATE user consent dialog.       |
 |  System Settings > Privacy & Security > Automation shows:  |
 |                                                            |
-|  HushType                                                  |
+|  VaulType                                                  |
 |    [x] Safari                                              |
 |    [x] Xcode                                               |
 |    [ ] Music  (denied)                                     |
@@ -843,11 +843,11 @@ Automation permission is unique because it is **per-target-application**. HushTy
 +------------------------------------------------------------+
 ```
 
-> :information_source: **Info**: The per-app model means HushType does not need a blanket Automation permission. Each voice command target is authorized independently. Users can selectively allow HushType to control some apps but not others.
+> :information_source: **Info**: The per-app model means VaulType does not need a blanket Automation permission. Each voice command target is authorized independently. Users can selectively allow VaulType to control some apps but not others.
 
 ### 5.3 NSAppleScript Permission Triggers
 
-When HushType executes an AppleScript that targets another application, macOS automatically shows a consent dialog if permission has not been granted:
+When VaulType executes an AppleScript that targets another application, macOS automatically shows a consent dialog if permission has not been granted:
 
 ```swift
 import Foundation
@@ -897,9 +897,9 @@ try executeVoiceCommand(
 
 **Consent dialog flow:**
 
-1. HushType calls `NSAppleScript.executeAndReturnError`.
-2. macOS detects that HushType is targeting another app via Apple Events.
-3. System shows: *"HushType" wants access to control "Safari". Allowing control will provide access to documents and data in "Safari", and to perform actions within that app.*
+1. VaulType calls `NSAppleScript.executeAndReturnError`.
+2. macOS detects that VaulType is targeting another app via Apple Events.
+3. System shows: *"VaulType" wants access to control "Safari". Allowing control will provide access to documents and data in "Safari", and to perform actions within that app.*
 4. User clicks **OK** (grants) or **Don't Allow** (denies).
 5. Decision is stored in the TCC database under `kTCCServiceAppleEvents`.
 
@@ -910,7 +910,7 @@ Before executing a voice command, check whether Automation permission has been g
 ```swift
 import ApplicationServices
 
-/// Checks whether HushType has Automation permission for a target app
+/// Checks whether VaulType has Automation permission for a target app
 /// without prompting the user.
 ///
 /// - Parameter bundleIdentifier: The target app's bundle ID.
@@ -944,7 +944,7 @@ func checkAutomationPermission(
 }
 ```
 
-> :warning: **Warning**: `AEDeterminePermissionToAutomateTarget` requires the target app to be running. If the target app is not launched, the function returns `procNotFound` and the permission status cannot be determined. HushType handles this by attempting the AppleScript execution directly, which will launch the target app and trigger the consent dialog if needed.
+> :warning: **Warning**: `AEDeterminePermissionToAutomateTarget` requires the target app to be running. If the target app is not launched, the function returns `procNotFound` and the permission status cannot be determined. VaulType handles this by attempting the AppleScript execution directly, which will launch the target app and trigger the consent dialog if needed.
 
 ---
 
@@ -952,14 +952,14 @@ func checkAutomationPermission(
 
 ### 6.1 Degraded Mode Descriptions
 
-HushType is designed to degrade gracefully when permissions are missing. Each missing permission disables a specific feature set while leaving the rest functional.
+VaulType is designed to degrade gracefully when permissions are missing. Each missing permission disables a specific feature set while leaving the rest functional.
 
 | Missing Permission | Feature Impact | Degraded Behavior |
 |-------------------|----------------|-------------------|
-| **Microphone** | Core dictation disabled | HushType cannot capture audio. The app shows a persistent banner: "Microphone access required. Grant access in System Settings to start dictating." The app remains open for settings configuration and model management. |
+| **Microphone** | Core dictation disabled | VaulType cannot capture audio. The app shows a persistent banner: "Microphone access required. Grant access in System Settings to start dictating." The app remains open for settings configuration and model management. |
 | **Accessibility** | CGEvent injection disabled | Text injection falls back to **clipboard-only mode**: transcribed text is copied to the clipboard and pasted via simulated Cmd+V. This briefly overwrites the clipboard and may not work in all apps (e.g., Terminal secure input mode). The app shows a subtle indicator: "Running in clipboard mode. Grant Accessibility access for direct typing." |
 | **Automation** | Voice commands disabled | Voice commands that target other apps via AppleScript silently fail. The transcription pipeline and text injection continue to work normally. The app shows a contextual message only when a voice command fails: "Automation access needed for this command." |
-| **Microphone + Accessibility** | Dictation and injection disabled | HushType is essentially non-functional for its primary purpose but remains usable for settings, model management, and history browsing. |
+| **Microphone + Accessibility** | Dictation and injection disabled | VaulType is essentially non-functional for its primary purpose but remains usable for settings, model management, and history browsing. |
 
 ### 6.2 Graceful Degradation Implementation
 
@@ -1086,7 +1086,7 @@ func injectText(
 
 ### 6.3 User-Facing Permission Status UI
 
-HushType's Settings window includes a dedicated Permissions tab that shows the current status of all permissions with actionable guidance:
+VaulType's Settings window includes a dedicated Permissions tab that shows the current status of all permissions with actionable guidance:
 
 ```swift
 import SwiftUI
@@ -1213,15 +1213,15 @@ A critical aspect of the macOS TCC framework: **once a user denies a permission,
 
 | Permission | Can Re-request Programmatically? | How to Change After Denial |
 |------------|----------------------------------|----------------------------|
-| **Microphone** | No -- `AVCaptureDevice.requestAccess` returns `false` immediately without showing a dialog | System Settings > Privacy & Security > Microphone > Toggle HushType ON |
-| **Accessibility** | Partially -- `AXIsProcessTrustedWithOptions(prompt: true)` shows the system alert once per launch, but the user still must toggle manually in Settings | System Settings > Privacy & Security > Accessibility > Toggle HushType ON |
-| **Automation** | No -- `AEDeterminePermissionToAutomateTarget(prompt: true)` does not re-show the dialog after denial | System Settings > Privacy & Security > Automation > HushType > Toggle target app ON |
+| **Microphone** | No -- `AVCaptureDevice.requestAccess` returns `false` immediately without showing a dialog | System Settings > Privacy & Security > Microphone > Toggle VaulType ON |
+| **Accessibility** | Partially -- `AXIsProcessTrustedWithOptions(prompt: true)` shows the system alert once per launch, but the user still must toggle manually in Settings | System Settings > Privacy & Security > Accessibility > Toggle VaulType ON |
+| **Automation** | No -- `AEDeterminePermissionToAutomateTarget(prompt: true)` does not re-show the dialog after denial | System Settings > Privacy & Security > Automation > VaulType > Toggle target app ON |
 
 > :warning: **Warning**: There is no API to reset the TCC database entry for your app. Calling `tccutil reset` from the command line affects all apps for that service, not individual apps. Do not instruct users to run `tccutil reset` unless absolutely necessary, as it resets permissions for all applications.
 
 ### 7.2 Opening System Settings Programmatically
 
-HushType provides convenience methods to open the exact System Settings pane for each permission:
+VaulType provides convenience methods to open the exact System Settings pane for each permission:
 
 ```swift
 import AppKit
@@ -1277,11 +1277,11 @@ func handleDeniedPermission(_ permission: SystemSettingsPane) {
 
 ### 7.3 User Guidance Strategy
 
-HushType uses a tiered notification strategy for denied permissions:
+VaulType uses a tiered notification strategy for denied permissions:
 
 | Context | Notification Type | Message |
 |---------|------------------|---------|
-| **First denial** (during onboarding) | Modal alert with System Settings button | "HushType needs [permission] to [function]. Open System Settings to grant access." |
+| **First denial** (during onboarding) | Modal alert with System Settings button | "VaulType needs [permission] to [function]. Open System Settings to grant access." |
 | **Subsequent app launches** (permission still denied) | Non-modal banner in main window | "Some features are limited. [Permission] access is needed for [function]. [Open Settings]" |
 | **When user triggers a feature that requires the denied permission** | Contextual toast notification | "[Feature] requires [permission] access. Tap to open Settings." |
 | **Settings > Permissions tab** | Persistent status indicator | Full status dashboard with per-permission Open Settings buttons |
@@ -1294,7 +1294,7 @@ HushType uses a tiered notification strategy for denied permissions:
 
 ### 8.1 TCC Configuration Profiles
 
-Enterprise IT administrators can pre-approve HushType's permissions using Mobile Device Management (MDM) configuration profiles. This allows silent deployment without requiring end-user interaction for permission dialogs.
+Enterprise IT administrators can pre-approve VaulType's permissions using Mobile Device Management (MDM) configuration profiles. This allows silent deployment without requiring end-user interaction for permission dialogs.
 
 The relevant MDM payload is the **Privacy Preferences Policy Control** payload (`com.apple.TCC.configuration-profile-policy`), which writes entries directly to the system-level TCC database.
 
@@ -1302,7 +1302,7 @@ The relevant MDM payload is the **Privacy Preferences Policy Control** payload (
 
 ### 8.2 Privacy Preferences Policy Control
 
-The following configuration profile pre-approves all three permissions for HushType:
+The following configuration profile pre-approves all three permissions for VaulType:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1316,13 +1316,13 @@ The following configuration profile pre-approves all three permissions for HushT
             <key>PayloadType</key>
             <string>com.apple.TCC.configuration-profile-policy</string>
             <key>PayloadIdentifier</key>
-            <string>com.hushtype.tcc.policy</string>
+            <string>com.vaultype.tcc.policy</string>
             <key>PayloadUUID</key>
             <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>PayloadDisplayName</key>
-            <string>HushType Permission Policy</string>
+            <string>VaulType Permission Policy</string>
 
             <key>Services</key>
             <dict>
@@ -1331,11 +1331,11 @@ The following configuration profile pre-approves all three permissions for HushT
                 <array>
                     <dict>
                         <key>Identifier</key>
-                        <string>com.hushtype.app</string>
+                        <string>com.vaultype.app</string>
                         <key>IdentifierType</key>
                         <string>bundleID</string>
                         <key>CodeRequirement</key>
-                        <string>identifier "com.hushtype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
+                        <string>identifier "com.vaultype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
                         <key>Allowed</key>
                         <true/>
                         <key>StaticCode</key>
@@ -1348,11 +1348,11 @@ The following configuration profile pre-approves all three permissions for HushT
                 <array>
                     <dict>
                         <key>Identifier</key>
-                        <string>com.hushtype.app</string>
+                        <string>com.vaultype.app</string>
                         <key>IdentifierType</key>
                         <string>bundleID</string>
                         <key>CodeRequirement</key>
-                        <string>identifier "com.hushtype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
+                        <string>identifier "com.vaultype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
                         <key>Allowed</key>
                         <true/>
                         <key>StaticCode</key>
@@ -1365,11 +1365,11 @@ The following configuration profile pre-approves all three permissions for HushT
                 <array>
                     <dict>
                         <key>Identifier</key>
-                        <string>com.hushtype.app</string>
+                        <string>com.vaultype.app</string>
                         <key>IdentifierType</key>
                         <string>bundleID</string>
                         <key>CodeRequirement</key>
-                        <string>identifier "com.hushtype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
+                        <string>identifier "com.vaultype.app" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "TEAM_ID_HERE"</string>
                         <key>Allowed</key>
                         <true/>
                         <key>AEReceiverIdentifier</key>
@@ -1387,9 +1387,9 @@ The following configuration profile pre-approves all three permissions for HushT
 
     <!-- Profile-level metadata -->
     <key>PayloadDisplayName</key>
-    <string>HushType Permissions</string>
+    <string>VaulType Permissions</string>
     <key>PayloadIdentifier</key>
-    <string>com.hushtype.mdm.permissions</string>
+    <string>com.vaultype.mdm.permissions</string>
     <key>PayloadOrganization</key>
     <string>Your Organization</string>
     <key>PayloadScope</key>
@@ -1404,20 +1404,20 @@ The following configuration profile pre-approves all three permissions for HushT
 </plist>
 ```
 
-> :warning: **Warning**: Replace `TEAM_ID_HERE` with the actual Apple Developer Team ID used to sign HushType. The `CodeRequirement` string must match the app's actual code signature. Use `codesign -dr - /Applications/HushType.app` to obtain the correct designated requirement.
+> :warning: **Warning**: Replace `TEAM_ID_HERE` with the actual Apple Developer Team ID used to sign VaulType. The `CodeRequirement` string must match the app's actual code signature. Use `codesign -dr - /Applications/VaulType.app` to obtain the correct designated requirement.
 
 ### 8.3 Deploying via MDM
 
 **Steps for IT administrators:**
 
-1. **Obtain the code requirement** for the signed HushType binary:
+1. **Obtain the code requirement** for the signed VaulType binary:
 
 ```bash
-# Get the designated requirement for HushType
-codesign -dr - /Applications/HushType.app 2>&1
+# Get the designated requirement for VaulType
+codesign -dr - /Applications/VaulType.app 2>&1
 
 # Output example:
-# designated => identifier "com.hushtype.app" and anchor apple generic
+# designated => identifier "com.vaultype.app" and anchor apple generic
 # and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */
 # and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */
 # and certificate leaf[subject.OU] = "ABC123DEF4"
@@ -1427,7 +1427,7 @@ codesign -dr - /Applications/HushType.app 2>&1
 
 3. **Sign the profile** with your organization's MDM signing certificate (required for deployment).
 
-4. **Deploy the profile** through your MDM solution before or simultaneously with deploying HushType.
+4. **Deploy the profile** through your MDM solution before or simultaneously with deploying VaulType.
 
 5. **Verify deployment** on a test machine:
 
@@ -1437,7 +1437,7 @@ sudo profiles list -verbose
 
 # Check TCC database for the MDM-managed entries
 sudo sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" \
-    "SELECT service, client, allowed, auth_reason FROM access WHERE client = 'com.hushtype.app';"
+    "SELECT service, client, allowed, auth_reason FROM access WHERE client = 'com.vaultype.app';"
 ```
 
 ### 8.4 MDM Providers
@@ -1461,7 +1461,7 @@ The Privacy Preferences Policy Control payload is supported by all major MDM sol
 
 ### 9.1 Runtime Permission Observation
 
-HushType needs to detect when the user changes permissions in System Settings while the app is running. macOS does not provide a notification-based API for all permission changes, so HushType uses a combination of strategies.
+VaulType needs to detect when the user changes permissions in System Settings while the app is running. macOS does not provide a notification-based API for all permission changes, so VaulType uses a combination of strategies.
 
 ### 9.2 DistributedNotificationCenter Approach
 
@@ -1503,11 +1503,11 @@ final class AccessibilityPermissionObserver {
 }
 ```
 
-> :warning: **Warning**: The `com.apple.accessibility.api` distributed notification fires when any app's Accessibility permission changes, not just HushType's. Always re-check `AXIsProcessTrusted()` when receiving this notification to determine if the change is relevant to HushType.
+> :warning: **Warning**: The `com.apple.accessibility.api` distributed notification fires when any app's Accessibility permission changes, not just VaulType's. Always re-check `AXIsProcessTrusted()` when receiving this notification to determine if the change is relevant to VaulType.
 
 ### 9.3 Polling Strategy
 
-For Microphone and Automation permissions, no reliable notification mechanism exists. HushType uses event-driven polling:
+For Microphone and Automation permissions, no reliable notification mechanism exists. VaulType uses event-driven polling:
 
 ```swift
 import AVFoundation
@@ -1573,7 +1573,7 @@ final class PermissionMonitor: ObservableObject {
 | Timer (every 30 seconds, only in Settings window) | Fallback for edge cases where the above notifications are missed. Only active when the Permissions settings tab is visible. |
 | Manual refresh button in Settings | User-initiated check for immediate feedback. |
 
-> :information_source: **Info**: HushType does not use continuous background polling for permission status, as this would waste CPU cycles. Polling is strictly event-driven (app activation, distributed notifications) with a manual fallback in the Settings UI.
+> :information_source: **Info**: VaulType does not use continuous background polling for permission status, as this would waste CPU cycles. Polling is strictly event-driven (app activation, distributed notifications) with a manual fallback in the Settings UI.
 
 ---
 
@@ -1583,12 +1583,12 @@ final class PermissionMonitor: ObservableObject {
 
 | Issue | Symptoms | Cause | Solution |
 |-------|----------|-------|----------|
-| **Accessibility permission lost after update** | Text injection stops working. `AXIsProcessTrusted()` returns `false`. HushType appears in Accessibility list but is disabled. | App's code signature changed between versions (different signing certificate or unsigned build). | Open System Settings > Privacy & Security > Accessibility. Remove HushType from the list (select and click "-"), then re-add it (click "+", navigate to /Applications/HushType.app). |
-| **Microphone permission not prompting** | No system dialog appears when HushType starts. `AVCaptureDevice.authorizationStatus(for: .audio)` returns `.denied`. | Permission was previously denied and macOS does not re-prompt. | Open System Settings > Privacy & Security > Microphone. Toggle HushType to ON. |
-| **"HushType is not in the Accessibility list"** | User opens System Settings > Accessibility but HushType is not listed. | HushType has never called `AXIsProcessTrustedWithOptions(prompt: true)`, or the app binary path has changed. | In HushType, go to Settings > Permissions > click "Request Accessibility Access". Alternatively, manually add HushType via the "+" button in System Settings > Accessibility. |
-| **Automation permission denied for all apps** | Voice commands fail for every target app with error -1743. | User denied the first Automation prompt and the system applied it broadly. | Open System Settings > Privacy & Security > Automation > HushType. Toggle each target app to ON. |
+| **Accessibility permission lost after update** | Text injection stops working. `AXIsProcessTrusted()` returns `false`. VaulType appears in Accessibility list but is disabled. | App's code signature changed between versions (different signing certificate or unsigned build). | Open System Settings > Privacy & Security > Accessibility. Remove VaulType from the list (select and click "-"), then re-add it (click "+", navigate to /Applications/VaulType.app). |
+| **Microphone permission not prompting** | No system dialog appears when VaulType starts. `AVCaptureDevice.authorizationStatus(for: .audio)` returns `.denied`. | Permission was previously denied and macOS does not re-prompt. | Open System Settings > Privacy & Security > Microphone. Toggle VaulType to ON. |
+| **"VaulType is not in the Accessibility list"** | User opens System Settings > Accessibility but VaulType is not listed. | VaulType has never called `AXIsProcessTrustedWithOptions(prompt: true)`, or the app binary path has changed. | In VaulType, go to Settings > Permissions > click "Request Accessibility Access". Alternatively, manually add VaulType via the "+" button in System Settings > Accessibility. |
+| **Automation permission denied for all apps** | Voice commands fail for every target app with error -1743. | User denied the first Automation prompt and the system applied it broadly. | Open System Settings > Privacy & Security > Automation > VaulType. Toggle each target app to ON. |
 | **Permission dialogs appear in wrong language** | System permission dialogs show in a language different from the system locale. | macOS bug with localization. | Ensure System Settings > General > Language & Region has the correct primary language. Reboot if necessary. |
-| **"HushType would like to control this computer" keeps appearing** | Accessibility system alert shows every time the app launches. | Permission is being requested but never successfully granted (e.g., due to MDM restriction or corrupted TCC database). | Try resetting the TCC database (see [10.2](#102-resetting-permissions-via-terminal)). Check for MDM-managed restrictions with your IT department. |
+| **"VaulType would like to control this computer" keeps appearing** | Accessibility system alert shows every time the app launches. | Permission is being requested but never successfully granted (e.g., due to MDM restriction or corrupted TCC database). | Try resetting the TCC database (see [10.2](#102-resetting-permissions-via-terminal)). Check for MDM-managed restrictions with your IT department. |
 
 ### 10.2 Resetting Permissions via Terminal
 
@@ -1608,14 +1608,14 @@ tccutil reset AppleEvents
 tccutil reset All
 ```
 
-> :x: **Don't**: Do not run `tccutil reset All` unless absolutely necessary. This resets every privacy permission for every application on the system, requiring the user to re-grant permissions for all apps (not just HushType).
+> :x: **Don't**: Do not run `tccutil reset All` unless absolutely necessary. This resets every privacy permission for every application on the system, requiring the user to re-grant permissions for all apps (not just VaulType).
 
 > :white_check_mark: **Do**: Prefer resetting only the specific service that is problematic (e.g., `tccutil reset Accessibility` if only Accessibility is stuck).
 
 **After running `tccutil reset`:**
 
-1. Quit HushType completely (`Cmd+Q`).
-2. Relaunch HushType.
+1. Quit VaulType completely (`Cmd+Q`).
+2. Relaunch VaulType.
 3. The permission request flow will restart as if it were a fresh install.
 4. Other apps affected by the reset will also need to re-request permissions.
 
@@ -1624,10 +1624,10 @@ tccutil reset All
 Use these terminal commands to diagnose permission issues:
 
 ```bash
-# Check if HushType has Accessibility permission
+# Check if VaulType has Accessibility permission
 # (requires the app to be running)
 sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
-    "SELECT service, client, allowed FROM access WHERE client LIKE '%hushtype%';"
+    "SELECT service, client, allowed FROM access WHERE client LIKE '%vaultype%';"
 
 # List all Accessibility-trusted apps
 sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
@@ -1635,23 +1635,23 @@ sqlite3 ~/Library/Application\ Support/com.apple.TCC/TCC.db \
 
 # Check for MDM-managed permissions (system-level TCC)
 sudo sqlite3 /Library/Application\ Support/com.apple.TCC/TCC.db \
-    "SELECT service, client, allowed, auth_reason FROM access WHERE client LIKE '%hushtype%';"
+    "SELECT service, client, allowed, auth_reason FROM access WHERE client LIKE '%vaultype%';"
 
-# Verify HushType's code signature
-codesign --verify --deep --strict --verbose=4 /Applications/HushType.app
+# Verify VaulType's code signature
+codesign --verify --deep --strict --verbose=4 /Applications/VaulType.app
 
 # Display signing authority chain
-codesign -dv --verbose=4 /Applications/HushType.app 2>&1 | grep "Authority"
+codesign -dv --verbose=4 /Applications/VaulType.app 2>&1 | grep "Authority"
 
-# Check if HushType's designated requirement matches
+# Check if VaulType's designated requirement matches
 # what TCC expects
-codesign -dr - /Applications/HushType.app
+codesign -dr - /Applications/VaulType.app
 
 # Monitor TCC database changes in real-time (useful for debugging)
 log stream --predicate 'subsystem == "com.apple.TCC"' --level debug
 
 # Check for MDM configuration profiles that affect TCC
-sudo profiles list -verbose 2>&1 | grep -A 5 -i "privacy\|TCC\|hushtype"
+sudo profiles list -verbose 2>&1 | grep -A 5 -i "privacy\|TCC\|vaultype"
 ```
 
 > :apple: **macOS-specific**: On macOS 14+ (Sonoma), direct SQLite access to the user-level TCC database (`~/Library/Application Support/com.apple.TCC/TCC.db`) may be restricted by SIP (System Integrity Protection). The `log stream` approach is more reliable for debugging.
@@ -1660,11 +1660,11 @@ sudo profiles list -verbose 2>&1 | grep -A 5 -i "privacy\|TCC\|hushtype"
 
 | Bug | Affected macOS Versions | Description | Workaround |
 |-----|-------------------------|-------------|------------|
-| **Accessibility toggle visually on but not functional** | macOS 14.0-14.2 | After toggling Accessibility ON, `AXIsProcessTrusted()` still returns `false` until the app is quit and relaunched. | Quit HushType (Cmd+Q), wait 2 seconds, relaunch. Apple fixed this in macOS 14.3. |
+| **Accessibility toggle visually on but not functional** | macOS 14.0-14.2 | After toggling Accessibility ON, `AXIsProcessTrusted()` still returns `false` until the app is quit and relaunched. | Quit VaulType (Cmd+Q), wait 2 seconds, relaunch. Apple fixed this in macOS 14.3. |
 | **Microphone status stuck on `.notDetermined`** | macOS 14.0 | `AVCaptureDevice.authorizationStatus(for: .audio)` returns `.notDetermined` even after the user has responded to the dialog. | Call `requestAccess(for: .audio)` again. If still stuck, reset with `tccutil reset Microphone` and retry. |
 | **Automation permission dialog not appearing** | macOS 14.x | The Apple Events consent dialog sometimes fails to appear when the target app is not in the foreground. | Ensure the target app is launched and visible before executing the AppleScript command. |
-| **System Settings does not scroll to the correct app** | macOS 14.0-14.1 | Opening via URL scheme `x-apple.systempreferences:...` opens the correct pane but does not scroll to HushType in a long list. | User must manually scroll to find HushType in the alphabetical list. |
-| **Permission revoked after macOS minor update** | macOS 14.x (intermittent) | macOS minor updates (e.g., 14.3 to 14.4) occasionally invalidate Accessibility permissions for non-App-Store apps. | Re-toggle the Accessibility permission after macOS updates. HushType detects this and shows a re-authorization alert (see [Section 3.6](#36-code-signature-invalidation)). |
+| **System Settings does not scroll to the correct app** | macOS 14.0-14.1 | Opening via URL scheme `x-apple.systempreferences:...` opens the correct pane but does not scroll to VaulType in a long list. | User must manually scroll to find VaulType in the alphabetical list. |
+| **Permission revoked after macOS minor update** | macOS 14.x (intermittent) | macOS minor updates (e.g., 14.3 to 14.4) occasionally invalidate Accessibility permissions for non-App-Store apps. | Re-toggle the Accessibility permission after macOS updates. VaulType detects this and shows a re-authorization alert (see [Section 3.6](#36-code-signature-invalidation)). |
 
 ---
 
@@ -1680,4 +1680,4 @@ sudo profiles list -verbose 2>&1 | grep -A 5 -i "privacy\|TCC\|hushtype"
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/vaultype).*

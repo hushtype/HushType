@@ -2,7 +2,7 @@
 
 > **Last Updated: 2026-02-20**
 > **Component**: LLM Processing Engine
-> **Module**: `HushType/Services/LLM/`
+> **Module**: `VaulType/Services/LLM/`
 > **Status**: Complete (Phases 2-5)
 > **License**: GPL-3.0
 
@@ -65,13 +65,13 @@
 
 ## 1. Overview
 
-HushType's LLM Processing Pipeline transforms raw speech-to-text transcriptions into polished, context-aware text output. The entire pipeline runs locally on the user's machine, maintaining HushType's zero-network architecture: no cloud calls, no telemetry, no data exfiltration.
+VaulType's LLM Processing Pipeline transforms raw speech-to-text transcriptions into polished, context-aware text output. The entire pipeline runs locally on the user's machine, maintaining VaulType's zero-network architecture: no cloud calls, no telemetry, no data exfiltration.
 
 ### Implementation Status
 
-- **llama.cpp** (version b8059) — compiled as a static library linked directly into HushType. This is the sole LLM backend. Metal GPU acceleration is enabled with `GGML_METAL_EMBED_LIBRARY=ON` (no separate `.metallib` needed).
+- **llama.cpp** (version b8059) — compiled as a static library linked directly into VaulType. This is the sole LLM backend. Metal GPU acceleration is enabled with `GGML_METAL_EMBED_LIBRARY=ON` (no separate `.metallib` needed).
 - **Ollama backend removed** — the OllamaProvider was removed during Phase 5 refactoring. llama.cpp is the only backend.
-- **LlamaContext.swift** lives in `HushType/Services/LLM/` and mirrors the WhisperContext pattern.
+- **LlamaContext.swift** lives in `VaulType/Services/LLM/` and mirrors the WhisperContext pattern.
 - **llama.cpp shares ggml libs with whisper.cpp** — only `-lllama` added to avoid duplicate ggml linking.
 
 ### Processing Pipeline (Implemented)
@@ -104,7 +104,7 @@ AudioCaptureService (AVAudioEngine)
 
 ```
 +------------------------------------------------------------------+
-|                    HushType LLM Pipeline                         |
+|                    VaulType LLM Pipeline                         |
 |                                                                  |
 |  Speech Audio                                                    |
 |      |                                                           |
@@ -156,7 +156,7 @@ AudioCaptureService (AVAudioEngine)
 
 ### 2.1 Build and Compilation
 
-llama.cpp (version b8059) is compiled as a static library (`.a`) via CMake and linked directly into the HushType binary. This eliminates any runtime dependency on external executables or dynamic libraries.
+llama.cpp (version b8059) is compiled as a static library (`.a`) via CMake and linked directly into the VaulType binary. This eliminates any runtime dependency on external executables or dynamic libraries.
 
 **Build script:** `scripts/setup-llama.sh`
 
@@ -198,7 +198,7 @@ Since llama.cpp is a C/C++ library, a bridging header and Swift-friendly wrapper
 #include "llama.h"
 #include "ggml.h"
 
-// Re-export the core llama.cpp API functions that HushType uses.
+// Re-export the core llama.cpp API functions that VaulType uses.
 // Swift can call these directly through the CLlama module.
 
 #endif /* LLAMA_BRIDGE_H */
@@ -228,7 +228,7 @@ public final class LlamaContext: @unchecked Sendable {
     private let model: OpaquePointer      // llama_model *
     private let context: OpaquePointer    // llama_context *
     private let sampler: OpaquePointer    // llama_sampler *
-    private let queue = DispatchQueue(label: "com.hushtype.llama", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "com.vaultype.llama", qos: .userInitiated)
 
     public let contextSize: Int32
     public let modelPath: String
@@ -477,7 +477,7 @@ func optimalGPULayers(for modelSizeBytes: UInt64) -> Int32 {
 
 ### 2.4 Memory-Mapped GGUF Models
 
-GGUF (GGML Universal File Format) is the model file format used by llama.cpp. HushType uses memory mapping (`mmap`) to load models, which provides:
+GGUF (GGML Universal File Format) is the model file format used by llama.cpp. VaulType uses memory mapping (`mmap`) to load models, which provides:
 
 - **Fast startup** -- The OS maps the file into virtual memory without reading the entire file into RAM upfront.
 - **Shared memory** -- If multiple processes load the same model file, the OS can share the physical memory pages.
@@ -598,7 +598,7 @@ public struct GenerationOptions: Sendable {
 
 ## 3. Ollama Integration (Removed)
 
-> **Note**: The Ollama backend was removed during Phase 5 refactoring. HushType uses llama.cpp exclusively. The sections below are retained for historical reference only.
+> **Note**: The Ollama backend was removed during Phase 5 refactoring. VaulType uses llama.cpp exclusively. The sections below are retained for historical reference only.
 
 ### 3.1 When to Use Ollama vs llama.cpp
 
@@ -631,7 +631,7 @@ brew install ollama
 **Pull a recommended model:**
 
 ```bash
-# Pull Qwen2.5-3B-Instruct (recommended for HushType)
+# Pull Qwen2.5-3B-Instruct (recommended for VaulType)
 ollama pull qwen2.5:3b-instruct-q4_K_M
 
 # Pull Phi-3.5-mini as an alternative
@@ -655,11 +655,11 @@ ollama serve
 curl http://localhost:11434/api/tags
 ```
 
-> :lock: **Security**: Ollama binds to `localhost` (127.0.0.1) by default. HushType only connects to `localhost:11434`. No data leaves the machine. If Ollama is configured to listen on `0.0.0.0`, HushType will still only connect to `127.0.0.1`.
+> :lock: **Security**: Ollama binds to `localhost` (127.0.0.1) by default. VaulType only connects to `localhost:11434`. No data leaves the machine. If Ollama is configured to listen on `0.0.0.0`, VaulType will still only connect to `127.0.0.1`.
 
 ### 3.3 API Endpoints Used
 
-HushType uses two Ollama REST API endpoints:
+VaulType uses two Ollama REST API endpoints:
 
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -1179,7 +1179,7 @@ let llmService = LLMService()
 // Start with llama.cpp (default)
 try await llmService.switchBackend(
     to: .llamaCpp,
-    model: "/Users/me/Library/Application Support/HushType/Models/qwen2.5-3b-instruct-q4_K_M.gguf"
+    model: "/Users/me/Library/Application Support/VaulType/Models/qwen2.5-3b-instruct-q4_K_M.gguf"
 )
 
 // Later, switch to Ollama
@@ -1201,7 +1201,7 @@ let result = try await llmService.generate(
 
 ### 5.1 Recommended Models
 
-HushType is optimized for small, fast instruction-following models in the 1-4B parameter range. These models balance quality, speed, and memory usage for real-time text processing tasks.
+VaulType is optimized for small, fast instruction-following models in the 1-4B parameter range. These models balance quality, speed, and memory usage for real-time text processing tasks.
 
 | Model | Parameters | Quant | File Size | Context Window |
 |---|---|---|---|---|
@@ -1287,7 +1287,7 @@ Decision Tree: Which Model Should I Use?
 
 ### 6.1 Template Variables
 
-HushType's prompt template system uses variable substitution with `{variable_name}` syntax. The following variables are available in all templates:
+VaulType's prompt template system uses variable substitution with `{variable_name}` syntax. The following variables are available in all templates:
 
 | Variable | Description | Example Value |
 |---|---|---|
@@ -1440,7 +1440,7 @@ public enum ProcessingMode: String, Codable, CaseIterable, Sendable {
 
 ### 6.3 Built-in Templates
 
-HushType ships with one built-in template per processing mode (except Raw, which has no template). These templates are seeded into SwiftData on first launch.
+VaulType ships with one built-in template per processing mode (except Raw, which has no template). These templates are seeded into SwiftData on first launch.
 
 ```swift
 /// Seeds the default built-in prompt templates into the SwiftData store.
@@ -1650,7 +1650,7 @@ private extension JSONEncoder {
 }
 ```
 
-> :information_source: **Info**: Exported template bundles include a `bundleVersion` field for forward compatibility. Future versions of HushType can migrate older template formats automatically.
+> :information_source: **Info**: Exported template bundles include a `bundleVersion` field for forward compatibility. Future versions of VaulType can migrate older template formats automatically.
 
 ---
 
@@ -2107,14 +2107,14 @@ public enum ProcessingError: LocalizedError {
 
 Each model has a maximum context window that limits the total number of tokens (prompt + generated output) that can be processed in a single inference call.
 
-| Model | Max Context Window | Recommended Max for HushType | Prompt Budget | Output Budget |
+| Model | Max Context Window | Recommended Max for VaulType | Prompt Budget | Output Budget |
 |---|---|---|---|---|
 | Qwen2.5-3B-Instruct | 32,768 | 4,096 | 3,500 | 596 |
 | Phi-3.5-mini | 128,000 | 4,096 | 3,500 | 596 |
 | Llama-3.2-3B-Instruct | 8,192 | 4,096 | 3,500 | 596 |
 | Qwen2.5-1.5B-Instruct | 32,768 | 2,048 | 1,700 | 348 |
 
-> :warning: **Warning**: While models like Phi-3.5-mini support up to 128K tokens, HushType defaults to a 4,096 context window to optimize latency and memory usage. Larger context windows require proportionally more memory for the KV cache. Users can increase this in settings if needed.
+> :warning: **Warning**: While models like Phi-3.5-mini support up to 128K tokens, VaulType defaults to a 4,096 context window to optimize latency and memory usage. Larger context windows require proportionally more memory for the KV cache. Users can increase this in settings if needed.
 
 **Context window allocation:**
 
@@ -2189,7 +2189,7 @@ public struct TokenBudget {
 
 ### 8.3 Truncation Strategies
 
-When input text exceeds the token budget, HushType applies one of three truncation strategies:
+When input text exceeds the token budget, VaulType applies one of three truncation strategies:
 
 ```swift
 /// Strategies for truncating text that exceeds the token budget.
@@ -2263,7 +2263,7 @@ extension TruncationStrategy {
 
 ## 9. Latency Optimization Strategies
 
-Minimizing latency is critical for HushType because the user is waiting for their speech to be transformed and injected into the active application. The goal is sub-3-second total pipeline time from end-of-speech to text injection.
+Minimizing latency is critical for VaulType because the user is waiting for their speech to be transformed and injected into the active application. The goal is sub-3-second total pipeline time from end-of-speech to text injection.
 
 ```
 Latency Budget (Target: < 3 seconds total)
@@ -2497,7 +2497,7 @@ public enum LLMPipelineError: LocalizedError {
 
 ### 10.2 Fallback Chain
 
-When the LLM pipeline encounters an error, HushType follows a defined fallback chain to ensure the user always gets some output:
+When the LLM pipeline encounters an error, VaulType follows a defined fallback chain to ensure the user always gets some output:
 
 ```
 Fallback Chain:
@@ -2693,7 +2693,7 @@ Each processing mode has a configurable timeout. If the LLM does not produce out
 
 ### 10.4 Memory Pressure Handling
 
-HushType monitors system memory pressure and takes protective action to prevent the system from becoming unresponsive.
+VaulType monitors system memory pressure and takes protective action to prevent the system from becoming unresponsive.
 
 ```swift
 import Foundation
@@ -2759,7 +2759,7 @@ final class MemoryPressureMonitor {
 }
 ```
 
-> :x: **Error**: If you see "Memory pressure: CRITICAL. Unloading LLM model." in the logs, HushType has unloaded the LLM to prevent system instability. All text processing will fall back to Raw mode until the user manually reloads a model or memory pressure subsides. Consider using a smaller model or closing other memory-intensive applications.
+> :x: **Error**: If you see "Memory pressure: CRITICAL. Unloading LLM model." in the logs, VaulType has unloaded the LLM to prevent system instability. All text processing will fall back to Raw mode until the user manually reloads a model or memory pressure subsides. Consider using a smaller model or closing other memory-intensive applications.
 
 ---
 
@@ -2802,7 +2802,7 @@ This section also provides a simplified view of the LLM-specific portion of the 
 
 ```
 +====================================================================+
-||                  HushType LLM Processing Pipeline                ||
+||                  VaulType LLM Processing Pipeline                ||
 +====================================================================+
 
   User speaks into microphone
@@ -2957,4 +2957,4 @@ All LLM-related configuration is stored in `UserDefaults` (for simple preference
 
 ---
 
-*This document is part of the HushType project documentation. HushType is licensed under GPL-3.0. For more information, see the [LICENSE](../../LICENSE) file in the repository root.*
+*This document is part of the VaulType project documentation. VaulType is licensed under GPL-3.0. For more information, see the [LICENSE](../../LICENSE) file in the repository root.*

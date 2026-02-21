@@ -2,15 +2,15 @@
 
 > **Last Updated: 2026-02-20**
 
-> **HushType** — Privacy-first, macOS-native speech-to-text application
+> **VaulType** — Privacy-first, macOS-native speech-to-text application
 
 ---
 
 ## Not Applicable
 
-HushType is a **native macOS application**. Docker is not used and does not apply to this project.
+VaulType is a **native macOS application**. Docker is not used and does not apply to this project.
 
-HushType requires macOS-specific system APIs that cannot run in any container environment:
+VaulType requires macOS-specific system APIs that cannot run in any container environment:
 
 - **Metal GPU** — whisper.cpp and llama.cpp use Apple Metal for hardware-accelerated inference
 - **AVFoundation / Core Audio** — microphone capture requires macOS audio hardware

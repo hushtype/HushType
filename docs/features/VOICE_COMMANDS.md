@@ -2,7 +2,7 @@
 
 **Last Updated: 2026-02-20**
 
-> HushType's voice command system enables hands-free control of macOS applications, windows, and system settings through natural language spoken commands. All processing happens locally using whisper.cpp for recognition and a regex-based command parser for fast intent matching. Phase 4 (v0.4.0) is complete.
+> VaulType's voice command system enables hands-free control of macOS applications, windows, and system settings through natural language spoken commands. All processing happens locally using whisper.cpp for recognition and a regex-based command parser for fast intent matching. Phase 4 (v0.4.0) is complete.
 
 ## Implementation Status
 
@@ -82,7 +82,7 @@ All Phase 4 voice command features are implemented:
 
 ## Overview
 
-HushType's voice command subsystem transforms spoken natural language into actionable macOS operations. Unlike dictation mode, which converts speech into typed text, command mode intercepts recognized speech and routes it through an intent classification pipeline to execute system-level actions.
+VaulType's voice command subsystem transforms spoken natural language into actionable macOS operations. Unlike dictation mode, which converts speech into typed text, command mode intercepts recognized speech and routes it through an intent classification pipeline to execute system-level actions.
 
 Key design principles:
 
@@ -403,7 +403,7 @@ final class CommandModeController: ObservableObject {
 
 ### Visual Indicators
 
-When command mode is active, HushType displays a floating overlay in the menu bar area and optionally a larger on-screen indicator:
+When command mode is active, VaulType displays a floating overlay in the menu bar area and optionally a larger on-screen indicator:
 
 | State | Indicator | Color | Description |
 |-------|-----------|-------|-------------|
@@ -778,7 +778,7 @@ final class RegexCommandParser: Sendable {
 
 ### LLM-Based Parsing
 
-For commands that do not match any regex pattern, HushType optionally routes the input through a local llama.cpp model for deeper intent classification. This is disabled by default and requires a downloaded NLU model.
+For commands that do not match any regex pattern, VaulType optionally routes the input through a local llama.cpp model for deeper intent classification. This is disabled by default and requires a downloaded NLU model.
 
 ```swift
 // MARK: - LLM Command Parser
@@ -1401,7 +1401,7 @@ enum AppCommandHandler {
 }
 ```
 
-> ⚠️ `quitApp` is marked with `requiresConfirmation: true` in the command registry. HushType will ask the user to confirm before terminating an application ("Did you say quit Safari?").
+> ⚠️ `quitApp` is marked with `requiresConfirmation: true` in the command registry. VaulType will ask the user to confirm before terminating an application ("Did you say quit Safari?").
 
 ### Window State Commands
 
@@ -1611,7 +1611,7 @@ enum WindowCommandHandler {
 }
 ```
 
-> 🍎 The Accessibility API (`AXUIElement`) requires the user to grant HushType access in **System Settings > Privacy & Security > Accessibility**. See [`PERMISSIONS.md`](PERMISSIONS.md).
+> 🍎 The Accessibility API (`AXUIElement`) requires the user to grant VaulType access in **System Settings > Privacy & Security > Accessibility**. See [`PERMISSIONS.md`](PERMISSIONS.md).
 
 ### Move to Next Desktop
 
@@ -1723,7 +1723,7 @@ extension WindowCommandHandler {
 
 ### Window Management via Accessibility APIs
 
-All window management operations in HushType are built on the macOS Accessibility API (`AXUIElement`). The key attributes used are:
+All window management operations in VaulType are built on the macOS Accessibility API (`AXUIElement`). The key attributes used are:
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
@@ -1734,7 +1734,7 @@ All window management operations in HushType are built on the macOS Accessibilit
 | `kAXMinimizedAttribute` | `CFBoolean` | Whether the window is minimized |
 | `kAXFullScreenAttribute` | `CFBoolean` | Whether the window is in full screen |
 
-> 🔒 All Accessibility API calls require the `kAXTrustedCheckOptionPrompt` entitlement. HushType checks for this on launch and guides users through granting permission. See [`PERMISSIONS.md`](PERMISSIONS.md) for details.
+> 🔒 All Accessibility API calls require the `kAXTrustedCheckOptionPrompt` entitlement. VaulType checks for this on launch and guides users through granting permission. See [`PERMISSIONS.md`](PERMISSIONS.md) for details.
 
 ---
 
@@ -1947,7 +1947,7 @@ enum SystemCommandHandler {
     }
 ```
 
-> ℹ️ Brightness control via IOKit is supported on built-in Apple displays. External displays may not respond to `IODisplaySetFloatParameter`. For DDC-capable external monitors, consider a separate DDC bridge (out of scope for HushType core).
+> ℹ️ Brightness control via IOKit is supported on built-in Apple displays. External displays may not respond to `IODisplaySetFloatParameter`. For DDC-capable external monitors, consider a separate DDC bridge (out of scope for VaulType core).
 
 ### Do Not Disturb
 
@@ -1984,7 +1984,7 @@ enum SystemCommandHandler {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let desktopPath = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Desktop")
-            .appendingPathComponent("HushType_Screenshot_\(timestamp).png")
+            .appendingPathComponent("VaulType_Screenshot_\(timestamp).png")
             .path
 
         let process = Process()
@@ -2242,7 +2242,7 @@ final class AliasStore {
     init() throws {
         let schema = Schema([CommandAlias.self])
         let config = ModelConfiguration(
-            "HushTypeAliases",
+            "VaulTypeAliases",
             schema: schema,
             isStoredInMemoryOnly: false
         )
@@ -2344,14 +2344,14 @@ Example aliases:
 
 ### Running Shortcuts via ShortcutsProvider
 
-HushType integrates with Apple Shortcuts using the `ShortcutsProvider` protocol introduced in macOS 14.
+VaulType integrates with Apple Shortcuts using the `ShortcutsProvider` protocol introduced in macOS 14.
 
 ```swift
 import AppIntents
 
-// MARK: - HushType App Shortcuts Provider
+// MARK: - VaulType App Shortcuts Provider
 
-struct HushTypeShortcuts: AppShortcutsProvider {
+struct VaulTypeShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: RunVoiceCommandIntent(),
@@ -2379,7 +2379,7 @@ struct HushTypeShortcuts: AppShortcutsProvider {
 
 struct RunVoiceCommandIntent: AppIntent {
     static var title: LocalizedStringResource = "Run Voice Command"
-    static var description = IntentDescription("Executes a HushType voice command by text")
+    static var description = IntentDescription("Executes a VaulType voice command by text")
 
     @Parameter(title: "Command Text")
     var commandText: String
@@ -2448,7 +2448,7 @@ enum ShortcutCommandHandler {
 }
 ```
 
-> 🍎 The `shortcuts` CLI is available on macOS 12+ and does not require additional entitlements. HushType can list available shortcuts with `shortcuts list` and run them with `shortcuts run <name>`.
+> 🍎 The `shortcuts` CLI is available on macOS 12+ and does not require additional entitlements. VaulType can list available shortcuts with `shortcuts list` and run them with `shortcuts run <name>`.
 
 ---
 
@@ -2456,7 +2456,7 @@ enum ShortcutCommandHandler {
 
 ### NSAppleScript Execution
 
-HushType provides an AppleScript bridge for advanced automation scenarios that require controlling applications not accessible through standard APIs.
+VaulType provides an AppleScript bridge for advanced automation scenarios that require controlling applications not accessible through standard APIs.
 
 ```swift
 import Foundation
@@ -2557,7 +2557,7 @@ actor AppleScriptBridge {
             if lowercased.contains(pattern) {
                 throw CommandError.permissionDenied(
                     "AppleScript contains blocked operation: '\(pattern)'. "
-                    + "For security, HushType does not allow this pattern."
+                    + "For security, VaulType does not allow this pattern."
                 )
             }
         }
@@ -2578,7 +2578,7 @@ actor AppleScriptBridge {
 }
 ```
 
-> 🔒 **Security policy**: HushType blocks `do shell script` in user-submitted AppleScript to prevent arbitrary command execution. Only HushType's own internal AppleScript templates may use shell scripting, and they are reviewed at build time.
+> 🔒 **Security policy**: VaulType blocks `do shell script` in user-submitted AppleScript to prevent arbitrary command execution. Only VaulType's own internal AppleScript templates may use shell scripting, and they are reviewed at build time.
 
 > ⚠️ AppleScript execution requires the **Automation** permission in **System Settings > Privacy & Security > Automation**. Each target application must be individually authorized. See [`PERMISSIONS.md`](PERMISSIONS.md).
 
@@ -2697,7 +2697,7 @@ final class FeedbackEngine {
 
 ## Configuration
 
-Voice command settings are managed through HushType's preferences and stored via SwiftData:
+Voice command settings are managed through VaulType's preferences and stored via SwiftData:
 
 ```swift
 // MARK: - Voice Command Settings

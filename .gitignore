@@ -67,7 +67,7 @@ compile_commands.json
 *.bin
 *.gguf
 *.ggml
-!HushType/Resources/PromptTemplates/*.json
+!VaulType/Resources/PromptTemplates/*.json
 
 # Secrets - NEVER COMMIT
 *.p12

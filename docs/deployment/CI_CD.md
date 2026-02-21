@@ -2,7 +2,7 @@ Last Updated: 2026-02-20
 
 # CI/CD Pipeline
 
-> GitHub Actions workflows for building, testing, linting, and releasing HushType.
+> GitHub Actions workflows for building, testing, linting, and releasing VaulType.
 
 ## Table of Contents
 
@@ -23,7 +23,7 @@ Last Updated: 2026-02-20
 
 ## Overview
 
-HushType uses GitHub Actions for all CI/CD operations. Since HushType is a native macOS application, all builds run on macOS runners with Xcode. There are no Docker containers or Linux runners in this project.
+VaulType uses GitHub Actions for all CI/CD operations. Since VaulType is a native macOS application, all builds run on macOS runners with Xcode. There are no Docker containers or Linux runners in this project.
 
 ```
 Push/PR to main ──► Build (Debug + Release) ──► Test ──► Lint
@@ -139,7 +139,7 @@ jobs:
       - name: Build
         run: |
           xcodebuild build \
-            -scheme HushType \
+            -scheme VaulType \
             -configuration ${{ matrix.configuration }} \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath DerivedData \
@@ -152,8 +152,8 @@ jobs:
         if: matrix.configuration == 'Release'
         uses: actions/upload-artifact@v4
         with:
-          name: HushType-Release
-          path: DerivedData/Build/Products/Release/HushType.app
+          name: VaulType-Release
+          path: DerivedData/Build/Products/Release/VaulType.app
           retention-days: 7
 ```
 
@@ -231,7 +231,7 @@ jobs:
           CI: "true"
         run: |
           xcodebuild test \
-            -scheme HushType \
+            -scheme VaulType \
             -destination 'platform=macOS,arch=arm64' \
             -derivedDataPath DerivedData \
             -resultBundlePath TestResults.xcresult \
@@ -392,13 +392,13 @@ The certificate is decoded and imported into a temporary keychain in the CI runn
 Notarization uses `xcrun notarytool` with `--wait` to block until Apple's notary service returns a result. The existing `scripts/notarize.sh` wraps this:
 
 ```bash
-xcrun notarytool submit "HushType-${VERSION}-universal.dmg" \
+xcrun notarytool submit "VaulType-${VERSION}-universal.dmg" \
     --apple-id "$APPLE_ID" \
     --team-id "$TEAM_ID" \
     --password "$APP_PASSWORD" \
     --wait --timeout 30m
 
-xcrun stapler staple "HushType-${VERSION}-universal.dmg"
+xcrun stapler staple "VaulType-${VERSION}-universal.dmg"
 ```
 
 Notarization typically takes 5-15 minutes. The `--timeout 30m` flag handles slow responses.
@@ -407,7 +407,7 @@ Notarization typically takes 5-15 minutes. The `--timeout 30m` flag handles slow
 
 ## Sparkle Appcast Update
 
-HushType uses Sparkle 2.x with EdDSA (Ed25519) signatures. The `scripts/update-appcast.sh` script inserts a new `<item>` at the top of `appcast.xml` after each release:
+VaulType uses Sparkle 2.x with EdDSA (Ed25519) signatures. The `scripts/update-appcast.sh` script inserts a new `<item>` at the top of `appcast.xml` after each release:
 
 ```xml
 <item>
@@ -417,7 +417,7 @@ HushType uses Sparkle 2.x with EdDSA (Ed25519) signatures. The `scripts/update-a
   <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
   <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
   <enclosure
-    url="https://github.com/hushtype/hushtype/releases/download/v${VERSION}/HushType-${VERSION}-universal.dmg"
+    url="https://github.com/vaultype/vaultype/releases/download/v${VERSION}/VaulType-${VERSION}-universal.dmg"
     type="application/octet-stream"
     sparkle:edSignature="${SIGNATURE}"
     length="${SIZE}"
@@ -435,23 +435,23 @@ Homebrew Cask submission is a planned Phase 6 task. When complete, a workflow wi
 
 ```bash
 # Homebrew cask formula (planned)
-cask "hushtype" do
+cask "vaultype" do
   version "0.x.0"
   sha256 "COMPUTED_SHA256"
 
-  url "https://github.com/hushtype/hushtype/releases/download/v#{version}/HushType-#{version}-universal.dmg"
-  name "HushType"
+  url "https://github.com/vaultype/vaultype/releases/download/v#{version}/VaulType-#{version}-universal.dmg"
+  name "VaulType"
   desc "Privacy-first, offline speech-to-text for macOS with local AI"
-  homepage "https://hushtype.app"
+  homepage "https://vaultype.app"
 
   depends_on macos: ">= :sonoma"
 
-  app "HushType.app"
+  app "VaulType.app"
 
   zap trash: [
-    "~/Library/Application Support/HushType",
-    "~/Library/Caches/com.hushtype.app",
-    "~/Library/Preferences/com.hushtype.app.plist",
+    "~/Library/Application Support/VaulType",
+    "~/Library/Caches/com.vaultype.app",
+    "~/Library/Preferences/com.vaultype.app.plist",
   ]
 end
 ```

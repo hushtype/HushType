@@ -3,20 +3,20 @@
 #
 # Usage: ./scripts/update-homebrew.sh <version> <sha256>
 #
-# This updates Casks/hushtype.rb with the new version and checksum.
+# This updates Casks/vaultype.rb with the new version and checksum.
 # After updating, submit a PR to homebrew-cask or use a tap.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-CASK_FILE="$PROJECT_ROOT/Casks/hushtype.rb"
+CASK_FILE="$PROJECT_ROOT/Casks/vaultype.rb"
 
 usage() {
     cat <<EOF
 Usage: $(basename "$0") <version> <sha256>
 
-Update the Homebrew cask formula for HushType.
+Update the Homebrew cask formula for VaulType.
 
 Arguments:
   version   Release version (e.g. 1.0.0)
@@ -47,7 +47,7 @@ if [[ ! -f "$CASK_FILE" ]]; then
     exit 1
 fi
 
-echo "=== HushType: Homebrew Cask Update ==="
+echo "=== VaulType: Homebrew Cask Update ==="
 echo ""
 echo "Version : $VERSION"
 echo "SHA256  : $SHA256"
@@ -59,28 +59,28 @@ sed -i '' "s/version \".*\"/version \"${VERSION}\"/" "$CASK_FILE"
 # Update sha256 line
 sed -i '' "s/sha256 \".*\"/sha256 \"${SHA256}\"/" "$CASK_FILE"
 
-echo "[done] Casks/hushtype.rb updated (local copy)"
+echo "[done] Casks/vaultype.rb updated (local copy)"
 
 # Also update the tap repo if available
-TAP_DIR="$(brew --repository hushtype/hushtype 2>/dev/null || true)"
+TAP_DIR="$(brew --repository vaultype/vaultype 2>/dev/null || true)"
 if [[ -n "$TAP_DIR" && -d "$TAP_DIR" ]]; then
     echo ""
     echo "Updating tap repo: $TAP_DIR"
-    cp "$CASK_FILE" "$TAP_DIR/Casks/hushtype.rb"
+    cp "$CASK_FILE" "$TAP_DIR/Casks/vaultype.rb"
     cd "$TAP_DIR"
-    git add Casks/hushtype.rb
-    git commit -m "Update HushType to ${VERSION}"
+    git add Casks/vaultype.rb
+    git commit -m "Update VaulType to ${VERSION}"
     git push
     echo "[done] Tap repo updated and pushed"
 else
     echo ""
     echo "Tap not installed locally. To update the tap repo manually:"
-    echo "  1. Clone: git clone https://github.com/hushtype/homebrew-hushtype"
-    echo "  2. Copy Casks/hushtype.rb into the clone"
+    echo "  1. Clone: git clone https://github.com/vaultype/homebrew-vaultype"
+    echo "  2. Copy Casks/vaultype.rb into the clone"
     echo "  3. Commit and push"
 fi
 
 echo ""
 echo "Users can install with:"
-echo "  brew tap hushtype/hushtype"
-echo "  brew install --cask hushtype"
+echo "  brew tap vaultype/vaultype"
+echo "  brew install --cask vaultype"

@@ -1,25 +1,25 @@
 <p align="center">
-  <img src="assets/icon-rounded.png" width="128" alt="HushType Icon">
+  <img src="assets/icon-rounded.png" width="128" alt="VaulType Icon">
 </p>
-<h1 align="center">HushType</h1>
+<h1 align="center">VaulType</h1>
 <p align="center"><em>Your voice stays private. Text appears at your cursor.</em></p>
 
 <p align="center">
   <!-- Badges -->
-  <a href="https://github.com/hushtype/HushType/releases/latest"><img alt="Download" src="https://img.shields.io/github/v/release/hushtype/HushType?label=Download&logo=apple&color=7B61FF"></a>
+  <a href="https://github.com/vaultype/VaulType/releases/latest"><img alt="Download" src="https://img.shields.io/github/v/release/vaultype/VaulType?label=Download&logo=apple&color=7B61FF"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2014%2B-blue?logo=apple">
   <img alt="Swift" src="https://img.shields.io/badge/Swift-5.9%2B-orange?logo=swift">
   <img alt="License" src="https://img.shields.io/badge/license-GPL--3.0-green">
-  <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/hushtype/HushType/build.yml?branch=main">
+  <img alt="Build" src="https://img.shields.io/github/actions/workflow/status/vaultype/VaulType/build.yml?branch=main">
 </p>
 
 ---
 
-## What is HushType?
+## What is VaulType?
 
-HushType is a **privacy-first, macOS-native speech-to-text application** that lets you dictate text into any app where your cursor is active — without ever sending your voice to the cloud.
+VaulType is a **privacy-first, macOS-native speech-to-text application** that lets you dictate text into any app where your cursor is active — without ever sending your voice to the cloud.
 
-Unlike cloud-dependent alternatives (MacWhisper, Superwhisper, Apple Dictation), HushType runs entirely offline using local AI models:
+Unlike cloud-dependent alternatives (MacWhisper, Superwhisper, Apple Dictation), VaulType runs entirely offline using local AI models:
 
 - **[whisper.cpp](https://github.com/ggerganov/whisper.cpp)** for speech recognition with Metal GPU acceleration
 - **[llama.cpp](https://github.com/ggerganov/llama.cpp)** for intelligent text post-processing with local LLMs
@@ -62,19 +62,19 @@ The app lives in your macOS menu bar and provides global hotkey-activated dictat
 ### Install via Homebrew (recommended)
 
 ```bash
-brew tap hushtype/hushtype
-brew install --cask hushtype
+brew tap vaultype/vaultype
+brew install --cask vaultype
 ```
 
 ### Install from GitHub Releases
 
-1. Download the latest `.dmg` from [GitHub Releases](https://github.com/hushtype/hushtype/releases)
-2. Open the DMG and drag HushType to Applications
-3. Launch HushType from Applications
+1. Download the latest `.dmg` from [GitHub Releases](https://github.com/vaultype/vaultype/releases)
+2. Open the DMG and drag VaulType to Applications
+3. Launch VaulType from Applications
 
 ### First Run
 
-1. **Grant Permissions** — HushType will request Accessibility and Microphone permissions
+1. **Grant Permissions** — VaulType will request Accessibility and Microphone permissions
 2. **Download a Model** — Open Settings and download a Whisper model (recommended: `small` for balanced speed/accuracy)
 3. **Set Your Hotkey** — Default is double-tap Fn or hold Right Option
 4. **Start Dictating** — Press your hotkey, speak, and release. Text appears at your cursor.
@@ -85,14 +85,14 @@ brew install --cask hushtype
 
 ```bash
 # Clone the repository
-git clone https://github.com/hushtype/hushtype.git
-cd hushtype
+git clone https://github.com/vaultype/vaultype.git
+cd vaultype
 
 # Build whisper.cpp and llama.cpp
 ./scripts/build-deps.sh
 
 # Open in Xcode
-open HushType.xcodeproj
+open VaulType.xcodeproj
 
 # Build and run (⌘R)
 ```
@@ -101,7 +101,7 @@ open HushType.xcodeproj
 
 ## Processing Modes
 
-HushType's dual AI pipeline gives you six modes for different use cases:
+VaulType's dual AI pipeline gives you six modes for different use cases:
 
 | Mode | What It Does | Best For |
 |------|-------------|----------|
@@ -115,8 +115,8 @@ HushType's dual AI pipeline gives you six modes for different use cases:
 ## Project Structure
 
 ```
-HushType/
-├── HushType/                    # Main app target
+VaulType/
+├── VaulType/                    # Main app target
 │   ├── App/                     # App entry point, menu bar
 │   ├── Views/                   # SwiftUI views (settings, overlay)
 │   ├── Services/                # Core services
@@ -131,8 +131,8 @@ HushType/
 │   └── Resources/               # Assets, prompt templates
 ├── WhisperKit/                  # whisper.cpp bridging module
 ├── LlamaKit/                   # llama.cpp bridging module
-├── HushTypeTests/               # Unit tests
-├── HushTypeUITests/             # UI tests
+├── VaulTypeTests/               # Unit tests
+├── VaulTypeUITests/             # UI tests
 ├── scripts/                     # Build scripts
 └── docs/                        # Documentation
 ```
@@ -155,7 +155,7 @@ HushType/
 
 ## How It Compares
 
-| Feature | HushType | MacWhisper | Superwhisper | Apple Dictation |
+| Feature | VaulType | MacWhisper | Superwhisper | Apple Dictation |
 |---------|----------|------------|--------------|-----------------|
 | Fully Offline | Yes | Partial | Partial | No |
 | Local LLM Processing | Yes | No | No | No |
@@ -170,7 +170,7 @@ HushType/
 ### Getting Started
 - [Quick Start Guide](docs/getting-started/QUICK_START.md) — Up and running in 5 minutes
 - [Setup Guide](docs/getting-started/SETUP_GUIDE.md) — Full development environment setup
-- [Development Guide](docs/getting-started/DEVELOPMENT_GUIDE.md) — Contributing and extending HushType
+- [Development Guide](docs/getting-started/DEVELOPMENT_GUIDE.md) — Contributing and extending VaulType
 
 ### Architecture
 - [Architecture](docs/architecture/ARCHITECTURE.md) — System design and component breakdown
@@ -203,20 +203,20 @@ We welcome contributions! See [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.m
 
 ```bash
 # Fork and clone
-git clone https://github.com/YOUR_USERNAME/hushtype.git
+git clone https://github.com/YOUR_USERNAME/vaultype.git
 
 # Create a feature branch
 git checkout -b feature/your-feature
 
 # Make changes and test
-xcodebuild test -scheme HushType
+xcodebuild test -scheme VaulType
 
 # Submit a pull request
 ```
 
 ## License
 
-HushType is licensed under the [GNU General Public License v3.0](LICENSE).
+VaulType is licensed under the [GNU General Public License v3.0](LICENSE).
 
 Third-party components:
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp) — MIT License
@@ -228,6 +228,6 @@ See [Legal Compliance](docs/security/LEGAL_COMPLIANCE.md) for full attribution a
 ---
 
 <p align="center">
-  <strong>HushType</strong> — Privacy-first dictation for macOS.<br>
+  <strong>VaulType</strong> — Privacy-first dictation for macOS.<br>
   Your voice. Your Mac. No cloud required.
 </p>

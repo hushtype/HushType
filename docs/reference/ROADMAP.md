@@ -2,7 +2,7 @@ Last Updated: 2026-02-20
 
 # Product Roadmap
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
 > This roadmap defines the phased development plan from MVP through stable release and beyond.
 
 ## Current Status (February 2026)
@@ -96,7 +96,7 @@ Remaining:
 
 ## Roadmap Overview
 
-HushType follows a phased release strategy. Each phase builds incrementally on the previous one, delivering usable value at every milestone. All phases share one non-negotiable constraint: **every feature operates 100% locally on the user's device**.
+VaulType follows a phased release strategy. Each phase builds incrementally on the previous one, delivering usable value at every milestone. All phases share one non-negotiable constraint: **every feature operates 100% locally on the user's device**.
 
 ```
  v0.1.0 (MVP)          v0.2.0 (LLM)         v0.3.0 (Smart)
@@ -152,11 +152,11 @@ A persistent, lightweight menu bar application built with SwiftUI `MenuBarExtra`
 ```swift
 // Target architecture
 @main
-struct HushTypeApp: App {
+struct VaulTypeApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {
-        MenuBarExtra("HushType", systemImage: appState.menuBarIcon) {
+        MenuBarExtra("VaulType", systemImage: appState.menuBarIcon) {
             MenuBarView()
                 .environmentObject(appState)
         }
@@ -240,7 +240,7 @@ Deliver transcribed text to the cursor position in any macOS application.
 | Unicode support | Full Unicode including CJK, emoji, diacritics | P1 |
 | Accessibility permission check | Guide user through granting Accessibility permission | P0 |
 
-> **Important**: Text injection requires the Accessibility permission. HushType must detect when permission is missing and present clear instructions. See [Security](../security/SECURITY.md) for the permission model.
+> **Important**: Text injection requires the Accessibility permission. VaulType must detect when permission is missing and present clear instructions. See [Security](../security/SECURITY.md) for the permission model.
 
 ### 1.6 Settings and Preferences
 
@@ -260,7 +260,7 @@ Persistent user preferences stored via SwiftData and UserDefaults.
 
 The MVP is complete when a user can:
 
-1. Install HushType by dragging to `/Applications`
+1. Install VaulType by dragging to `/Applications`
 2. Grant Microphone and Accessibility permissions on first launch
 3. Press `Cmd+Shift+Space`, speak naturally, and release
 4. See the transcribed text appear at the cursor in any app
@@ -307,7 +307,7 @@ For users who already have Ollama installed and prefer using their existing mode
 | Model listing | Fetch available models from the Ollama API | P1 |
 | Settings toggle | Allow switching between llama.cpp and Ollama in preferences | P1 |
 
-> **Note**: Ollama is strictly optional. HushType must function fully without it. Network calls are made only to `localhost`. See [Security](../security/SECURITY.md) for network policy.
+> **Note**: Ollama is strictly optional. VaulType must function fully without it. Network calls are made only to `localhost`. See [Security](../security/SECURITY.md) for network policy.
 
 ### 2.3 Model Downloader for GGUF
 
@@ -424,7 +424,7 @@ A templating engine for LLM prompts with variable substitution.
 
 ## Phase 3 -- Smart Features (v0.3.0)
 
-**Goal**: Make HushType context-aware and history-capable. The app adapts its behavior based on the active application, remembers past dictations, and provides a visual overlay for editing before injection.
+**Goal**: Make VaulType context-aware and history-capable. The app adapts its behavior based on the active application, remembers past dictations, and provides a visual overlay for editing before injection.
 
 ### 3.1 App-Aware Context
 
@@ -482,7 +482,7 @@ A small, always-on-top overlay that shows real-time transcription and allows edi
 
 ```
 ┌─────────────────────────────────────────────┐
-│  HushType                          [x]  [-] │
+│  VaulType                          [x]  [-] │
 ├─────────────────────────────────────────────┤
 │                                             │
 │  The quick brown fox jumps over the lazy    │
@@ -516,7 +516,7 @@ User dictionary for correcting common whisper misrecognitions and domain-specifi
 | "jay son" | "JSON" | Global | Acronym normalization |
 | "swift you eye" | "SwiftUI" | Global | Framework name |
 | "build and run" | "Cmd+R" | Xcode only | App-specific shortcut |
-| "hush type" | "HushType" | Global | Product name |
+| "hush type" | "VaulType" | Global | Product name |
 
 ### 3.5 Multi-Language Support
 
@@ -635,7 +635,7 @@ Chain multiple commands and integrate with macOS automation frameworks.
   ──► [4] Switch system to dark mode
 ```
 
-> **Important**: AppleScript execution requires the Automation permission and presents significant security considerations. Users must explicitly grant per-app Automation permissions, and HushType must sanitize all input to prevent injection attacks. See [Security](../security/SECURITY.md) for details.
+> **Important**: AppleScript execution requires the Automation permission and presents significant security considerations. Users must explicitly grant per-app Automation permissions, and VaulType must sanitize all input to prevent injection attacks. See [Security](../security/SECURITY.md) for details.
 
 ---
 
@@ -668,7 +668,7 @@ Audible cues for state transitions and command execution.
 
 ### 5.3 Accessibility Features
 
-Ensure HushType is fully usable by people with disabilities.
+Ensure VaulType is fully usable by people with disabilities.
 
 | Deliverable | Description | Priority |
 |---|---|---|
@@ -684,7 +684,7 @@ Ensure HushType is fully usable by people with disabilities.
 
 ### 5.4 Performance Optimization
 
-Ensure HushType is a responsible background citizen -- low resource usage, battery awareness, and thermal management.
+Ensure VaulType is a responsible background citizen -- low resource usage, battery awareness, and thermal management.
 
 | Deliverable | Description | Priority |
 |---|---|---|
@@ -709,20 +709,20 @@ Ensure HushType is a responsible background citizen -- low resource usage, batte
 
 ### 5.5 Plugin and Extension System
 
-A mechanism for the community to extend HushType with custom processing, commands, and integrations.
+A mechanism for the community to extend VaulType with custom processing, commands, and integrations.
 
 | Deliverable | Description | Priority |
 |---|---|---|
 | Plugin API | Swift protocol-based plugin interface | P2 |
 | Plugin types | Processing plugins, command plugins, integration plugins | P2 |
-| Plugin discovery | Load plugins from `~/Library/Application Support/HushType/Plugins/` | P2 |
+| Plugin discovery | Load plugins from `~/Library/Application Support/VaulType/Plugins/` | P2 |
 | Sandboxed execution | Plugins run in restricted context with limited system access | P2 |
 | Plugin manager UI | Install, enable/disable, and remove plugins from Settings | P2 |
 | Documentation | Plugin development guide with example plugins | P2 |
 
 ```swift
 /// Plugin protocol for community extensions
-protocol HushTypePlugin: Sendable {
+protocol VaulTypePlugin: Sendable {
     /// Unique identifier for this plugin
     var identifier: String { get }
 
@@ -740,12 +740,12 @@ protocol HushTypePlugin: Sendable {
 }
 
 /// Processing plugin -- transforms text in the pipeline
-protocol ProcessingPlugin: HushTypePlugin {
+protocol ProcessingPlugin: VaulTypePlugin {
     func process(text: String, context: ProcessingContext) async throws -> String
 }
 
 /// Command plugin -- adds new voice commands
-protocol CommandPlugin: HushTypePlugin {
+protocol CommandPlugin: VaulTypePlugin {
     var supportedCommands: [CommandDefinition] { get }
     func execute(command: ParsedCommand) async throws -> CommandResult
 }
@@ -757,7 +757,7 @@ protocol CommandPlugin: HushTypePlugin {
 
 ## v1.0 -- Stable Release
 
-**Goal**: All five phases delivered, tested, documented, and polished to production quality. v1.0 represents HushType's public commitment to API and feature stability.
+**Goal**: All five phases delivered, tested, documented, and polished to production quality. v1.0 represents VaulType's public commitment to API and feature stability.
 
 ### v1.0 Checklist
 
@@ -776,7 +776,7 @@ protocol CommandPlugin: HushTypePlugin {
 
 ### v1.0 Versioning Policy
 
-After v1.0, HushType follows Semantic Versioning:
+After v1.0, VaulType follows Semantic Versioning:
 
 | Version Component | Meaning | Example |
 |---|---|---|
@@ -788,7 +788,7 @@ After v1.0, HushType follows Semantic Versioning:
 
 ## Future Considerations (v1.0+)
 
-The following features are under consideration for post-1.0 releases. They are not committed to any timeline and will be prioritized based on community feedback, technical feasibility, and alignment with HushType's privacy-first principles.
+The following features are under consideration for post-1.0 releases. They are not committed to any timeline and will be prioritized based on community feedback, technical feasibility, and alignment with VaulType's privacy-first principles.
 
 ### Speaker Diarization
 
@@ -840,16 +840,16 @@ Long-form transcription optimized for meetings, lectures, and interviews.
 
 ### Third-Party Integrations
 
-Connect HushType to popular productivity tools.
+Connect VaulType to popular productivity tools.
 
 | Integration | Description | Feasibility |
 |---|---|---|
-| **Raycast** | HushType as a Raycast extension for quick dictation | High -- Raycast has a Swift extension API |
-| **Alfred** | Alfred workflow for triggering HushType modes | Medium -- requires Alfred Powerpack |
+| **Raycast** | VaulType as a Raycast extension for quick dictation | High -- Raycast has a Swift extension API |
+| **Alfred** | Alfred workflow for triggering VaulType modes | Medium -- requires Alfred Powerpack |
 | **Obsidian** | Direct dictation into Obsidian notes with metadata | Medium -- via URI scheme or plugin |
 | **Notion** | Dictation to Notion pages | Low -- requires Notion API (cloud) |
 
-> **Note**: Integrations that require cloud APIs (e.g., Notion) conflict with HushType's privacy-first design. Such integrations would be offered as opt-in plugins with clear privacy disclosures.
+> **Note**: Integrations that require cloud APIs (e.g., Notion) conflict with VaulType's privacy-first design. Such integrations would be offered as opt-in plugins with clear privacy disclosures.
 
 ### iOS Companion App
 
@@ -899,7 +899,7 @@ Each criterion must be verified before the MVP can be tagged and released.
 
 | ID | Criterion | Verification Method |
 |---|---|---|
-| **AC-01** | User can install by dragging HushType.app to `/Applications` | Manual test on clean macOS 14 installation |
+| **AC-01** | User can install by dragging VaulType.app to `/Applications` | Manual test on clean macOS 14 installation |
 | **AC-02** | App appears in the menu bar on launch with correct icon | Visual inspection |
 | **AC-03** | App prompts for Microphone permission on first recording attempt | Manual test on clean install |
 | **AC-04** | App prompts for Accessibility permission on first text injection | Manual test on clean install |
@@ -922,7 +922,7 @@ Each criterion must be verified before the MVP can be tagged and released.
 | **Startup time** | <0.5s from launch to menu bar icon visible | Timed measurement |
 | **Idle CPU** | <1% CPU when not recording | Activity Monitor observation over 10 minutes |
 | **Idle RAM** | <100 MB with no model loaded; <500 MB with whisper-base loaded | Activity Monitor |
-| **Binary size** | <20 MB (excluding ML models) | `du -sh HushType.app` |
+| **Binary size** | <20 MB (excluding ML models) | `du -sh VaulType.app` |
 | **Disk usage** | <200 MB total with whisper-base model | Measured after fresh install + model download |
 | **Crash rate** | <0.5% of sessions | Tracked during beta testing |
 | **Battery impact** | No measurable battery drain when idle | Battery health comparison over 8 hours |
@@ -946,7 +946,7 @@ The following features are explicitly deferred to later phases:
 
 ## Community-Requested Features Backlog
 
-This section serves as a template for tracking feature requests from the community. Items are added here after discussion in GitHub Issues or Discussions and are prioritized based on demand, feasibility, and alignment with HushType's values.
+This section serves as a template for tracking feature requests from the community. Items are added here after discussion in GitHub Issues or Discussions and are prioritized based on demand, feasibility, and alignment with VaulType's values.
 
 ### Backlog Template
 
@@ -966,12 +966,12 @@ Requested features are evaluated against the following criteria before being add
 | **User demand** | High | Number of unique requestors and upvotes on the issue |
 | **Technical feasibility** | High | Can be implemented with reasonable effort using existing architecture |
 | **Maintenance burden** | Medium | Long-term cost of maintaining the feature |
-| **Scope creep risk** | Medium | Does this pull HushType away from its core mission? |
+| **Scope creep risk** | Medium | Does this pull VaulType away from its core mission? |
 | **Platform constraints** | Medium | Does macOS provide the necessary APIs? |
 
 ### How to Request a Feature
 
-1. Check the [existing issues](https://github.com/hushtype/hushtype/issues) to avoid duplicates
+1. Check the [existing issues](https://github.com/vaultype/vaultype/issues) to avoid duplicates
 2. Open a new issue using the "Feature Request" template
 3. Describe the use case, not just the solution
 4. Indicate whether you are willing to contribute implementation effort
@@ -1011,6 +1011,6 @@ Requested features are evaluated against the following criteria before being add
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions, corrections, or feature requests, please open an issue on the [GitHub repository](https://github.com/hushtype/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions, corrections, or feature requests, please open an issue on the [GitHub repository](https://github.com/vaultype/vaultype).*
 
-*HushType is free software licensed under the [GNU General Public License v3.0](../../LICENSE).*
+*VaulType is free software licensed under the [GNU General Public License v3.0](../../LICENSE).*

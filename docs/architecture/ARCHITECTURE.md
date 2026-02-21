@@ -2,8 +2,8 @@ Last Updated: 2026-02-13
 
 # System Architecture
 
-> **HushType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
-> This document is the definitive reference for HushType's internal architecture, data flows, threading model, memory management, and extensibility design.
+> **VaulType** — Privacy-first, macOS-native speech-to-text with local LLM post-processing.
+> This document is the definitive reference for VaulType's internal architecture, data flows, threading model, memory management, and extensibility design.
 
 ---
 
@@ -53,7 +53,7 @@ Last Updated: 2026-02-13
 
 ## High-Level System Architecture
 
-HushType follows a strict layered architecture with four tiers. Dependencies flow downward only — upper layers depend on lower layers, but never the reverse. Each layer communicates through well-defined Swift protocols, enabling testability and future extensibility.
+VaulType follows a strict layered architecture with four tiers. Dependencies flow downward only — upper layers depend on lower layers, but never the reverse. Each layer communicates through well-defined Swift protocols, enabling testability and future extensibility.
 
 ### Layer Diagram
 
@@ -644,13 +644,13 @@ actor LLMService {
 }
 ```
 
-> 💡 **Tip**: The prompt format (`<|system|>`, `<|user|>`, `<|assistant|>`) varies by LLM model family. HushType maintains a prompt format registry that maps model filenames to their expected chat template format (ChatML, Llama, Phi, etc.).
+> 💡 **Tip**: The prompt format (`<|system|>`, `<|user|>`, `<|assistant|>`) varies by LLM model family. VaulType maintains a prompt format registry that maps model filenames to their expected chat template format (ChatML, Llama, Phi, etc.).
 
 ---
 
 ## Text Injection Pipeline
 
-After post-processing, the final text must be injected into whatever application the user was focused on when they triggered dictation. HushType uses a dual-strategy approach: CGEvent keystroke simulation for short text, and clipboard paste for longer text.
+After post-processing, the final text must be injected into whatever application the user was focused on when they triggered dictation. VaulType uses a dual-strategy approach: CGEvent keystroke simulation for short text, and clipboard paste for longer text.
 
 ### Injection Strategy Selection
 
@@ -745,13 +745,13 @@ final class ClipboardPreserver {
 }
 ```
 
-> 🔒 **Security**: The clipboard contains the transcribed text for approximately 150ms during the paste operation. HushType immediately restores the previous clipboard contents. Applications that poll the clipboard rapidly (clipboard managers, password managers) may capture this transient content. Users who are concerned about this can configure CGEvent-only injection in their `AppProfile`, accepting slower injection for longer texts.
+> 🔒 **Security**: The clipboard contains the transcribed text for approximately 150ms during the paste operation. VaulType immediately restores the previous clipboard contents. Applications that poll the clipboard rapidly (clipboard managers, password managers) may capture this transient content. Users who are concerned about this can configure CGEvent-only injection in their `AppProfile`, accepting slower injection for longer texts.
 
 ---
 
 ## Voice Command Pipeline
 
-HushType supports voice commands that trigger system actions instead of injecting text. Voice commands are detected by a configurable prefix (default: "hey hush") and parsed into structured actions.
+VaulType supports voice commands that trigger system actions instead of injecting text. Voice commands are detected by a configurable prefix (default: "hey hush") and parsed into structured actions.
 
 ### Command Detection and Parsing
 
@@ -979,7 +979,7 @@ actor ActionExecutor {
 
 ## Thread Architecture
 
-HushType uses a combination of Swift Concurrency (`actor`, `async/await`, `Task`) and explicit GCD dispatch for components that interact with C libraries or system callbacks.
+VaulType uses a combination of Swift Concurrency (`actor`, `async/await`, `Task`) and explicit GCD dispatch for components that interact with C libraries or system callbacks.
 
 ### Thread Model Diagram
 
@@ -1149,7 +1149,7 @@ actor TranscriptionCoordinator {
 
 ## Memory Management Strategy
 
-ML model memory management is critical for HushType. A typical configuration loads 0.5-3 GB of model weights into memory. This section describes how models are loaded, retained, unloaded, and how the app responds to system memory pressure.
+ML model memory management is critical for VaulType. A typical configuration loads 0.5-3 GB of model weights into memory. This section describes how models are loaded, retained, unloaded, and how the app responds to system memory pressure.
 
 ### Model Lifecycle
 
@@ -1257,7 +1257,7 @@ struct ModelLoadConfiguration {
 
 ### Memory Pressure Handling
 
-HushType responds to macOS memory pressure notifications to prevent the system from becoming unresponsive:
+VaulType responds to macOS memory pressure notifications to prevent the system from becoming unresponsive:
 
 ```swift
 import Foundation
@@ -1325,18 +1325,18 @@ final class MemoryPressureMonitor {
 
 ## Plugin Architecture
 
-HushType is designed for future extensibility through a plugin system. While plugins are not yet implemented in the initial release, the architecture is designed to accommodate them without breaking changes.
+VaulType is designed for future extensibility through a plugin system. While plugins are not yet implemented in the initial release, the architecture is designed to accommodate them without breaking changes.
 
 ### Plugin Protocol Definitions
 
 ```swift
 import Foundation
 
-/// A HushType plugin that can process text at specific points in the pipeline.
+/// A VaulType plugin that can process text at specific points in the pipeline.
 ///
 /// Plugins are discovered at launch, instantiated in sandboxed containers,
 /// and invoked at well-defined pipeline stages.
-protocol HushTypePlugin: AnyObject, Sendable {
+protocol VaulTypePlugin: AnyObject, Sendable {
     /// Unique reverse-DNS identifier (e.g., "com.example.myplugin").
     static var identifier: String { get }
 
@@ -1403,7 +1403,7 @@ struct PluginContext: Sendable {
 ```swift
 /// Manages plugin discovery, lifecycle, and execution.
 actor PluginManager {
-    private var loadedPlugins: [String: any HushTypePlugin] = [:]
+    private var loadedPlugins: [String: any VaulTypePlugin] = [:]
     private var enabledPlugins: Set<String> = []
 
     /// Plugin search paths (in priority order).
@@ -1412,7 +1412,7 @@ actor PluginManager {
         FileManager.default.urls(
             for: .applicationSupportDirectory,
             in: .userDomainMask
-        ).first!.appendingPathComponent("HushType/Plugins"),
+        ).first!.appendingPathComponent("VaulType/Plugins"),
 
         // Built-in plugins
         Bundle.main.builtInPlugInsURL
@@ -1468,7 +1468,7 @@ actor PluginManager {
 │                     PLUGIN SANDBOX MODEL                                 │
 │                                                                          │
 │  ┌──────────────────────────────────────────────────────────────┐       │
-│  │  HushType Main Process                                       │       │
+│  │  VaulType Main Process                                       │       │
 │  │                                                               │       │
 │  │  ┌──────────────────────────────────────────────────────┐    │       │
 │  │  │  TranscriptionCoordinator                             │    │       │
@@ -1488,7 +1488,7 @@ actor PluginManager {
 │  │  • No network access (URLSession blocked)                    │       │
 │  │  • No file system access outside plugin's own container      │       │
 │  │  • No access to system APIs (CGEvent, NSWorkspace, etc.)     │       │
-│  │  • No access to SwiftData or other HushType internal state   │       │
+│  │  • No access to SwiftData or other VaulType internal state   │       │
 │  │  • 5-second timeout per process() call                       │       │
 │  │  • 50 MB memory limit per plugin                             │       │
 │  │                                                               │       │
@@ -1506,13 +1506,13 @@ actor PluginManager {
 
 > ℹ️ **Info**: The initial plugin architecture (v1) runs plugins in-process with soft restrictions enforced by API design (plugins only receive `String` and `PluginContext`, not service references). A future version (v2) will use XPC Services for true process-level isolation, enabling untrusted third-party plugins with hardware-enforced sandboxing.
 
-> ⚠️ **Warning**: Plugin support is a planned feature for a future release. The protocols and architecture described here are subject to change. The initial release of HushType does not load or execute plugins.
+> ⚠️ **Warning**: Plugin support is a planned feature for a future release. The protocols and architecture described here are subject to change. The initial release of VaulType does not load or execute plugins.
 
 ---
 
 ## Error Handling Architecture
 
-HushType uses a structured error handling strategy with typed error domains, fallback chains for graceful degradation, and consistent user-facing error presentation.
+VaulType uses a structured error handling strategy with typed error domains, fallback chains for graceful degradation, and consistent user-facing error presentation.
 
 ### Error Domain Hierarchy
 
@@ -1520,7 +1520,7 @@ HushType uses a structured error handling strategy with typed error domains, fal
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      ERROR DOMAIN HIERARCHY                              │
 │                                                                          │
-│  HushTypeError (top-level)                                               │
+│  VaulTypeError (top-level)                                               │
 │  │                                                                       │
 │  ├── AudioError                                                          │
 │  │   ├── .microphonePermissionDenied                                    │
@@ -1579,8 +1579,8 @@ HushType uses a structured error handling strategy with typed error domains, fal
 ```
 
 ```swift
-/// Top-level error type encompassing all HushType error domains.
-enum HushTypeError: Error, LocalizedError {
+/// Top-level error type encompassing all VaulType error domains.
+enum VaulTypeError: Error, LocalizedError {
     case audio(AudioError)
     case whisper(WhisperError)
     case llm(LLMError)
@@ -1629,7 +1629,7 @@ enum AudioError: Error, LocalizedError {
 
 ### Fallback Chains
 
-HushType implements fallback chains so that partial failures degrade functionality gracefully rather than blocking the user entirely.
+VaulType implements fallback chains so that partial failures degrade functionality gracefully rather than blocking the user entirely.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -1712,12 +1712,12 @@ HushType implements fallback chains so that partial failures degrade functionali
 /// Converts internal errors into user-friendly presentation.
 struct ErrorPresenter {
     /// Determine the appropriate presentation style for an error.
-    static func presentation(for error: HushTypeError) -> ErrorPresentation {
+    static func presentation(for error: VaulTypeError) -> ErrorPresentation {
         switch error {
         case .audio(.microphonePermissionDenied):
             return ErrorPresentation(
                 title: "Microphone Access Required",
-                message: "HushType needs microphone access to transcribe your speech.",
+                message: "VaulType needs microphone access to transcribe your speech.",
                 style: .alert,
                 actions: [
                     .openSystemSettings("Privacy & Security > Microphone"),
@@ -1747,7 +1747,7 @@ struct ErrorPresenter {
         case .injection(.accessibilityPermissionDenied):
             return ErrorPresentation(
                 title: "Accessibility Permission Required",
-                message: "HushType needs Accessibility access to type text into applications. Text has been copied to your clipboard instead.",
+                message: "VaulType needs Accessibility access to type text into applications. Text has been copied to your clipboard instead.",
                 style: .alert,
                 actions: [
                     .openSystemSettings("Privacy & Security > Accessibility"),
@@ -1803,7 +1803,7 @@ struct ErrorPresentation {
 >
 > ❌ **Don't**: Expose raw error codes, stack traces, or internal component names in user-facing errors. The user does not need to know that `whisper_full()` returned error code `-7`.
 
-> 💡 **Tip**: All errors are also logged to the unified logging system (`os_log`) with the `com.hushtype` subsystem. Users can collect diagnostic logs via Console.app for bug reports. Sensitive data (transcription text) is never included in log messages.
+> 💡 **Tip**: All errors are also logged to the unified logging system (`os_log`) with the `com.vaultype` subsystem. Users can collect diagnostic logs via Console.app for bug reports. Sensitive data (transcription text) is never included in log messages.
 
 ---
 
@@ -1815,10 +1815,10 @@ struct ErrorPresentation {
 - [Setup Guide](../getting-started/SETUP_GUIDE.md) -- Development environment setup and first build
 - [Deployment Guide](../deployment/DEPLOYMENT.md) -- Build, sign, notarize, and distribute
 - [API Reference](../api/API_REFERENCE.md) -- Internal module APIs and interfaces
-- [Contributing Guide](../contributing/CONTRIBUTING.md) -- How to contribute to HushType
+- [Contributing Guide](../contributing/CONTRIBUTING.md) -- How to contribute to VaulType
 - [Testing Guide](../testing/TESTING.md) -- Unit, integration, and UI testing strategy
 - [Feature Documentation](../features/FEATURES.md) -- Detailed feature specifications
 
 ---
 
-*This document is part of the [HushType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/hushtype).*
+*This document is part of the [VaulType Documentation](../). For questions or corrections, please open an issue on the [GitHub repository](https://github.com/user/vaultype).*

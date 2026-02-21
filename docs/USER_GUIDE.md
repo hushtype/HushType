@@ -1,8 +1,8 @@
-# HushType User Guide
+# VaulType User Guide
 
 **Version 0.5.0 | macOS 14.0+ (Sonoma)**
 
-HushType is a privacy-first speech-to-text app that lives in your Mac's menu bar. It transcribes your voice locally using on-device AI — no internet connection required, no data ever leaves your machine.
+VaulType is a privacy-first speech-to-text app that lives in your Mac's menu bar. It transcribes your voice locally using on-device AI — no internet connection required, no data ever leaves your machine.
 
 ---
 
@@ -31,9 +31,9 @@ HushType is a privacy-first speech-to-text app that lives in your Mac's menu bar
 
 ## 1. Getting Started
 
-### What is HushType?
+### What is VaulType?
 
-HushType is a macOS menu bar app that converts your speech into text and types it into any app — email clients, text editors, chat apps, code editors, and more. Unlike cloud-based dictation tools, all AI processing happens entirely on your Mac using:
+VaulType is a macOS menu bar app that converts your speech into text and types it into any app — email clients, text editors, chat apps, code editors, and more. Unlike cloud-based dictation tools, all AI processing happens entirely on your Mac using:
 
 - **whisper.cpp** for speech recognition
 - **llama.cpp** for optional grammar cleanup and text formatting
@@ -55,53 +55,53 @@ Apple Silicon Macs are strongly recommended. The on-device AI models run signifi
 ### Installation
 
 **From the DMG:**
-1. Download the latest `HushType.dmg` from the releases page.
+1. Download the latest `VaulType.dmg` from the releases page.
 2. Open the DMG file.
-3. Drag HushType into your Applications folder.
-4. Open HushType from Applications or Spotlight.
+3. Drag VaulType into your Applications folder.
+4. Open VaulType from Applications or Spotlight.
 
 **From Homebrew (when available):**
 ```
-brew install --cask hushtype
+brew install --cask vaultype
 ```
 
-When you first open HushType, macOS may ask if you are sure you want to open it. Click "Open" to proceed. HushType is not yet notarized for all distribution channels.
+When you first open VaulType, macOS may ask if you are sure you want to open it. Click "Open" to proceed. VaulType is not yet notarized for all distribution channels.
 
 ---
 
 ## 2. First Launch — Onboarding
 
-The first time you open HushType, a setup wizard walks you through four steps. Each step is important for the app to work correctly.
+The first time you open VaulType, a setup wizard walks you through four steps. Each step is important for the app to work correctly.
 
 ### Step 1: Welcome
 
-A brief introduction to HushType. Click **Continue** to proceed.
+A brief introduction to VaulType. Click **Continue** to proceed.
 
 ### Step 2: Microphone Access
 
-HushType needs access to your microphone to capture your voice. Click **Grant Microphone Access** to open the system permission dialog, then click **Allow**.
+VaulType needs access to your microphone to capture your voice. Click **Grant Microphone Access** to open the system permission dialog, then click **Allow**.
 
 If you skip this step, dictation will not work. You can grant microphone access later in **System Settings > Privacy & Security > Microphone**.
 
 ### Step 3: Accessibility Permission
 
-Accessibility permission allows HushType to:
+Accessibility permission allows VaulType to:
 - Type transcribed text into other apps
 - Move and resize windows using voice commands
 
-Click **Open Accessibility Settings**. In System Settings, scroll down to find HushType and toggle it on.
+Click **Open Accessibility Settings**. In System Settings, scroll down to find VaulType and toggle it on.
 
 This step is technically optional — you can skip it and still use clipboard-based text injection — but it is required for the best experience and for voice commands that manage windows.
 
 ### Step 4: Download Speech Model
 
-HushType needs a speech recognition model before it can transcribe anything. The default model (Base English, approximately 150 MB) is downloaded automatically during this step. Wait for the progress bar to complete before continuing.
+VaulType needs a speech recognition model before it can transcribe anything. The default model (Base English, approximately 150 MB) is downloaded automatically during this step. Wait for the progress bar to complete before continuing.
 
 You can download additional or larger models later in **Settings > Models**.
 
 ### Step 5: You're All Set
 
-Setup is complete. Click **Get Started**. HushType will minimize to the menu bar. You are ready to dictate.
+Setup is complete. Click **Get Started**. VaulType will minimize to the menu bar. You are ready to dictate.
 
 ---
 
@@ -109,17 +109,17 @@ Setup is complete. Click **Get Started**. HushType will minimize to the menu bar
 
 ### The Menu Bar Icon
 
-HushType lives in your Mac's menu bar. Click the icon to open a quick-access menu where you can start dictation, open Settings, or quit the app.
+VaulType lives in your Mac's menu bar. Click the icon to open a quick-access menu where you can start dictation, open Settings, or quit the app.
 
 ### Push-to-Talk (Default Mode)
 
-By default, HushType uses push-to-talk:
+By default, VaulType uses push-to-talk:
 
 1. Place your cursor in any text field (email body, document, chat message, etc.).
 2. Press and hold the **fn** key (bottom-left of your keyboard on most Macs).
 3. Speak normally. You will hear a soft chime when recording begins.
 4. Release the **fn** key when you finish speaking.
-5. HushType processes your audio and types the result into the active field.
+5. VaulType processes your audio and types the result into the active field.
 
 The default hotkey is **fn**, but you can change it to any key or modifier combination in **Settings > General**.
 
@@ -143,7 +143,7 @@ You can disable the overlay in **Settings > General > Show Overlay After Dictati
 
 ### Sound Feedback
 
-HushType plays audio cues to confirm recording events:
+VaulType plays audio cues to confirm recording events:
 - A chime when recording starts.
 - A click when recording stops.
 - A distinct sound when a voice command succeeds or fails.
@@ -152,9 +152,9 @@ Sound effects can be disabled or the theme changed in **Settings > Audio > Sound
 
 ### Text Injection
 
-Once transcription is confirmed (or immediately, if the overlay is disabled), HushType types the text at your cursor using one of two methods:
+Once transcription is confirmed (or immediately, if the overlay is disabled), VaulType types the text at your cursor using one of two methods:
 
-- **Automatic (default)**: HushType picks the best method for the active app automatically.
+- **Automatic (default)**: VaulType picks the best method for the active app automatically.
 - **Keyboard Simulation**: Types character by character using simulated keystrokes. Preserves your clipboard but requires Accessibility permission.
 - **Clipboard Paste**: Copies text to your clipboard and presses Cmd+V. Works in all apps but temporarily overwrites whatever was on your clipboard.
 
@@ -164,7 +164,7 @@ You can choose a method in **Settings > General > Text Injection**.
 
 ## 4. Settings Reference
 
-Open Settings by clicking the HushType icon in the menu bar and selecting **Settings**, or by pressing the standard macOS shortcut **Cmd+,** when any HushType window is focused.
+Open Settings by clicking the VaulType icon in the menu bar and selecting **Settings**, or by pressing the standard macOS shortcut **Cmd+,** when any VaulType window is focused.
 
 ### 4.1 General
 
@@ -179,35 +179,35 @@ Open Settings by clicking the HushType icon in the menu bar and selecting **Sett
 
 | Setting | Description |
 |---|---|
-| Launch at Login | Automatically starts HushType when you log in to your Mac. Recommended for daily use. |
+| Launch at Login | Automatically starts VaulType when you log in to your Mac. Recommended for daily use. |
 | Show Overlay After Dictation | Displays a floating review panel showing the transcription before it is typed. Turn off for instant injection. |
 | Play Sound Effects | Plays audio feedback when recording starts and stops. |
 
 **Updates**
 
-Click **Check for Updates** to see if a newer version of HushType is available.
+Click **Check for Updates** to see if a newer version of VaulType is available.
 
 **Text Injection**
 
 | Setting | Description |
 |---|---|
-| Default Method | How HushType types text. Options: Automatic Detection, Keyboard Simulation (CGEvent), or Clipboard Paste. |
+| Default Method | How VaulType types text. Options: Automatic Detection, Keyboard Simulation (CGEvent), or Clipboard Paste. |
 | Keystroke Delay | Time in milliseconds between simulated keystrokes (Keyboard Simulation mode only). Increase this if text is being dropped in some apps. Default: 5 ms. |
 
 ### 4.2 Audio
 
 **Input Device**
 
-Select which microphone HushType uses. The default is your system's default input device. Click **Refresh Devices** if a newly plugged-in microphone does not appear.
+Select which microphone VaulType uses. The default is your system's default input device. Click **Refresh Devices** if a newly plugged-in microphone does not appear.
 
 **Voice Activity Detection**
 
-The VAD Sensitivity slider controls how sensitive HushType is to detecting speech. The orange line on the level meter shows the current threshold.
+The VAD Sensitivity slider controls how sensitive VaulType is to detecting speech. The orange line on the level meter shows the current threshold.
 
 - Audio levels **above** the orange line are treated as speech.
 - Audio levels **below** the orange line are treated as silence or background noise.
 
-Lower the sensitivity if HushType is picking up too much background noise. Raise it if HushType is cutting off the beginning of your speech. Click **Start Preview** to see your microphone level in real time while adjusting.
+Lower the sensitivity if VaulType is picking up too much background noise. Raise it if VaulType is cutting off the beginning of your speech. Click **Start Preview** to see your microphone level in real time while adjusting.
 
 **Sound Feedback**
 
@@ -225,7 +225,7 @@ Click **Preview Sound** to hear how the current settings sound.
 |---|---|
 | GPU Acceleration | Always on (Metal). Uses your Mac's GPU for faster transcription on supported hardware. |
 | Inference Threads | Number of CPU threads for speech recognition. **Auto** is recommended and uses all available cores. Reduce this if you notice the fan spinning excessively. |
-| Battery-Aware Mode | When on, HushType automatically reduces quality and thread count when running on battery power to extend battery life. |
+| Battery-Aware Mode | When on, VaulType automatically reduces quality and thread count when running on battery power to extend battery life. |
 
 ### 4.3 Processing
 
@@ -251,7 +251,7 @@ When using Prompt Template mode, this section lists the available templates for 
 
 ### 4.4 Models
 
-HushType uses two types of AI models:
+VaulType uses two types of AI models:
 
 - **Speech-to-Text (Whisper)**: Converts your voice to text.
 - **Language Model (LLM)**: Optionally post-processes the text (grammar, formatting, etc.).
@@ -300,7 +300,7 @@ Click **Check for Updates** to refresh the model registry and see if new models 
 
 ### 4.5 App Profiles
 
-App Profiles let you configure HushType differently for each application. For example, you might want:
+App Profiles let you configure VaulType differently for each application. For example, you might want:
 
 - Code mode when dictating in VS Code.
 - Clean mode when writing emails in Mail.
@@ -321,17 +321,17 @@ Each profile can override:
 - Custom vocabulary (spoken-word substitutions specific to this app)
 - Shortcut aliases (voice phrases that trigger keyboard shortcuts in this app)
 
-When HushType detects that a specific app is active, its profile settings take priority over your global defaults.
+When VaulType detects that a specific app is active, its profile settings take priority over your global defaults.
 
 ### 4.6 Vocabulary
 
-The Vocabulary tab lets you teach HushType custom word substitutions. When a spoken form is recognized, it is automatically replaced with your defined replacement before text injection.
+The Vocabulary tab lets you teach VaulType custom word substitutions. When a spoken form is recognized, it is automatically replaced with your defined replacement before text injection.
 
 **Example use cases:**
 - Say "my email" → type `firstname.lastname@example.com`
 - Say "company name" → type `Acme Corporation`
 - Say "version number" → type `v2.4.1`
-- Correct a name HushType consistently misspells, such as "Kaitlin" being misheard as "Caitlin"
+- Correct a name VaulType consistently misspells, such as "Kaitlin" being misheard as "Caitlin"
 
 **Adding a Vocabulary Entry**
 
@@ -351,13 +351,13 @@ When this toggle is on, whisper.cpp analyzes the first 30 seconds of audio to id
 
 **Default Language**
 
-When auto-detect is off, HushType uses this language for all transcriptions. If you have an App Profile that specifies a different language, the profile's language takes priority.
+When auto-detect is off, VaulType uses this language for all transcriptions. If you have an App Profile that specifies a different language, the profile's language takes priority.
 
 Supported languages include English, Turkish, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Russian, Chinese, Japanese, Korean, Arabic, and Hindi.
 
 ### 4.8 History
 
-HushType keeps a log of past dictations in **History**. Access it from the menu bar menu to review, copy, or re-inject earlier transcriptions.
+VaulType keeps a log of past dictations in **History**. Access it from the menu bar menu to review, copy, or re-inject earlier transcriptions.
 
 **Retention Policies**
 
@@ -370,7 +370,7 @@ Entries marked as favorites are never deleted automatically regardless of these 
 
 **Privacy**
 
-Toggle **Store transcription text** off if you want HushType to record that a dictation happened (timestamp, duration, word count) without storing the actual text. This is useful if you dictate sensitive content.
+Toggle **Store transcription text** off if you want VaulType to record that a dictation happened (timestamp, duration, word count) without storing the actual text. This is useful if you dictate sensitive content.
 
 **Storage Actions**
 
@@ -379,7 +379,7 @@ Toggle **Store transcription text** off if you want HushType to record that a di
 
 ### 4.9 Commands
 
-Voice commands let you control macOS by voice using the same hotkey as dictation. Instead of typing text, you give HushType a command to execute.
+Voice commands let you control macOS by voice using the same hotkey as dictation. Instead of typing text, you give VaulType a command to execute.
 
 **Enable Voice Commands**
 
@@ -425,13 +425,13 @@ Custom commands let you define your own trigger phrases that execute one or more
 
 ### 4.10 Plugins
 
-Plugins extend HushType with additional processing modes or custom voice commands. They are distributed as `.bundle` files.
+Plugins extend VaulType with additional processing modes or custom voice commands. They are distributed as `.bundle` files.
 
 **Installing a Plugin**
 
-1. Click **Open Plugins Folder** to open `~/Library/Application Support/HushType/Plugins/` in Finder.
+1. Click **Open Plugins Folder** to open `~/Library/Application Support/VaulType/Plugins/` in Finder.
 2. Copy your `.bundle` file into this folder.
-3. Return to HushType and click **Refresh** to discover the new plugin.
+3. Return to VaulType and click **Refresh** to discover the new plugin.
 
 **Managing Plugins**
 
@@ -449,7 +449,7 @@ Voice commands let you control your Mac entirely by voice. The command system is
 2. Say the wake phrase (default: **Hey Type**) followed by your command.
 3. Release the hotkey.
 
-HushType recognizes the wake phrase, strips it from the transcription, and routes the remainder through the command parser instead of injecting it as text.
+VaulType recognizes the wake phrase, strips it from the transcription, and routes the remainder through the command parser instead of injecting it as text.
 
 **Example:**
 ```
@@ -652,10 +652,10 @@ Fully user-defined processing using a combination of pre-processors and post-pro
 
 ### Microphone Not Detected
 
-**Symptom**: HushType shows no audio level in the settings, or nothing happens when you press the hotkey.
+**Symptom**: VaulType shows no audio level in the settings, or nothing happens when you press the hotkey.
 
 **Solutions:**
-1. Open **System Settings > Privacy & Security > Microphone** and confirm HushType has permission.
+1. Open **System Settings > Privacy & Security > Microphone** and confirm VaulType has permission.
 2. In **Settings > Audio**, click **Refresh Devices** and check if your microphone appears in the list.
 3. Make sure your microphone is not muted at the hardware level (some USB microphones have a physical mute button).
 4. If you recently plugged in a new microphone, click **Refresh Devices** — the device list does not update automatically.
@@ -665,14 +665,14 @@ Fully user-defined processing using a combination of pre-processors and post-pro
 **Symptom**: Transcription appears in the overlay, but nothing is typed after you confirm.
 
 **Solutions:**
-1. Open **System Settings > Privacy & Security > Accessibility** and confirm HushType is listed and enabled.
+1. Open **System Settings > Privacy & Security > Accessibility** and confirm VaulType is listed and enabled.
 2. Without Accessibility permission, only Clipboard Paste injection works. Try setting **Settings > General > Default Method** to **Clipboard Paste**.
 3. Some apps (notably web browsers running in isolated sandbox modes) may block simulated keystrokes. Try Clipboard Paste mode for those apps.
 4. Confirm that the text field you want to type into was focused before you started recording.
 
 ### No Models Downloaded
 
-**Symptom**: HushType shows a "No model available" error, or transcription never starts.
+**Symptom**: VaulType shows a "No model available" error, or transcription never starts.
 
 **Solutions:**
 1. Go to **Settings > Models**, switch to the **Whisper** tab, and download at least one model.
@@ -719,7 +719,7 @@ Fully user-defined processing using a combination of pre-processors and post-pro
 
 ### App Not in Menu Bar After Restart
 
-**Symptom**: HushType does not start automatically when you log in.
+**Symptom**: VaulType does not start automatically when you log in.
 
 **Solution**: Go to **Settings > General** and turn on **Launch at Login**.
 
@@ -727,11 +727,11 @@ Fully user-defined processing using a combination of pre-processors and post-pro
 
 ## 8. Privacy
 
-HushType is built around a single principle: **your voice data never leaves your device**.
+VaulType is built around a single principle: **your voice data never leaves your device**.
 
 ### What Runs Locally
 
-- **Audio capture** is done by the built-in macOS audio system (AVFoundation). Audio is captured directly by HushType and never routed to any external service.
+- **Audio capture** is done by the built-in macOS audio system (AVFoundation). Audio is captured directly by VaulType and never routed to any external service.
 - **Speech recognition** uses whisper.cpp, a local implementation of OpenAI's Whisper model. The model file is stored on your Mac and runs entirely in-process.
 - **Text processing** uses llama.cpp, a local implementation of various LLM models. All grammar correction, formatting, and template processing runs on your hardware.
 - **Text injection** is done directly through macOS system APIs (CGEvent or the clipboard). No third-party service is involved.
@@ -740,33 +740,33 @@ HushType is built around a single principle: **your voice data never leaves your
 
 - Dictation history (text and metadata) is stored in a local SwiftData database in your app's container.
 - App profiles, vocabulary entries, and settings are stored in the same local database.
-- AI model files are stored in `~/Library/Application Support/HushType/Models/`.
-- Plugins are stored in `~/Library/Application Support/HushType/Plugins/`.
+- AI model files are stored in `~/Library/Application Support/VaulType/Models/`.
+- Plugins are stored in `~/Library/Application Support/VaulType/Plugins/`.
 
 None of this data is transmitted anywhere.
 
 ### Telemetry and Analytics
 
-HushType collects no telemetry, crash reports, or analytics. There are no tracking identifiers, no anonymous usage statistics, and no network calls to any analytics service.
+VaulType collects no telemetry, crash reports, or analytics. There are no tracking identifiers, no anonymous usage statistics, and no network calls to any analytics service.
 
 ### Network Usage
 
-The only network activity HushType performs is:
+The only network activity VaulType performs is:
 - Downloading model files when you click the download button in **Settings > Models**.
 - Checking for app updates when you click **Check for Updates** in **Settings > General** (uses Sparkle, an open-source updater).
 
-Both of these are initiated explicitly by you. HushType does not make background network requests.
+Both of these are initiated explicitly by you. VaulType does not make background network requests.
 
 ### Microphone Usage
 
-HushType only captures audio while you are actively holding (or have toggled on) the dictation hotkey. The microphone is not active in the background at any other time.
+VaulType only captures audio while you are actively holding (or have toggled on) the dictation hotkey. The microphone is not active in the background at any other time.
 
 ### Removing Your Data
 
 - To clear all dictation history, go to **Settings > History > Clear All History**.
-- To remove all data and reset HushType to its default state, go to **Settings > History > Factory Reset**.
-- To fully uninstall HushType, quit the app, delete it from your Applications folder, and optionally delete `~/Library/Application Support/HushType/` to remove all stored data and models.
+- To remove all data and reset VaulType to its default state, go to **Settings > History > Factory Reset**.
+- To fully uninstall VaulType, quit the app, delete it from your Applications folder, and optionally delete `~/Library/Application Support/VaulType/` to remove all stored data and models.
 
 ---
 
-*HushType v0.5.0 — Built with whisper.cpp and llama.cpp*
+*VaulType v0.5.0 — Built with whisper.cpp and llama.cpp*

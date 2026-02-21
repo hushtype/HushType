@@ -2,7 +2,7 @@
 
 Last Updated: 2026-02-13
 
-All notable changes to HushType will be documented in this file.
+All notable changes to VaulType will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Renamed project from HushType to VaulType (all source, configs, CI/CD, docs, and distribution)
 
 ### Deprecated
 
@@ -53,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0-alpha] — 2026-02-13
 
-Initial alpha release of HushType — a privacy-first, macOS-native speech-to-text
+Initial alpha release of VaulType — a privacy-first, macOS-native speech-to-text
 application. All transcription runs locally on-device; no audio data ever leaves
 the machine.
 
@@ -100,9 +101,9 @@ change between alpha releases without notice.*
 
 ## Links
 
-[Unreleased]: https://github.com/anthropics/hushtype/compare/v0.1.0-alpha...HEAD
-[0.1.0-alpha]: https://github.com/anthropics/hushtype/releases/tag/v0.1.0-alpha
+[Unreleased]: https://github.com/anthropics/vaultype/compare/v0.1.0-alpha...HEAD
+[0.1.0-alpha]: https://github.com/anthropics/vaultype/releases/tag/v0.1.0-alpha
 
 <!-- When cutting a new release, add a comparison link:
-[X.Y.Z]: https://github.com/anthropics/hushtype/compare/vPREVIOUS...vX.Y.Z
+[X.Y.Z]: https://github.com/anthropics/vaultype/compare/vPREVIOUS...vX.Y.Z
 -->

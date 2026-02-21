@@ -1,4 +1,4 @@
-# HushType Regression Test Results
+# VaulType Regression Test Results
 
 ## Test Environment
 
@@ -16,7 +16,7 @@ Build result: **TEST BUILD SUCCEEDED**
 
 Command used:
 ```
-xcodebuild build-for-testing -scheme HushType -destination 'platform=macOS,arch=arm64' \
+xcodebuild build-for-testing -scheme VaulType -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath /tmp/claude/DerivedData CODE_SIGN_IDENTITY="-" \
   CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 ```
@@ -93,7 +93,7 @@ The items below require manual execution on a physical Mac with microphone hardw
 - [ ] WhisperContext deinit frees C memory (no leak reported by Instruments)
 
 #### 1.5 Speech Recognition
-- [ ] Whisper model loads from ~/Library/Application Support/HushType/Models/
+- [ ] Whisper model loads from ~/Library/Application Support/VaulType/Models/
 - [ ] Transcription of clear speech returns sensible text
 - [ ] Transcription runs on a background queue (UI remains responsive)
 - [ ] Model selection in Settings > Models switches between tiny/base/small/medium/large-v3-turbo
@@ -354,17 +354,17 @@ The items below require manual execution on a physical Mac with microphone hardw
 - [ ] Idle CPU usage is near zero (no polling loops; event-driven architecture)
 
 #### 5.5 Onboarding
-- [ ] Onboarding wizard appears on first launch (when com.hushtype.onboardingCompleted is false)
+- [ ] Onboarding wizard appears on first launch (when com.vaultype.onboardingCompleted is false)
 - [ ] Onboarding does not appear on subsequent launches after completion
 - [ ] Step 1 (Welcome): title and description render correctly
 - [ ] Step 2 (Microphone): "Grant Access" button calls requestMicrophoneAccess() without crash
 - [ ] Step 3 (Accessibility): "Open Settings" deep-links to macOS Accessibility settings
 - [ ] Step 4 (Model Download): guided download of default whisper base model with progress indicator
-- [ ] Step 5 (Done): "Get Started" button sets com.hushtype.onboardingCompleted = true and dismisses
+- [ ] Step 5 (Done): "Get Started" button sets com.vaultype.onboardingCompleted = true and dismisses
 - [ ] Onboarding can be re-triggered via a Settings option or developer defaults override
 
 #### 5.6 Plugin System
-- [ ] Plugin discovery scans ~/Library/Application Support/HushType/Plugins/ on launch
+- [ ] Plugin discovery scans ~/Library/Application Support/VaulType/Plugins/ on launch
 - [ ] A valid ProcessingPlugin found in that directory is listed in PluginManagerView
 - [ ] A valid CommandPlugin found in that directory adds new voice commands
 - [ ] Activating a plugin calls plugin.activate() without crash
@@ -392,7 +392,7 @@ The following sequence exercises the complete pipeline end-to-end. Run this afte
 - [ ] Switch back to Notes: AppContextService detects Notes, mode auto-selects Structure
 - [ ] Open Settings: all 10 tabs render without crash
 - [ ] Close Settings: settings changes are persisted (reopen and verify)
-- [ ] Quit app: no orphaned processes remain (no zombie HushType instances)
+- [ ] Quit app: no orphaned processes remain (no zombie VaulType instances)
 
 ---
 
@@ -400,16 +400,16 @@ The following sequence exercises the complete pipeline end-to-end. Run this afte
 
 | Issue | Reference | Status |
 |-------|-----------|--------|
-| CGEvent injection requires accessibility permission that is unreliable during development (code signature changes per build) | HUSHTYPE-60 | Backlog: remove clipboard fallback for production |
+| CGEvent injection requires accessibility permission that is unreliable during development (code signature changes per build) | VAULTYPE-60 | Backlog: remove clipboard fallback for production |
 | Test runner crashes on launch due to AppDelegate.terminateOtherInstances() killing test host | Architecture note in MEMORY.md | Workaround: guard with `ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil` |
 | OllamaProvider was removed in refactor; any tests referencing it should be updated | Commit 220e951 | Verify no stale OllamaProvider test references remain |
-| CLI builds blocked by sandbox — requires `dangerouslyDisableSandbox: true` on xcodebuild | HUSHTYPE-59 | Done (resolved) |
+| CLI builds blocked by sandbox — requires `dangerouslyDisableSandbox: true` on xcodebuild | VAULTYPE-59 | Done (resolved) |
 
 ---
 
 ## Test File Reference
 
-All test files are located in `/Users/harungungorer/dev/HushType/HushTypeTests/`:
+All test files are located in `/Users/harungungorer/dev/VaulType/VaulTypeTests/`:
 
 | Test File | Phase | Key Classes Under Test |
 |-----------|-------|----------------------|

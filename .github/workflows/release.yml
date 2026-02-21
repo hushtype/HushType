@@ -12,8 +12,8 @@ env:
   WHISPER_TAG: "v1.7.4"
   LLAMA_TAG: "b8059"
   XCODE_VERSION: "16.2"
-  APP_NAME: "HushType"
-  SCHEME: "HushType"
+  APP_NAME: "VaulType"
+  SCHEME: "VaulType"
   TEAM_ID: "L6UMTZRQRM"
 
 jobs:
@@ -261,9 +261,9 @@ jobs:
           DMG_PATH="build/${APP_NAME}-${RELEASE_VERSION}.dmg"
 
           gh release create "v${RELEASE_VERSION}" \
-            --title "HushType v${RELEASE_VERSION}" \
+            --title "VaulType v${RELEASE_VERSION}" \
             --generate-notes \
-            "$DMG_PATH#HushType-${RELEASE_VERSION}.dmg"
+            "$DMG_PATH#VaulType-${RELEASE_VERSION}.dmg"
 
           echo ""
           echo "Release created: v${RELEASE_VERSION}"
