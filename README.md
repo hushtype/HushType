@@ -139,10 +139,19 @@ HushType/
 
 ## Screenshots
 
-<!-- TODO: Add screenshots -->
-| Menu Bar | Settings | Overlay |
-|----------|----------|---------|
-| ![Menu Bar](assets/screenshots/menubar.png) | ![Settings](assets/screenshots/settings.png) | ![Overlay](assets/screenshots/overlay.png) |
+<p align="center">
+  <img src="assets/screenshots/settings.png" width="600" alt="Settings"><br>
+  <em>Settings — 10 tabs for full control over dictation, models, and voice commands</em>
+</p>
+
+<p align="center">
+  <img src="assets/screenshots/menubar.png" width="250" alt="Menu Bar">&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/screenshots/overlay.png" width="400" alt="Overlay">
+</p>
+<p align="center">
+  <em>Menu Bar — quick status at a glance</em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <em>Overlay — edit before injecting text</em>
+</p>
 
 ## How It Compares
 
