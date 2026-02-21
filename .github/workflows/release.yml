@@ -270,7 +270,67 @@ jobs:
           echo "SHA256: ${SHA256}"
 
       # ------------------------------------------------------------------
-      # 9. Update Appcast
+      # 9. Update Homebrew Cask
+      # ------------------------------------------------------------------
+      - name: Update Homebrew cask
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          SHA256: ${{ steps.signatures.outputs.sha256 }}
+        run: |
+          if [ -z "$HOMEBREW_TAP_TOKEN" ]; then
+            echo "Warning: HOMEBREW_TAP_TOKEN not set, skipping Homebrew cask update"
+            exit 0
+          fi
+
+          CASK_CONTENT=$(cat <<'CASK'
+          cask "vaultype" do
+            version "VERSION_PLACEHOLDER"
+            sha256 "SHA256_PLACEHOLDER"
+
+            url "https://github.com/vaultype/VaulType/releases/download/v#{version}/VaulType-#{version}.dmg"
+            name "VaulType"
+            desc "Privacy-first speech-to-text for macOS — runs 100% locally"
+            homepage "https://github.com/vaultype/VaulType"
+
+            depends_on macos: ">= :sonoma"
+
+            app "VaulType.app"
+
+            zap trash: [
+              "~/Library/Application Support/VaulType",
+              "~/Library/Preferences/com.vaultype.app.plist",
+              "~/Library/Caches/com.vaultype.app",
+            ]
+          end
+          CASK
+          )
+
+          CASK_CONTENT="${CASK_CONTENT//VERSION_PLACEHOLDER/$RELEASE_VERSION}"
+          CASK_CONTENT="${CASK_CONTENT//SHA256_PLACEHOLDER/$SHA256}"
+
+          # Get current file SHA for update
+          FILE_SHA=$(curl -s \
+            -H "Authorization: token $HOMEBREW_TAP_TOKEN" \
+            "https://api.github.com/repos/vaultype/homebrew-vaultype/contents/Casks/vaultype.rb" \
+            | python3 -c "import sys,json; print(json.load(sys.stdin).get('sha',''))")
+
+          # Update the cask file
+          ENCODED=$(echo "$CASK_CONTENT" | base64)
+          curl -s -X PUT \
+            -H "Authorization: token $HOMEBREW_TAP_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/vaultype/homebrew-vaultype/contents/Casks/vaultype.rb" \
+            -d "{
+              \"message\": \"chore: bump vaultype to v${RELEASE_VERSION}\",
+              \"content\": \"${ENCODED}\",
+              \"sha\": \"${FILE_SHA}\"
+            }"
+
+          echo "Homebrew cask updated to v${RELEASE_VERSION}"
+
+      # ------------------------------------------------------------------
+      # 10. Update Appcast
       # ------------------------------------------------------------------
       - name: Update appcast.xml
         env:
@@ -297,7 +357,7 @@ jobs:
           include_files: appcast.xml
 
       # ------------------------------------------------------------------
-      # 10. Cleanup
+      # 11. Cleanup
       # ------------------------------------------------------------------
       - name: Cleanup keychain
         if: always()
