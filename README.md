@@ -26,7 +26,7 @@ Unlike cloud-dependent alternatives (MacWhisper, Superwhisper, Apple Dictation),
 
 The app lives in your macOS menu bar and provides global hotkey-activated dictation with six purpose-built processing modes — from raw transcription to LLM-powered text structuring, grammar correction, and prompt formatting.
 
-> **Hush** = your voice stays private, never leaving your device
+> **Vault** = your voice stays locked on your device
 > **Type** = text appears at your cursor
 
 ## Key Features
