@@ -1,4 +1,4 @@
-# SwiftFormat Configuration for HushType
+# SwiftFormat Configuration for VaulType
 
 --exclude vendor,DerivedData,.build,WhisperKit/Sources/CWhisper,LlamaKit/Sources/CLlama
 --swiftversion 5.9
